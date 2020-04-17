@@ -75,7 +75,7 @@
     
     
     
-    <article id="post-从零改造CAS" class="article article-type-post" itemscope
+    <article id="post-项目集成CAS客户端浅析" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -83,8 +83,8 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2020/04/15/%E4%BB%8E%E9%9B%B6%E6%94%B9%E9%80%A0CAS/"
-    >从零改造CAS</a> 
+  <a class="article-title" href="/2020/04/16/%E9%A1%B9%E7%9B%AE%E9%9B%86%E6%88%90CAS%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%B5%85%E6%9E%90/"
+    >项目集成CAS客户端浅析</a> 
 </h2>
  
 
@@ -93,10 +93,14 @@
 
     
     <div class="article-meta">
-      <a href="/2020/04/15/%E4%BB%8E%E9%9B%B6%E6%94%B9%E9%80%A0CAS/" class="article-date">
-  <time datetime="2020-04-15T10:48:47.000Z" itemprop="datePublished">2020-04-15</time>
+      <a href="/2020/04/16/%E9%A1%B9%E7%9B%AE%E9%9B%86%E6%88%90CAS%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%B5%85%E6%9E%90/" class="article-date">
+  <time datetime="2020-04-16T11:48:49.000Z" itemprop="datePublished">2020-04-16</time>
 </a>
       
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
       
       
       
@@ -111,7 +115,156 @@
       
 
       
+      <h2 id="CAS客户端的作用"><a href="#CAS客户端的作用" class="headerlink" title="CAS客户端的作用"></a>CAS客户端的作用</h2><h2 id="CAS客户端需要配置什么"><a href="#CAS客户端需要配置什么" class="headerlink" title="CAS客户端需要配置什么"></a>CAS客户端需要配置什么</h2><h2 id="集成方案"><a href="#集成方案" class="headerlink" title="集成方案"></a>集成方案</h2><h3 id="非SpringBoot，非Shrio项目"><a href="#非SpringBoot，非Shrio项目" class="headerlink" title="非SpringBoot，非Shrio项目"></a>非SpringBoot，非Shrio项目</h3><h3 id="SpringBoot项目"><a href="#SpringBoot项目" class="headerlink" title="SpringBoot项目"></a>SpringBoot项目</h3><h3 id="Shiro项目"><a href="#Shiro项目" class="headerlink" title="Shiro项目"></a>Shiro项目</h3>
       
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CAS/" rel="tag">CAS</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-从零改造CAS服务端" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/04/15/%E4%BB%8E%E9%9B%B6%E6%94%B9%E9%80%A0CAS%E6%9C%8D%E5%8A%A1%E7%AB%AF/"
+    >从零改造CAS服务端</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/15/%E4%BB%8E%E9%9B%B6%E6%94%B9%E9%80%A0CAS%E6%9C%8D%E5%8A%A1%E7%AB%AF/" class="article-date">
+  <time datetime="2020-04-15T10:48:47.000Z" itemprop="datePublished">2020-04-15</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="CAS是什么"><a href="#CAS是什么" class="headerlink" title="CAS是什么"></a>CAS是什么</h2><h2 id="CAS服务端改造的整体思路"><a href="#CAS服务端改造的整体思路" class="headerlink" title="CAS服务端改造的整体思路"></a>CAS服务端改造的整体思路</h2><h2 id="怎么用自己的登陆验证替换原有的登陆验证"><a href="#怎么用自己的登陆验证替换原有的登陆验证" class="headerlink" title="怎么用自己的登陆验证替换原有的登陆验证"></a>怎么用自己的登陆验证替换原有的登陆验证</h2><h2 id="怎么使用自己的登陆页面"><a href="#怎么使用自己的登陆页面" class="headerlink" title="怎么使用自己的登陆页面"></a>怎么使用自己的登陆页面</h2><h2 id="怎么移除https"><a href="#怎么移除https" class="headerlink" title="怎么移除https"></a>怎么移除https</h2><h2 id="支持跨域"><a href="#支持跨域" class="headerlink" title="支持跨域"></a>支持跨域</h2><h2 id="使用redis代替本地缓存（支持集群部署）"><a href="#使用redis代替本地缓存（支持集群部署）" class="headerlink" title="使用redis代替本地缓存（支持集群部署）"></a>使用redis代替本地缓存（支持集群部署）</h2><h2 id="CAS的其他配置"><a href="#CAS的其他配置" class="headerlink" title="CAS的其他配置"></a>CAS的其他配置</h2>
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CAS/" rel="tag">CAS</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-about" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/04/14/about/"
+    >关于我</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/14/about/" class="article-date">
+  <time datetime="2020-04-14T11:48:49.000Z" itemprop="datePublished">2020-04-14</time>
+</a>
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <br/>
+<br/>
+<img src="/images/xm.jpeg" alt="avatar" width="300" style="border-radius:50%"/>
+<br/>
+<br/>
+
+<blockquote>
+<p>孟佳伟<br>A Ordinary Chinese Programmer</p>
+</blockquote>
+<ul>
+<li>杭州</li>
+<li>GitHub: <a href="https://github.com/Arthur-Meng" target="_blank" rel="noopener">Arthur-Meng</a></li>
+</ul>
+
       
       <!-- reward -->
       
@@ -195,7 +348,7 @@
 <nav class="navbar">
   
   <div class="logo">
-    <a href="/"><img src="/images/xm.jpeg" alt="Arthur&#39;s Blog"></a>
+    <a href="/"><img src="/images/xm.jpeg" style="border-radius:50%" alt="Arthur&#39;s Blog"></a>
   </div>
   
   <ul class="nav nav-main">
@@ -217,7 +370,7 @@
     </li>
     
     <li class="nav-item">
-      <a class="nav-item-link" href="/2020/about">关于我</a>
+      <a class="nav-item-link" href="/2020/04/14/about">关于我</a>
     </li>
     
   </ul>
@@ -226,7 +379,7 @@
   <ul class="nav">
     <li class="nav-item">
       
-      <a class="nav-item-link nav-item-search"  title="Search">
+      <a class="nav-item-link nav-item-search" title="Search">
         <i class="ri-search-line"></i>
       </a>
       
