@@ -115,7 +115,43 @@
       
 
       
-      <h2 id="CAS客户端的作用"><a href="#CAS客户端的作用" class="headerlink" title="CAS客户端的作用"></a>CAS客户端的作用</h2><h2 id="CAS客户端需要配置什么"><a href="#CAS客户端需要配置什么" class="headerlink" title="CAS客户端需要配置什么"></a>CAS客户端需要配置什么</h2><h2 id="集成方案"><a href="#集成方案" class="headerlink" title="集成方案"></a>集成方案</h2><h3 id="非SpringBoot，非Shrio项目"><a href="#非SpringBoot，非Shrio项目" class="headerlink" title="非SpringBoot，非Shrio项目"></a>非SpringBoot，非Shrio项目</h3><h3 id="SpringBoot项目"><a href="#SpringBoot项目" class="headerlink" title="SpringBoot项目"></a>SpringBoot项目</h3><h3 id="Shiro项目"><a href="#Shiro项目" class="headerlink" title="Shiro项目"></a>Shiro项目</h3>
+      <p>&emsp;&emsp;前文中我们已经简单说了CAS是什么和CAS的服务端的改造，今天我们来简单说下CAS的客户端以及我们怎么在我们的项目里面集成CAS客户端。</p>
+<h2 id="集成CAS客户端后会怎么样"><a href="#集成CAS客户端后会怎么样" class="headerlink" title="集成CAS客户端后会怎么样"></a>集成CAS客户端后会怎么样</h2><p>我们的项目集成了CAS客户端之后，项目内原先的登录体系就变成了CAS单点登录的体系。</p>
+<p><strong>原先我们的登录体系可能是这样子的：</strong><br>1、访问我们的接口发现没有登录，重定向到我们的登录页<br>2、用户在我们的登录页进行登录<br>3、登录完成，生成会话信息（比如使用cookie或者session）<br>4、重定向到我们系统首页正常访问</p>
+<p><strong>变成了CAS单点登录的体系可能是这样子的：</strong><br>1、访问我们的接口发现没有登录，重定向到CAS的登录页<br>2、用户在CAS服务端提供的登录页进行登录<br>3、登录完成后CAS服务端生成一个TGC票据（Ticket Grangting Ticket）和ST票据（Service Ticket）， TGT是CAS为用户签发的登录票据，有了TGT就表示用户在CAS服务端登录了， ST是为用户签发的访问某一客户端的票据。<br>4、CAS服务端会携带这个ST重定向到我们系统<br>5、我们系统向CAS服务端校验这个ST（如果不校验的话，就可以伪造这个ST来访问我们的系统）<br>6、校验完成之后，登录完成，生成会话信息<br>7、重定向到我们系统首页正常访问</p>
+<p><strong>如果登录了，也可能是这样子的：</strong><br>1、访问我们的接口发现没有登录，重定向到CAS的登录页<br>2、重定向到CAS的登录页后，CAS发现这个当前已经有用户登录了（也就是cookie里面存了TGT）<br>3、CAS服务端生成一个ST票据<br>4、CAS服务端会携带这个ST重定向到我们系统（通过url的形式，传递的key是ticket）<br>5、我们系统向CAS服务端校验这个ST（如果不校验的话，就可以伪造这个ST来访问我们的系统）<br>6、校验完成之后，登录完成，生成会话信息<br>7、重定向到我们系统首页正常访问</p>
+<blockquote>
+<p><strong>如果还是有点听不懂的话，我来打一个还算恰当的比方：</strong><br>&#160; &#160; &#160; &#160;比如我们的系统是摩天轮，我们付钱买了摩天轮的门票之后就可以玩摩天轮了。另外的系统可能是旋转木马什么的，我们玩旋转木马也需要付钱买旋转木马的门票。这样子我们每玩一个项目都要付钱买下票（输入用户名密码校验），就很麻烦。这就是我们之前的登录体系。<br>&#160; &#160; &#160; &#160;所以有人就说我们就建一个游乐场，把所有的设施都放到一起，然后让我们去买游乐园的门票，有了游乐园门票我们就可以玩游乐园里面的所有设施了。这就是CAS单点登录的体系。这个比方在CAS已经登录场景中的映射是这样子的：我们去游乐园（服务端）玩，付钱（登录）买了游乐园的门票（TGT），有了门票我们就可以玩游乐园里面的设施了（表示已经登录了）。但是我们在玩摩天轮（客户端）的时候，摩天轮入口处的工作人员并不知道我们是不是已经买了票，所以会检查我们游乐园的门票（TGT），发现我们已经买了票我们就不用在付钱（再次登录），他们就会给我们一张摩天轮的门票（ST），我们拿着这个摩天轮的门票就可以玩摩天轮了！<br>&#160; &#160; &#160; &#160;在CAS没有登录的场景中是这样子的：我们去玩摩天轮（客户端），摩天轮入口处的工作人员发现我们没有游乐园的门票（TGT），就让我们先去买游乐园的门票（TGT），等我们买了游乐园的门票之后他们再给我们一张摩天轮的门票（ST），我们拿着这个摩天轮的门票也可以玩摩天轮了！</p>
+</blockquote>
+<h2 id="CAS客户端需要配置什么"><a href="#CAS客户端需要配置什么" class="headerlink" title="CAS客户端需要配置什么"></a>CAS客户端需要配置什么</h2><p>&emsp;&emsp;我们可以很明显在上面的CAS登录的流程中发现，我们在配置客户端至少要配置服务端的在哪里（服务端的ip和端口），还要配置客户端自己在哪里（客户端的ip和端口，登录的时候需要通过url传递给服务端，服务端才可以在登录完成后携带ST准确重定向回到我们系统），并且还需要知道和服务端交互的接口。我们来整理下有哪些接口：</p>
+<ul>
+<li>登录的接口（我们发现没有登录，需要重定向到CAS的登录页）</li>
+<li>校验的接口（我们需要向CAS服务端校验登录完成后CAS服务端传给我们的ST）</li>
+<li>登出的接口（我们登出的时候需要请求CAS服务端，告诉它我们已经登出了，我们登录了之后其他的系统也需要登出了）</li>
+</ul>
+<p>&emsp;&emsp;不同的集成客户端的形式，这几项配置都不会少，但是配置会有所不同。如果你采用的较为高级的框架，可能只需要配置服务端信息和客户端信息，和服务端交互的接口已经默认配置好了，毕竟如果不魔改的话接口是不变的。基本上是这样子的：</p>
+<ul>
+<li>登录的接口：/login</li>
+<li>校验的接口：<ul>
+<li>/validate (CAS 1.0)</li>
+<li>/serviceValidate (CAS 2.0)</li>
+<li>/p3/serviceValidate (CAS 3.0)</li>
+</ul>
+</li>
+<li>登出的接口：/logout</li>
+</ul>
+<h2 id="集成方案"><a href="#集成方案" class="headerlink" title="集成方案"></a>集成方案</h2><p>&emsp;&emsp;我们在了解了整体流程和客户端需要配置什么之后，就可以对于正式开始的试验了。<strong>重要的事情说三遍：我们需要根据自己的项目的技术栈选择最合适的方式集成CAS客户端的方式，并且根据CAS服务端的版本来选择说集成客户端的版本！</strong>因为找到最合适的集成方式并且使用匹配的版本会让你在集成过程中少走很多弯路。<br>&emsp;&emsp;由于集成CAS客户端的多样性和篇幅的限制，我就不一一具体讲解具体怎么集成，只是大概介绍下什么情况下应该使用说明方式集成。</p>
+<h3 id="非SpringBoot，非Shrio项目"><a href="#非SpringBoot，非Shrio项目" class="headerlink" title="非SpringBoot，非Shrio项目"></a>非SpringBoot，非Shrio项目</h3><p>1、集成cas-client，添加相应依赖（根据CAS客户端的版本来定）<br>2、配置web.xml，添加对应的CAS的过滤器filter，主要是以下这几个filter：</p>
+<ul>
+<li>拦截登录的filter（重定向到CAS的登录页）</li>
+<li>拦截校验ST请求的filter（接收到CAS服务端重定向到我们系统的携带了ST票据请求，向CAS服务端校验ST）</li>
+<li>拦截登出的filter（重定向到CAS的登出）</li>
+</ul>
+<p>3、如果是前后端分离的话需要重写相关的filter，防止跨域失败<br>4、具体的流程和实现可以参考：<a href="https://www.jianshu.com/p/b369645c0bad" target="_blank" rel="noopener">传送门</a></p>
+<h3 id="SpringBoot项目"><a href="#SpringBoot项目" class="headerlink" title="SpringBoot项目"></a>SpringBoot项目</h3><p>1、集成cas-client-autoconfig-support<br>2、配置文件中加入cas相关的配置，配置很少，配置起来相当简单，舒胡<br>3、具体的流程和实现可以参考：<a href="https://blog.csdn.net/oumuv/article/details/84317757" target="_blank" rel="noopener">传送门</a></p>
+<h3 id="Shiro项目"><a href="#Shiro项目" class="headerlink" title="Shiro项目"></a>Shiro项目</h3><p>1、集成CAS Client时建议选用buji-pac4j而不是shiro-cas（shiro-cas不兼容高版本的CAS，已被弃用）<br>2、也是配置文件中加入cas相关的配置，但是由于需要和shiro有耦合，和之前的配置不大一样，需要多注意<br>3、具体的流程和实现可以参考：<a href="https://blog.csdn.net/hxm_code/article/details/79181218" target="_blank" rel="noopener">传送门上</a>，<a href="https://blog.csdn.net/hxm_code/article/details/79226456" target="_blank" rel="noopener">传送门下</a></p>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>&emsp;&emsp;刚刚说的这几种都是传统的前后端不分离的系统，现在的很多新项目都是前后端分离。这时候我们在集成CAS客户端的时候会遇到一些其他的问题，如跨域等。我们下一章再讨论如果是前后端分离的话，我们在集成CAS客户端时需要注意什么和对应的几种解决的思路。<br></br></p>
+
       
       <!-- reward -->
       
@@ -186,7 +222,14 @@
       
 
       
-      <h2 id="CAS是什么"><a href="#CAS是什么" class="headerlink" title="CAS是什么"></a>CAS是什么</h2><h2 id="CAS服务端改造的整体思路"><a href="#CAS服务端改造的整体思路" class="headerlink" title="CAS服务端改造的整体思路"></a>CAS服务端改造的整体思路</h2><h2 id="怎么用自己的登陆验证替换原有的登陆验证"><a href="#怎么用自己的登陆验证替换原有的登陆验证" class="headerlink" title="怎么用自己的登陆验证替换原有的登陆验证"></a>怎么用自己的登陆验证替换原有的登陆验证</h2><h2 id="怎么使用自己的登陆页面"><a href="#怎么使用自己的登陆页面" class="headerlink" title="怎么使用自己的登陆页面"></a>怎么使用自己的登陆页面</h2><h2 id="怎么移除https"><a href="#怎么移除https" class="headerlink" title="怎么移除https"></a>怎么移除https</h2><h2 id="支持跨域"><a href="#支持跨域" class="headerlink" title="支持跨域"></a>支持跨域</h2><h2 id="使用redis代替本地缓存（支持集群部署）"><a href="#使用redis代替本地缓存（支持集群部署）" class="headerlink" title="使用redis代替本地缓存（支持集群部署）"></a>使用redis代替本地缓存（支持集群部署）</h2><h2 id="CAS的其他配置"><a href="#CAS的其他配置" class="headerlink" title="CAS的其他配置"></a>CAS的其他配置</h2>
+      <h2 id="CAS是什么"><a href="#CAS是什么" class="headerlink" title="CAS是什么"></a>CAS是什么</h2><p>&emsp;&emsp;CAS 是 Yale 大学发起的一个开源项目，旨在为 Web 应用系统提供一种可靠的单点登录方法。<br>&emsp;&emsp;那么单点登录是什么？<br>&emsp;&emsp;单点登录（Single Sign On），简称为 SSO，是目前比较流行的企业业务整合的解决方案之一。SSO的定义是在多个应用系统中，用户只需要登录一次就可以访问所有相互信任的应用系统。比如我们目前的系统存在诸多子系统，而这些子系统是分别部署在不同的服务器中，那么使用传统方式的session是无法解决的，我们需要使用相关的单点登录技术来解决。<br>&emsp;&emsp;好吧，上面的都是套话，<strong>简单来说就是把多个不同的系统的登录捆成一个整体，一个登录了之后大家都登录了，一个登出了之后大家都登出了，统一登录（单点登录），统一登出（单点登出）</strong>。为了达到这个目标，我们必须要引入一个协调者，大家都去它那边执行登录和登出的操作。这个协调者就是CAS服务端。我们来简单想下这个协调者要做什么事情：</p>
+<ul>
+<li>如果一个系统没有登录，它就要向CAS服务端询问当前是不是已经有用户登录了，如果还没登录就要请求登录，CAS服务端需要提供登录页和登录的校验</li>
+<li>如果向CAS服务端询问时发现已经有用户登录，CAS服务端就要告诉这个系统其他的系统已经先登录了和当前登录用户是谁，它无需额外登录，可以直接生成当前用户登录的会话</li>
+<li>任意一个系统登出的时候，都要告诉CAS服务端当前用户登出了，CAS服务端要通知所有系统当前用户已经登出了，让各个子系统都把会话关闭</li>
+</ul>
+<h3 id="CAS登录流程"><a href="#CAS登录流程" class="headerlink" title="CAS登录流程"></a>CAS登录流程</h3><p>&emsp;&emsp;当然以上只是总体的思路，具体实现的时候会稍微复杂一点。登录的流程大概是以下几步：<br>1、访问一个子系统发现没有登录，重定向到CAS服务端的登录页（携带service参数，参数的值是子系统的地址）<br>2、用户在CAS服务端提供的登录页进行登录<br>3、登录完成后CAS服务端生成一个TGC票据（Ticket Grangting Ticket）和ST票据（Service Ticket）， TGT是CAS为用户签发的登录票据，有了TGT就表示用户在CAS服务端登录了， ST是为用户签发的访问某一客户端的票据。<br>4、CAS服务端会携带这个ST重定向到子系统（就是service的值）<br>5、子系统向CAS服务端校验这个ST（如果不校验的话，就可以伪造这个ST来访问子系统）<br>6、校验完成之后，登录完成，子系统生成会话信息<br>7、重定向到子系统页面正常访问<br><br/><br><img src="/images/cas/cas流程图.jpg" /><br><br/></p>
+<h2 id="CAS服务端改造的整体思路"><a href="#CAS服务端改造的整体思路" class="headerlink" title="CAS服务端改造的整体思路"></a>CAS服务端改造的整体思路</h2><h2 id="怎么用自己的登录验证替换原有的登录验证"><a href="#怎么用自己的登录验证替换原有的登录验证" class="headerlink" title="怎么用自己的登录验证替换原有的登录验证"></a>怎么用自己的登录验证替换原有的登录验证</h2><h2 id="怎么使用自己的登录页面"><a href="#怎么使用自己的登录页面" class="headerlink" title="怎么使用自己的登录页面"></a>怎么使用自己的登录页面</h2><h2 id="怎么移除https"><a href="#怎么移除https" class="headerlink" title="怎么移除https"></a>怎么移除https</h2><h2 id="支持跨域"><a href="#支持跨域" class="headerlink" title="支持跨域"></a>支持跨域</h2><h2 id="使用redis代替本地缓存（支持集群部署）"><a href="#使用redis代替本地缓存（支持集群部署）" class="headerlink" title="使用redis代替本地缓存（支持集群部署）"></a>使用redis代替本地缓存（支持集群部署）</h2><h2 id="CAS的其他配置"><a href="#CAS的其他配置" class="headerlink" title="CAS的其他配置"></a>CAS的其他配置</h2>
       
       <!-- reward -->
       
