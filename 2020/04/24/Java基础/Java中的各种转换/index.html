@@ -73,7 +73,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">0</span>
+            <span class="post-count">483</span>
         </span>
     </span>
 
@@ -82,7 +82,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">2 min</span>
         </span>
     </span>
 </div>
@@ -93,6 +93,8 @@
 
     
     
+    <div class="tocbot"></div>
+
 
 
 
@@ -105,7 +107,33 @@
       
 
       
-      
+      <p>&emsp;&emsp;<strong>我其实是个记性不怎么好的人，所以希望写篇文章记录下Java中常用的各种转换，以便之后不会每次都去查，而是直接自己抄自己。</strong></p>
+<h2 id="常见类型"><a href="#常见类型" class="headerlink" title="常见类型"></a>常见类型</h2><ul>
+<li>String</li>
+<li>int</li>
+<li>Array（数组）</li>
+<li>List（列表）</li>
+<li>Set（集合）</li>
+<li>Object（对象，比如说Json/Map）</li>
+</ul>
+<h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><h3 id="String转int"><a href="#String转int" class="headerlink" title="String转int"></a>String转int</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转换失败抛出NumberFormatException</span></span><br><span class="line">Integer.valueOf(String s)</span><br></pre></td></tr></table></figure>
+<h3 id="String转Array"><a href="#String转Array" class="headerlink" title="String转Array"></a>String转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转为字符数组</span></span><br><span class="line"><span class="keyword">char</span>[] chars = <span class="string">"abbc"</span>.toCharArray();</span><br><span class="line"><span class="comment">//根据正则表达式分隔字符串为字符串数组</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line"><span class="comment">//这里需要注意的是如果出现了分隔重复的情况，会产生空字符串(两个分隔中间什么都没有就是空字符串)</span></span><br><span class="line"><span class="comment">//array = ["a","","c"];</span></span><br></pre></td></tr></table></figure>
+<h3 id="String转List"><a href="#String转List" class="headerlink" title="String转List"></a>String转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现是先转为数组再转为列表</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br></pre></td></tr></table></figure>
+<h3 id="String转Set"><a href="#String转Set" class="headerlink" title="String转Set"></a>String转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现是先转为数组再转为列表再转为集合（去重）</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
+<h3 id="String转Object"><a href="#String转Object" class="headerlink" title="String转Object"></a>String转Object</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 推荐使用fastjson（如果对数据准确性要求比较高建议用Gson） --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;fastjson.version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s = <span class="string">"&#123;\"key\":\"value\"&#125;"</span>;</span><br><span class="line">JSONObject json = JSONObject.parseObject(s);</span><br><span class="line">HashMap map = JSON.parseObject(s, HashMap<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"><span class="comment">//User user = JSON.parseObject(s, User.class);</span></span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="int"><a href="#int" class="headerlink" title="int"></a>int</h2><h3 id="int转String"><a href="#int转String" class="headerlink" title="int转String"></a>int转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//valueOf有很多重载，很多对象都可以用这个方法转为String</span></span><br><span class="line">String s = String.valueOf(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="int转对象"><a href="#int转对象" class="headerlink" title="int转对象"></a>int转对象</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Integer对象是java对int的封装，多了很多拓展方法</span></span><br><span class="line">Integer integer = <span class="keyword">new</span> Integer(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="Array（数组）"><a href="#Array（数组）" class="headerlink" title="Array（数组）"></a>Array（数组）</h2><h3 id="Array转String"><a href="#Array转String" class="headerlink" title="Array转String"></a>Array转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//自己用循环去拼接代码有点臃肿，直接用自带的工具类Arrays</span></span><br><span class="line">String s1 = Arrays.toString(<span class="string">"abbc"</span>.split(<span class="string">"b"</span>)); <span class="comment">//s1为[a, , c]</span></span><br><span class="line">String s2 = Arrays.toString(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>&#125;); <span class="comment">//s2为[1, 2]</span></span><br></pre></td></tr></table></figure>
+<h3 id="Array转List"><a href="#Array转List" class="headerlink" title="Array转List"></a>Array转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br></pre></td></tr></table></figure>
+<h3 id="Array转Set"><a href="#Array转Set" class="headerlink" title="Array转Set"></a>Array转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="List（列表）"><a href="#List（列表）" class="headerlink" title="List（列表）"></a>List（列表）</h2><h3 id="List转String"><a href="#List转String" class="headerlink" title="List转String"></a>List转String</h3><h3 id="List转Array"><a href="#List转Array" class="headerlink" title="List转Array"></a>List转Array</h3><h3 id="List转Set"><a href="#List转Set" class="headerlink" title="List转Set"></a>List转Set</h3><h2 id="Set（集合）"><a href="#Set（集合）" class="headerlink" title="Set（集合）"></a>Set（集合）</h2><h3 id="Set转String"><a href="#Set转String" class="headerlink" title="Set转String"></a>Set转String</h3><h3 id="Set转Array"><a href="#Set转Array" class="headerlink" title="Set转Array"></a>Set转Array</h3><h3 id="Set转List"><a href="#Set转List" class="headerlink" title="Set转List"></a>Set转List</h3><h2 id="Object（对象，比如说Json-Map）"><a href="#Object（对象，比如说Json-Map）" class="headerlink" title="Object（对象，比如说Json/Map）"></a>Object（对象，比如说Json/Map）</h2><h3 id="Object转String"><a href="#Object转String" class="headerlink" title="Object转String"></a>Object转String</h3><h3 id="Object转List"><a href="#Object转List" class="headerlink" title="Object转List"></a>Object转List</h3>
       
       <!-- reward -->
       

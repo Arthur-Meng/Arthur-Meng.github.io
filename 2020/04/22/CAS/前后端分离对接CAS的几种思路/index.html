@@ -73,7 +73,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">554</span>
+            <span class="post-count">1.5k</span>
         </span>
     </span>
 
@@ -82,7 +82,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">5 min</span>
         </span>
     </span>
 </div>
@@ -116,15 +116,32 @@
 </ul>
 <p>&emsp;&emsp;那我们来想下如果我们按照之前的CAS登录思路来走应该要怎么样。我们首先来确认一点，前后端分离时，前端和后台谁来作为CAS客户端和CAS服务端交互？很显然，肯定是后端，前端显然不能胜任这一任务。<strong>那我们预想的登录可能是这样子的：</strong></p>
 <ul>
-<li>前端发现没登录，这时候它该怎么办？它不能跳转到登录页，而是请求后台，让后台告诉它去CAS的登录页</li>
-<li>重定向到CAS的登录页进行登录的操作</li>
+<li>前端发现没登录，这时候它该怎么办？它不能跳转到原先的登录页，而是去CAS的登录页</li>
+<li>到CAS的登录页进行登录的操作</li>
 <li>登录完成携带ST访问后台</li>
 <li>后台校验完ST之后再回到前端</li>
 <li>正常访问</li>
 </ul>
-<p>&emsp;&emsp;<strong>我们可以发现，整个流程和之前的对比最大的不同就是第一步。前端不能用自己原先那套登录逻辑了，而是发现没登录的时候向后台请求数据，让后台告诉它去哪里登录，然后它再跳转到对应的登录页。</strong>那么我们应该怎么实现这一步？</p>
-<h3 id="思路1"><a href="#思路1" class="headerlink" title="思路1"></a>思路1</h3><p>前端发一个请求给后台，后台给出302，302的地址是CAS登录的地址.</p>
-<h3 id="思路2"><a href="#思路2" class="headerlink" title="思路2"></a>思路2</h3><p>前端发一个请求给后台，后台给出200，响应里面是CAS登录的地址，然后前端跳转到CAS登录的地址。</p>
+<p>&emsp;&emsp;<strong>我们可以发现，整个流程和之前的对比最大的不同就是第一步。前端不能用自己原先那套登录逻辑了，而是发现没登录的时候跳转到CAS对应的登录页。</strong>那么我们应该怎么实现这一步？除此之外，我们需要考虑另外一个问题：<strong>如果另外的一个客户端登出，理论上我们的系统也要登出。那这时候我们前端请求的数据的时候，后台应该做出变动通知前端当前登录失效，需要重新登录。</strong>提供以下几个思路：</p>
+<h3 id="思路1"><a href="#思路1" class="headerlink" title="思路1"></a>思路1</h3><p>&emsp;&emsp;前端发一个请求给后台，后台给出302，302的地址是CAS登录的地址。如果支持跨域的话，前端手动跳转到302的地址就可以了。但是因为CAS往往不是和前端部署在一起的，如果不做反向代理和CAS服务端不支持的话，基本上会发生跨域（不知道跨域的请自行百度）。如果为了避免跨域，我们可以把url就变成那个请求，这样子请求就不是AJAX请求，哪怕302也不算跨域。登出的时候也是这样子，前端发送登出请求，后台给出302，302的地址是CAS登出的地址。</p>
+<h3 id="思路2"><a href="#思路2" class="headerlink" title="思路2"></a>思路2</h3><p>&emsp;&emsp;前端发一个请求给后台，后台给出200，响应里面是CAS登录的地址，然后前端跳转到CAS登录的地址。登出的时候也是这样子。这个思路和上面不一样就是把302变成了200，好处是前端可控，可以做更多自定义的操作。</p>
+<h3 id="思路3"><a href="#思路3" class="headerlink" title="思路3"></a>思路3</h3><p>&emsp;&emsp;前端发现没登录，直接跳转到对应的CAS的登录页。登出的时候一样，直接把url变成对应的CAS登出请求。这种方法简单暴力，不需要和后台有交互，但是这样子的话，前端就需要配置CAS相关的信息（同时后台也是要配置的），就会和CAS产生耦合。</p>
+<h3 id="思路4"><a href="#思路4" class="headerlink" title="思路4"></a>思路4</h3><p>&emsp;&emsp;我们可以增加一个适配器，这个适配器代理CAS服务端，适配器去支持跨域，然后整个流程和思路1就一样了，虽然有点麻烦，但是也是可行的（我就用过这种思路），用的是freemarker，稍微分享下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;**</span><br><span class="line"> * 登录转换（代理iar访问cas）</span><br><span class="line"> *&#x2F;</span><br><span class="line">@RequestMapping(value &#x3D; &quot;&#x2F;cas&#x2F;login&quot;, method &#x3D; RequestMethod.GET)</span><br><span class="line">@ResponseBody</span><br><span class="line">@CrossOrigin</span><br><span class="line">public ModelAndView beforeLogin(@RequestParam String service) &#123;</span><br><span class="line">    String casUrl &#x3D; casHost + casLoginUrl + &quot;?service&#x3D;&quot; + URLEncoder.encode(service);</span><br><span class="line">    ModelAndView modelAndView &#x3D; new ModelAndView(&quot;&#x2F;cas&quot;);</span><br><span class="line">    modelAndView.addObject(&quot;casUrl&quot;, casUrl);</span><br><span class="line">    return modelAndView;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span>&gt;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.location.href = <span class="string">"$&#123;casUrl&#125;"</span></span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<br/>
+
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>&emsp;&emsp;所以我们仔细想下，会发现如果按照上面四个思路只有思路2和思路4是相对可行的。</p>
+<ul>
+<li>按照思路1，因为我们之后发的请求的肯定是ajax的，所以如果跨域，302就gg了。当然，如果你的CAS服务端支持跨域，那么思路1也是可行的，毕竟如果不发生跨域的话，前端就可以读取到302，并且手动跳转到302的地址。</li>
+<li>按照思路3，遇到另外的一个客户端登出的这种情况都不知道怎么办。</li>
+<li>所以只能按照思路2，在前端response的拦截器里面增加对应的处理，对数据增加判断，如果遇到后台说要跳转的信息，前端就跳转到响应里面的地址。</li>
+<li>或者思路4的方式，强行把跨域的CAS代理成不跨域的。<br/>
+
+</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>&emsp;&emsp;我们在前后端分离对接CAS时，会遇到一些平时没遇到的问题，这时候我们选用一个合适的方法见招拆招，去保证之前的CAS的流程可以顺利完成就可以了。只是这个合适的方法因项目而异，<strong>如果是CAS服务端支持跨域（一般很少），思路1无疑是最简单直接的。思路2可能是最容易让人接受的，而且也可以胜任绝大多数情况。思路3缺陷太大，无法兼容另一个客户端登出的情况。思路4则是比较麻烦，但是前端改动较少，只需要处理302的情况就可以了。</strong></p>
 
       
       <!-- reward -->
