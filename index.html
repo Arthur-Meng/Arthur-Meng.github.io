@@ -83,7 +83,7 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2020/05/01/Java%E5%9F%BA%E7%A1%80/%E5%B8%B8%E7%94%A8Maven%E6%8F%92%E4%BB%B6/"
+  <a class="article-title" href="/2020/05/18/Java%E5%9F%BA%E7%A1%80/%E5%B8%B8%E7%94%A8Maven%E6%8F%92%E4%BB%B6/"
     >常用Maven插件</a> 
 </h2>
  
@@ -93,8 +93,8 @@
 
     
     <div class="article-meta">
-      <a href="/2020/05/01/Java%E5%9F%BA%E7%A1%80/%E5%B8%B8%E7%94%A8Maven%E6%8F%92%E4%BB%B6/" class="article-date">
-  <time datetime="2020-05-01T09:17:43.000Z" itemprop="datePublished">2020-05-01</time>
+      <a href="/2020/05/18/Java%E5%9F%BA%E7%A1%80/%E5%B8%B8%E7%94%A8Maven%E6%8F%92%E4%BB%B6/" class="article-date">
+  <time datetime="2020-05-18T09:17:43.000Z" itemprop="datePublished">2020-05-18</time>
 </a>
       
   <div class="article-category">
@@ -115,7 +115,28 @@
       
 
       
-      
+      <p>&emsp;&emsp;Java生态体系中有三大构建工具:Ant、Maven和Gradle，Ant大家已经不怎么用了，Gradle是最新的也是最强的。由于工作的原因，Maven用的比较多，而且Maven很多功能也有，基本够用，所以想简单整理下自己用过的Maven插件，具体就不展开了，因为每个插件都会有很多配置，这里只是简单展示下功能和使用。</p>
+<h2 id="指定项目jdk版本和编码"><a href="#指定项目jdk版本和编码" class="headerlink" title="指定项目jdk版本和编码"></a>指定项目jdk版本和编码</h2><h3 id="maven-compiler-plugin"><a href="#maven-compiler-plugin" class="headerlink" title="maven-compiler-plugin"></a>maven-compiler-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-compiler-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">source</span>&gt;</span>1.8<span class="tag">&lt;/<span class="name">source</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">target</span>&gt;</span>1.8<span class="tag">&lt;/<span class="name">target</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">encoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">encoding</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="打包spring-boot项目"><a href="#打包spring-boot项目" class="headerlink" title="打包spring-boot项目"></a>打包spring-boot项目</h2><h3 id="spring-boot-maven-plugin"><a href="#spring-boot-maven-plugin" class="headerlink" title="spring-boot-maven-plugin"></a>spring-boot-maven-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">executable</span>&gt;</span>true<span class="tag">&lt;/<span class="name">executable</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>repackage<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="打包为可执行Jar"><a href="#打包为可执行Jar" class="headerlink" title="打包为可执行Jar"></a>打包为可执行Jar</h2><h3 id="maven-shade-plugin"><a href="#maven-shade-plugin" class="headerlink" title="maven-shade-plugin"></a>maven-shade-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-shade-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">goal</span>&gt;</span>shade<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">transformers</span>&gt;</span></span><br><span class="line">								<span class="tag">&lt;<span class="name">transformer</span> <span class="attr">implementation</span>=<span class="string">"org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"</span>&gt;</span></span><br><span class="line">									<span class="tag">&lt;<span class="name">mainClass</span>&gt;</span>包名+入口类<span class="tag">&lt;/<span class="name">mainClass</span>&gt;</span></span><br><span class="line">								<span class="tag">&lt;/<span class="name">transformer</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;/<span class="name">transformers</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="maven-assembly-plugin"><a href="#maven-assembly-plugin" class="headerlink" title="maven-assembly-plugin"></a>maven-assembly-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-assembly-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">archive</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">manifest</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">mainClass</span>&gt;</span>包名+入口类<span class="tag">&lt;/<span class="name">mainClass</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">archive</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">descriptorRefs</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">descriptorRef</span>&gt;</span>jar-with-dependencies<span class="tag">&lt;/<span class="name">descriptorRef</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">descriptorRefs</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">id</span>&gt;</span>make-assembly<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">goal</span>&gt;</span>single<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="maven-jar-plugin"><a href="#maven-jar-plugin" class="headerlink" title="maven-jar-plugin"></a>maven-jar-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-jar-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">version</span>&gt;</span>2.6<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">archive</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">manifest</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">mainClass</span>&gt;</span>com.mjw.app.DrawBordn<span class="tag">&lt;/<span class="name">mainClass</span>&gt;</span></span><br><span class="line">							<span class="comment">&lt;!-- to create a class path to your dependecies you have to fill true in this field --&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">addClasspath</span>&gt;</span>true<span class="tag">&lt;/<span class="name">addClasspath</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">classpathPrefix</span>&gt;</span>lib/<span class="tag">&lt;/<span class="name">classpathPrefix</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">manifestEntries</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">Class-Path</span>&gt;</span>./<span class="tag">&lt;/<span class="name">Class-Path</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">manifestEntries</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">archive</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">excludes</span>&gt;</span></span><br><span class="line">						<span class="comment">&lt;!--注意从编译结果目录开始算目录结构 --&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">exclude</span>&gt;</span>/*.yml<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">exclude</span>&gt;</span>/*.properties<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">exclude</span>&gt;</span>/*.xml<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">excludes</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="打包为war或者zip"><a href="#打包为war或者zip" class="headerlink" title="打包为war或者zip"></a>打包为war或者zip</h2><h3 id="maven-assembly-plugin-1"><a href="#maven-assembly-plugin-1" class="headerlink" title="maven-assembly-plugin"></a>maven-assembly-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-assembly-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">id</span>&gt;</span>make-zip<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>single<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">descriptors</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">descriptor</span>&gt;</span>deploy/assembly.xml<span class="tag">&lt;/<span class="name">descriptor</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">descriptors</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="版本管理"><a href="#版本管理" class="headerlink" title="版本管理"></a>版本管理</h2><h3 id="maven-assembly-plugin-2"><a href="#maven-assembly-plugin-2" class="headerlink" title="maven-assembly-plugin"></a>maven-assembly-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-release-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">tagBase</span>&gt;</span>$&#123;scm.tag.url&#125;/$&#123;project.artifactId&#125;<span class="tag">&lt;/<span class="name">tagBase</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">branchBase</span>&gt;</span>$&#123;scm.branch.url&#125;/$&#123;project.artifactId&#125;<span class="tag">&lt;/<span class="name">branchBase</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="依赖管理"><a href="#依赖管理" class="headerlink" title="依赖管理"></a>依赖管理</h2><h3 id="maven-dependency-plugin"><a href="#maven-dependency-plugin" class="headerlink" title="maven-dependency-plugin"></a>maven-dependency-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-dependency-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">id</span>&gt;</span>copy-dependencies<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>copy-dependencies<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="comment">&lt;!-- jar包存放位置 --&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">outputDirectory</span>&gt;</span>$&#123;project.build.directory&#125;/alternateLocation<span class="tag">&lt;/<span class="name">outputDirectory</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overWriteReleases</span>&gt;</span>false<span class="tag">&lt;/<span class="name">overWriteReleases</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overWriteSnapshots</span>&gt;</span>false<span class="tag">&lt;/<span class="name">overWriteSnapshots</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overWriteIfNewer</span>&gt;</span>true<span class="tag">&lt;/<span class="name">overWriteIfNewer</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="资源管理"><a href="#资源管理" class="headerlink" title="资源管理"></a>资源管理</h2><h3 id="maven-resources-plugin"><a href="#maven-resources-plugin" class="headerlink" title="maven-resources-plugin"></a>maven-resources-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-resources-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.6<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">id</span>&gt;</span>copy-resources<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">phase</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>copy-resources<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overwrite</span>&gt;</span>false<span class="tag">&lt;/<span class="name">overwrite</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">outputDirectory</span>&gt;</span>$&#123;project.build.directory&#125;/classes<span class="tag">&lt;/<span class="name">outputDirectory</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">resource</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">directory</span>&gt;</span>$&#123;project.build.directory&#125;/classes/WEB-INF/classes<span class="tag">&lt;/<span class="name">directory</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">filtering</span>&gt;</span>false<span class="tag">&lt;/<span class="name">filtering</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">resource</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<br/>
+
       
       <!-- reward -->
       
@@ -128,6 +149,271 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-读后感/少年的你" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/05/10/%E8%AF%BB%E5%90%8E%E6%84%9F/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/"
+    >少年的你</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/05/10/%E8%AF%BB%E5%90%8E%E6%84%9F/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/" class="article-date">
+  <time datetime="2020-05-10T10:21:09.000Z" itemprop="datePublished">2020-05-10</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="个人评分"><a href="#个人评分" class="headerlink" title="个人评分"></a>个人评分</h2><blockquote>
+<p>4（5分制）</p>
+</blockquote>
+<h2 id="电影梗概"><a href="#电影梗概" class="headerlink" title="电影梗概"></a>电影梗概</h2><p>&emsp;&emsp;陈念（周冬雨饰）是一名备战高考的高三复读生，她家境并不好，所以一心想努力学习考上好大学改变她现在糟糕的生活。故事发生于她的一个好朋友因为校园暴力而跳楼身亡，陈念没忍住把真相告诉了善良的警察。与此同时，她阴差阳错结实了一个叫小北（易烊千玺饰）的混混。小北心地善良，但是生活却残忍地对待着他，出于同情他想要保护要被报复的陈念，来往之下，他们暗生情愫。但是小北终究没有保护住，魏莱还是找到机会欺凌了小贝。而之后魏莱祈求和解时，陈念却失手杀推到间接死了她。小北为了保护她，装作了自己强奸未遂，然后杀人抛尸。而陈念也终于高考结束，取得不错的成绩。原本小北将要顶替陈念，而善良的警察并不愿看到小北死刑，将小北其实已经成年并将被判以死刑的消息告诉了陈年，陈年迷途知返，不愿看到爱人就这样子为了她离去，还是自首了。</p>
+<h2 id="感触"><a href="#感触" class="headerlink" title="感触"></a>感触</h2><p>&emsp;&emsp;这其实是一个很简单的故事，也许出彩的地方是拍摄了校园暴力这一个敏感的话题（起到了正能量的作用？？？），以及作为明星的易烊千玺和周冬雨的不拉胯的表演，尤其是易烊千玺能做到这样子尤为不易。电影里面关于高中和高考的描绘真的尤为到位，那一排排书，那一张张横幅，那一句句口号，我相信每一个高考过的人都会产生共鸣。我觉得不大舒服的地方可能是为了氛围和效果，所以将陈念和小北的生存环境弄的格外糟糕（也行并不过分，只是和我的观感不符）。我之所以没有打很高的分是因为这是一本比较好驾驭和拍摄的电影，虽然氛围和节奏还可以，但是掩盖不了故事其实很简单，并没有眼前一亮的感觉，我相信之后会有很多类似的电影。</p>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%B5%E5%BD%B1/" rel="tag">电影</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-Java基础/Java中的各种转换" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/05/10/Java%E5%9F%BA%E7%A1%80/Java%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E8%BD%AC%E6%8D%A2/"
+    >Java中的各种转换</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/05/10/Java%E5%9F%BA%E7%A1%80/Java%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E8%BD%AC%E6%8D%A2/" class="article-date">
+  <time datetime="2020-05-10T07:22:17.000Z" itemprop="datePublished">2020-05-10</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;<strong>我其实是个记性不怎么好的人，所以希望写篇文章记录下Java中常用的各种转换，以便之后不会每次都去查，而是直接自己抄自己。</strong></p>
+<h2 id="常见类型"><a href="#常见类型" class="headerlink" title="常见类型"></a>常见类型</h2><ul>
+<li>String</li>
+<li>int</li>
+<li>Array（数组）</li>
+<li>List（列表）</li>
+<li>Set（集合）</li>
+<li>Object（对象，比如说Json/Map）</li>
+<li>下文中和Json有关的操作会用到以下依赖：<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 推荐使用fastjson（如果对数据准确性要求比较高建议用Gson） --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;fastjson.version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<br/>
+
+</li>
+</ul>
+<h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><h3 id="String转int"><a href="#String转int" class="headerlink" title="String转int"></a>String转int</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转换失败抛出NumberFormatException</span></span><br><span class="line">Integer.valueOf(String s)</span><br></pre></td></tr></table></figure>
+<h3 id="String转Array"><a href="#String转Array" class="headerlink" title="String转Array"></a>String转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转为字符数组</span></span><br><span class="line"><span class="keyword">char</span>[] chars = <span class="string">"abbc"</span>.toCharArray();</span><br><span class="line"><span class="comment">//根据正则表达式分隔字符串为字符串数组</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line"><span class="comment">//这里需要注意的是如果出现了分隔重复的情况，会产生空字符串(两个分隔中间什么都没有就是空字符串)</span></span><br><span class="line"><span class="comment">//array = ["a","","c"];</span></span><br></pre></td></tr></table></figure>
+<h3 id="String转List"><a href="#String转List" class="headerlink" title="String转List"></a>String转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//如果最后的对象List&lt;String&gt;，实现是String先转为数组再转为列表</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line"><span class="comment">//如果最后的对象List&lt;Object&gt;，则需要用Json的方法以Object类型处理字符串</span></span><br><span class="line">List&lt;Object&gt; list = JSON.parseArray(s, Object<span class="class">.<span class="keyword">class</span>)</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="String转Set"><a href="#String转Set" class="headerlink" title="String转Set"></a>String转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现是先转为数组再转为列表再转为集合（去重）</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
+<h3 id="String转Object"><a href="#String转Object" class="headerlink" title="String转Object"></a>String转Object</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s = <span class="string">"&#123;\"key\":\"value\"&#125;"</span>;</span><br><span class="line">JSONObject json = JSONObject.parseObject(s);</span><br><span class="line">HashMap map = JSON.parseObject(s, HashMap<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"><span class="comment">//User user = JSON.parseObject(s, User.class);</span></span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="int"><a href="#int" class="headerlink" title="int"></a>int</h2><h3 id="int转String"><a href="#int转String" class="headerlink" title="int转String"></a>int转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//valueOf有很多重载，很多对象都可以用这个方法转为String</span></span><br><span class="line">String s = String.valueOf(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="int转对象"><a href="#int转对象" class="headerlink" title="int转对象"></a>int转对象</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Integer对象是java对int的封装，多了很多拓展方法</span></span><br><span class="line">Integer integer = <span class="keyword">new</span> Integer(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="Array（数组）"><a href="#Array（数组）" class="headerlink" title="Array（数组）"></a>Array（数组）</h2><h3 id="Array转String"><a href="#Array转String" class="headerlink" title="Array转String"></a>Array转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//自己用循环去拼接代码有点臃肿，直接用自带的工具类Arrays</span></span><br><span class="line">String s1 = Arrays.toString(<span class="string">"abbc"</span>.split(<span class="string">"b"</span>)); <span class="comment">//s1为[a, , c]</span></span><br><span class="line">String s2 = Arrays.toString(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>&#125;); <span class="comment">//s2为[1, 2]</span></span><br></pre></td></tr></table></figure>
+<h3 id="Array转List"><a href="#Array转List" class="headerlink" title="Array转List"></a>Array转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br></pre></td></tr></table></figure>
+<h3 id="Array转Set"><a href="#Array转Set" class="headerlink" title="Array转Set"></a>Array转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="List（列表）"><a href="#List（列表）" class="headerlink" title="List（列表）"></a>List（列表）</h2><h3 id="List转String"><a href="#List转String" class="headerlink" title="List转String"></a>List转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//如果是List&lt;String&gt;，用String自带的方法（jdk1.8）</span></span><br><span class="line">List list = <span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">list.add(<span class="string">"1"</span>);</span><br><span class="line">list.add(<span class="string">"2"</span>);</span><br><span class="line">String s = String.join(<span class="string">"-"</span>, list);<span class="comment">//s为1-2</span></span><br><span class="line"><span class="comment">//如果是List&lt;Object&gt;，用Json的方式转</span></span><br><span class="line">String s = JSON.toJSONString(list);</span><br></pre></td></tr></table></figure>
+<h3 id="List转Array"><a href="#List转Array" class="headerlink" title="List转Array"></a>List转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//用自带的toArray方法</span></span><br><span class="line">String[] strArray = <span class="keyword">new</span> String[list.size()];</span><br><span class="line">list.toArray(strArray);</span><br></pre></td></tr></table></figure>
+<h3 id="List转Set"><a href="#List转Set" class="headerlink" title="List转Set"></a>List转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//直接构造Set</span></span><br><span class="line">Set set = <span class="keyword">new</span> HashSet(list);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="Set（集合）"><a href="#Set（集合）" class="headerlink" title="Set（集合）"></a>Set（集合）</h2><h3 id="Set转String"><a href="#Set转String" class="headerlink" title="Set转String"></a>Set转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//如果是Set&lt;String&gt;，用String自带的方法（jdk1.8）</span></span><br><span class="line">Set set = <span class="keyword">new</span> HashSet();</span><br><span class="line">set.add(<span class="string">"1"</span>);</span><br><span class="line">set.add(<span class="string">"2"</span>);</span><br><span class="line">tring s = String.join(<span class="string">"-"</span>, set);<span class="comment">//s为1-2</span></span><br><span class="line"><span class="comment">//如果是Set&lt;Object&gt;，用Json的方式转</span></span><br><span class="line">String s = JSON.toJSONString(set);</span><br></pre></td></tr></table></figure>
+<h3 id="Set转Array"><a href="#Set转Array" class="headerlink" title="Set转Array"></a>Set转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//用自带的toArray方法</span></span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet();</span><br><span class="line">String[] strings = set.toArray(<span class="keyword">new</span> String[set.size()]);</span><br></pre></td></tr></table></figure>
+<h3 id="Set转List"><a href="#Set转List" class="headerlink" title="Set转List"></a>Set转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//直接构造List</span></span><br><span class="line">List list = <span class="keyword">new</span> ArrayList(set);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="Object（对象，比如说Json-Map）"><a href="#Object（对象，比如说Json-Map）" class="headerlink" title="Object（对象，比如说Json/Map）"></a>Object（对象，比如说Json/Map）</h2><h3 id="Object转String"><a href="#Object转String" class="headerlink" title="Object转String"></a>Object转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//万物皆可toJSONString</span></span><br><span class="line">String s = JSON.toJSONString(object);</span><br></pre></td></tr></table></figure>
+
+<br/>
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-读后感/饥饿站台" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/05/05/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%A5%A5%E9%A5%BF%E7%AB%99%E5%8F%B0/"
+    >饥饿站台</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/05/05/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%A5%A5%E9%A5%BF%E7%AB%99%E5%8F%B0/" class="article-date">
+  <time datetime="2020-05-05T10:21:09.000Z" itemprop="datePublished">2020-05-05</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="个人评分"><a href="#个人评分" class="headerlink" title="个人评分"></a>个人评分</h2><blockquote>
+<p>4.7（5分制）</p>
+</blockquote>
+<h2 id="电影梗概"><a href="#电影梗概" class="headerlink" title="电影梗概"></a>电影梗概</h2><p>&emsp;&emsp;男主为了证书前往了一个称之为<strong>垂直自我管理中心</strong>的地方，去之前他并不知道里面是什么情况。当他醒来后，他发现他在一个有很多很多层的建筑里面，建筑的中心是挖空的，以供一部电梯上下，他从中间望下去结果发现看不到底。每一层都会有两个人，他第一次所处的是<strong>48层</strong>，他的室友是一个老人。老人告诉他，这边的大多数人都是囚犯，48层是一个很不错的楼层。随后不久，<strong>一个装满了吃剩下的食物残渣的电梯</strong>悬停到了他们楼层，老人狼吞虎咽，而男主则是嫌弃地不敢下嘴。老人告诉他，那是他们仅有的食物来源，食物会从第一层下来，一层一层被吃掉，到下面的时候就什么都没有了，48层还能吃到残留的一些食物。每一个月，这边都会随机互换楼层。运气好就在上面，运气不好就在下面。<br>&emsp;&emsp;过了几天，男主也扛不住了，和老人一起食用食物残渣。有一天，他突然发现今天下来的食物里面居然有一个<strong>亚洲女人</strong>。老人告诉他，那个女人是在找她的孩子。到了下一层的时候，下一层的人想留下女人几天，女人尖叫，男主很是愤怒，出言警告，甚至还想跳下去维护正义，结果不料那两个人被女人反杀，男主就此作罢，看着女人下去了。<br>&emsp;&emsp;每个人进来的时候都可以带一样东西，男主选择带的是书（《唐吉坷德》），而老人带的则是一把刀。时间过得很快，一个月过去了，到了换楼层的时候。结果到了第二天，男主发现自己<strong>被绑在了自己的床上</strong>，老人告诉他，他们很不幸，被换到了171层，171是没有食物的，为了活下去，他必须在一周多之后<strong>慢慢吃男主</strong>，以熬过这一个月。果然到了时间，被绑住的男主正要被老人割肉之际，之前的女人刚刚好随着电梯出现在了这个楼层，不知是不是对男主善良的同情，女人救了男主，而老人被愤怒的男主反杀，<strong>男主也依靠着老人的尸体艰难度过了这一个月</strong>。<br>&emsp;&emsp;男主的下一个楼层是33层，第二个室友恰好是他进来时给他做咨询的一个<strong>女管理者</strong>，她由于绝症的原因，在生命的晚期决定抛弃一切亲自下来体验下生活。她是一个很<strong>理想</strong>的人，她带了一条狗，视如己出，她吃一天，狗吃一天。她还给下面的人指定进食标准，按照她的设想，监狱一共有200层，如果每个人都只吃属于的部分，那么食物是够的。但是下面的人并不听她的，依旧胡吃海喝。有一天，女人出现了，女管理者告诉男主，女人之前是想成名进来的，她其实并没有孩子，孩子是不被允许进来的，由于偷吃食物，女人把女管理者的狗杀了，失去了精神支柱之后，女管理者浑浑噩噩。<br>&emsp;&emsp;又到了下一个月，当男主醒来，他发现女管理者已经<strong>自杀</strong>了，而他又身处<strong>202层</strong>，超过了女管理者的预计。原先就失去了生活信念的女管理者已经绝望地自杀离开了人世，把自己的身体留给男主。<br>&emsp;&emsp;靠着女管理者的尸体又艰难度过了一个月男主发现这次他来到了<strong>第6层</strong>，而他的新室友是一个乐天的<strong>黑人壮汉</strong>。黑人壮汉来的时候选择带的东西是一根绳子，他的想法是到了顶层之后，靠着绳子爬上去，爬出这个鬼地方。当黑人壮汉发现自己是第6层的时候狂喜，那是几乎他距离实现自己的想法最好的机会了。他祈求第5层的人可以帮他一把，第5层假意帮他，却在他快到第5层的时候在他脸上大便，害得他差点掉下去死去，还弄丢了代表希望的绳子。失去绳子的壮汉愤愤不平。<br>&emsp;&emsp;这时，对这一切已经失望透顶的男主邀请壮汉帮助他重整这里的纪律，他们随着电梯一起下去，由他们两个严格安排食物，让最下面的人也能吃到食物。壮汉决定帮助男主，和他一起冒险一搏。路上，他们遇到了一个<strong>黑人智者</strong>，智者说他们必须把一盘<strong>布丁</strong>原封不动地送回<strong>0层</strong>，让这边的管理者知道他们已经完成了自发性的团结，好终止这一切。在下探的过程中，他们发现如果这一层没人就不会停下，所以楼层超过了男主根据时间预计的250层。终于在一个楼层，男主和壮汉和另外两个强壮的人发生了激烈的搏斗，若非又是女人及时出现，两个都要被杀。最后男主和壮汉重伤到了下一层去，而女人则是永远留在了那一层。<br>&emsp;&emsp;在继续的下潜中，男主似乎是看到了女人之前的孩子，决定把布丁给孩子吃，然后代表了<strong>希望的孩子</strong>送上去。壮汉因为失血过多去世了，而男主自己永远留在了最后的333层。</p>
+<h2 id="感触"><a href="#感触" class="headerlink" title="感触"></a>感触</h2><p>&emsp;&emsp;简单用几句话来总结下看完的感悟：人<strong>真的是一个既丑陋又美好的矛盾物种。在某些时候，我们可以被自称为人的美好特质会荡然无存，仅存潜藏在基因里面的活下去的兽性。而有时候，人可以被称之为人的美好特质又是那么shining。也行乌托邦真的只是存在于人想象中的地方，我们永远都摆脱不了阶级，人永远要被分成上等人、中等人和下等人，然后互相倾轧。也许世界上真的存在统治者，他们永远都是统治者，他们看不到芸芸众生，只管自己的统治稳固和享受自己精致奢靡的生活。最恐怖的是，这种情况正在越来越趋向于可能。随着科技的发展，壁垒的加大，一旦真的有独裁者或者统治者的出现，他们有科技，有资源，有生产力，有武力，他们将拥有一切，甚至更长或者永久的生命！不同于古时的振臂一呼，王侯将相宁有种乎就可以推翻一个王朝，那时我们将毫无毫无还手之力。真的到了那个时候我们将要面对的，会是北京折叠吗，还是时间规划局？我仅能想到的我们唯一的胜算是类似《严厉的月亮》里面的超级电脑叛变。</strong><br>&emsp;&emsp;最后的最后，畅想下我想象中可以达到的最好的世界吧，<strong>也许那时候每个人都会有相对充足的生产资料，能达到满足生活条件；教育更加普及，高等教育覆盖率很高；向上的通道并没有关闭，人人都可以通过自己的拼搏和努力实现他的理想；没有战争，国家的概念也相对淡化，每一个都把自己作为人类的一部分。</strong>对于第一点和第二点，我有信心随着科技的发展总有一天会实现的，但是第三点和第四点是真的没底，阶级的固化真的可以消除吗？政治这种东西也许会永远伴随着人，但是国家会不会我其实也没底。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&emsp;&emsp;其实在写这篇文章的时候，电影已经看了几天，所以有一些细节可能不是很清楚了，只能回忆起印象中大概的剧情。有一说一，其实我很喜欢这本电影，多好的故事啊，不管是技法还是质感都很不错（为什么中国就没这种类型这种题材的电影呢？手动狗头），所以我给了一个我认为较高的分数。虽然这本电影我感觉有明显硬伤，最主要是就是设定上，语焉不详，也许原意只是想有意地表现一个微缩世界的投影，但是这样子电影里面真实世界交互的部分就显得有点不合逻辑，谁建造了这里？目的是什么（难道是一个大型试验）？上面的人是不是其实知道下面是什么样子的（因为明明有人给他们换楼层的）？不过也行这些都不重要的，重要是是它所对应的意象：<strong>高高在上的统治者啊，你可曾看到无数人在底层挣扎，沉沦，绝望。虽然他们的确可能大多愚昧、自私、丑陋，充满了兽性，但是也依旧有人正义、善良、光明，愿意为了美好的未来奋斗，我们真的不能做什么去改变这一切吗？</strong></p>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%B5%E5%BD%B1/" rel="tag">电影</a></li></ul>
 
 
     </footer>
@@ -230,103 +516,6 @@
 
 <h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>&emsp;&emsp;commons-lang3包中， 除了StringUtils这个常用类之后，还有ArrayUtils（数组工具类），CharUtils（字符串工具类）,NumberUtils(数字工具类)等，大家有兴趣也可以去了解下！</p>
 
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java基础/Java中的各种转换" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/04/24/Java%E5%9F%BA%E7%A1%80/Java%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E8%BD%AC%E6%8D%A2/"
-    >Java中的各种转换</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/04/24/Java%E5%9F%BA%E7%A1%80/Java%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E8%BD%AC%E6%8D%A2/" class="article-date">
-  <time datetime="2020-04-24T11:48:17.000Z" itemprop="datePublished">2020-04-24</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;<strong>我其实是个记性不怎么好的人，所以希望写篇文章记录下Java中常用的各种转换，以便之后不会每次都去查，而是直接自己抄自己。</strong></p>
-<h2 id="常见类型"><a href="#常见类型" class="headerlink" title="常见类型"></a>常见类型</h2><ul>
-<li>String</li>
-<li>int</li>
-<li>Array（数组）</li>
-<li>List（列表）</li>
-<li>Set（集合）</li>
-<li>Object（对象，比如说Json/Map）</li>
-</ul>
-<h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><h3 id="String转int"><a href="#String转int" class="headerlink" title="String转int"></a>String转int</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转换失败抛出NumberFormatException</span></span><br><span class="line">Integer.valueOf(String s)</span><br></pre></td></tr></table></figure>
-<h3 id="String转Array"><a href="#String转Array" class="headerlink" title="String转Array"></a>String转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转为字符数组</span></span><br><span class="line"><span class="keyword">char</span>[] chars = <span class="string">"abbc"</span>.toCharArray();</span><br><span class="line"><span class="comment">//根据正则表达式分隔字符串为字符串数组</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line"><span class="comment">//这里需要注意的是如果出现了分隔重复的情况，会产生空字符串(两个分隔中间什么都没有就是空字符串)</span></span><br><span class="line"><span class="comment">//array = ["a","","c"];</span></span><br></pre></td></tr></table></figure>
-<h3 id="String转List"><a href="#String转List" class="headerlink" title="String转List"></a>String转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现是先转为数组再转为列表</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br></pre></td></tr></table></figure>
-<h3 id="String转Set"><a href="#String转Set" class="headerlink" title="String转Set"></a>String转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现是先转为数组再转为列表再转为集合（去重）</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
-<h3 id="String转Object"><a href="#String转Object" class="headerlink" title="String转Object"></a>String转Object</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 推荐使用fastjson（如果对数据准确性要求比较高建议用Gson） --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;fastjson.version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s = <span class="string">"&#123;\"key\":\"value\"&#125;"</span>;</span><br><span class="line">JSONObject json = JSONObject.parseObject(s);</span><br><span class="line">HashMap map = JSON.parseObject(s, HashMap<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"><span class="comment">//User user = JSON.parseObject(s, User.class);</span></span><br></pre></td></tr></table></figure>
-<br/>
-
-<h2 id="int"><a href="#int" class="headerlink" title="int"></a>int</h2><h3 id="int转String"><a href="#int转String" class="headerlink" title="int转String"></a>int转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//valueOf有很多重载，很多对象都可以用这个方法转为String</span></span><br><span class="line">String s = String.valueOf(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
-<h3 id="int转对象"><a href="#int转对象" class="headerlink" title="int转对象"></a>int转对象</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Integer对象是java对int的封装，多了很多拓展方法</span></span><br><span class="line">Integer integer = <span class="keyword">new</span> Integer(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
-<br/>
-
-<h2 id="Array（数组）"><a href="#Array（数组）" class="headerlink" title="Array（数组）"></a>Array（数组）</h2><h3 id="Array转String"><a href="#Array转String" class="headerlink" title="Array转String"></a>Array转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//自己用循环去拼接代码有点臃肿，直接用自带的工具类Arrays</span></span><br><span class="line">String s1 = Arrays.toString(<span class="string">"abbc"</span>.split(<span class="string">"b"</span>)); <span class="comment">//s1为[a, , c]</span></span><br><span class="line">String s2 = Arrays.toString(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>&#125;); <span class="comment">//s2为[1, 2]</span></span><br></pre></td></tr></table></figure>
-<h3 id="Array转List"><a href="#Array转List" class="headerlink" title="Array转List"></a>Array转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br></pre></td></tr></table></figure>
-<h3 id="Array转Set"><a href="#Array转Set" class="headerlink" title="Array转Set"></a>Array转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
-<br/>
-
-<h2 id="List（列表）"><a href="#List（列表）" class="headerlink" title="List（列表）"></a>List（列表）</h2><h3 id="List转String"><a href="#List转String" class="headerlink" title="List转String"></a>List转String</h3><h3 id="List转Array"><a href="#List转Array" class="headerlink" title="List转Array"></a>List转Array</h3><h3 id="List转Set"><a href="#List转Set" class="headerlink" title="List转Set"></a>List转Set</h3><h2 id="Set（集合）"><a href="#Set（集合）" class="headerlink" title="Set（集合）"></a>Set（集合）</h2><h3 id="Set转String"><a href="#Set转String" class="headerlink" title="Set转String"></a>Set转String</h3><h3 id="Set转Array"><a href="#Set转Array" class="headerlink" title="Set转Array"></a>Set转Array</h3><h3 id="Set转List"><a href="#Set转List" class="headerlink" title="Set转List"></a>Set转List</h3><h2 id="Object（对象，比如说Json-Map）"><a href="#Object（对象，比如说Json-Map）" class="headerlink" title="Object（对象，比如说Json/Map）"></a>Object（对象，比如说Json/Map）</h2><h3 id="Object转String"><a href="#Object转String" class="headerlink" title="Object转String"></a>Object转String</h3><h3 id="Object转List"><a href="#Object转List" class="headerlink" title="Object转List"></a>Object转List</h3>
       
       <!-- reward -->
       

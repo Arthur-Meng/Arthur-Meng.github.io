@@ -9,7 +9,7 @@
     
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    前后端分离对接CAS的几种思路 |  Arthur&#39;s Blog
+    Java中的各种转换 |  Arthur&#39;s Blog
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -41,7 +41,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-CAS/前后端分离对接CAS的几种思路" class="article article-type-post" itemscope
+  <article id="post-Java基础/Java中的各种转换" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -49,7 +49,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  前后端分离对接CAS的几种思路
+  Java中的各种转换
 </h1>
  
 
@@ -58,8 +58,8 @@
 
     
     <div class="article-meta">
-      <a href="/2020/04/22/CAS/%E5%89%8D%E5%90%8E%E7%AB%AF%E5%88%86%E7%A6%BB%E5%AF%B9%E6%8E%A5CAS%E7%9A%84%E5%87%A0%E7%A7%8D%E6%80%9D%E8%B7%AF/" class="article-date">
-  <time datetime="2020-04-22T02:25:48.000Z" itemprop="datePublished">2020-04-22</time>
+      <a href="/2020/05/10/Java%E5%9F%BA%E7%A1%80/Java%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E8%BD%AC%E6%8D%A2/" class="article-date">
+  <time datetime="2020-05-10T07:22:17.000Z" itemprop="datePublished">2020-05-10</time>
 </a>
       
   <div class="article-category">
@@ -73,7 +73,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.5k</span>
+            <span class="post-count">720</span>
         </span>
     </span>
 
@@ -82,7 +82,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">5 min</span>
+            <span class="post-count">3 min</span>
         </span>
     </span>
 </div>
@@ -107,42 +107,48 @@
       
 
       
-      <p>&emsp;&emsp;前文中我们已经简单说了下项目怎么集成CAS客户端（如果没看过最好看下，不然可能下面的会看不懂），但是那些都是针对前后端不分离的系统的。而其实现在的很多项目，都是前后端分离的（这里的分离指的是部署分离），尤其是微服务架构的，很多甚至后台是网关。前端本身就已经像是一个服务了，它只是需要向后台请求数据。<strong>前后端分离时，我们的登录可能是这样子的：</strong></p>
-<ul>
-<li>前端发现没登录，跳转到登录页</li>
-<li>用户在我们的登录页进行登录</li>
-<li>登录完成，生成会话信息（比如使用cookie或者session）</li>
-<li>正常访问</li>
-</ul>
-<p>&emsp;&emsp;那我们来想下如果我们按照之前的CAS登录思路来走应该要怎么样。我们首先来确认一点，前后端分离时，前端和后台谁来作为CAS客户端和CAS服务端交互？很显然，肯定是后端，前端显然不能胜任这一任务。<strong>那我们预想的登录可能是这样子的：</strong></p>
-<ul>
-<li>前端发现没登录，这时候它该怎么办？它不能跳转到原先的登录页，而是去CAS的登录页</li>
-<li>到CAS的登录页进行登录的操作</li>
-<li>登录完成携带ST访问后台</li>
-<li>后台校验完ST之后再回到前端</li>
-<li>正常访问</li>
-</ul>
-<p>&emsp;&emsp;<strong>我们可以发现，整个流程和之前的对比最大的不同就是第一步。前端不能用自己原先那套登录逻辑了，而是发现没登录的时候跳转到CAS对应的登录页。</strong>那么我们应该怎么实现这一步？除此之外，我们需要考虑另外一个问题：<strong>如果另外的一个客户端登出，理论上我们的系统也要登出。那这时候我们前端请求的数据的时候，后台应该做出变动通知前端当前登录失效，需要重新登录。</strong>提供以下几个思路：</p>
-<h3 id="思路1"><a href="#思路1" class="headerlink" title="思路1"></a>思路1</h3><p>&emsp;&emsp;前端发一个请求给后台，后台给出302，302的地址是CAS登录的地址。如果支持跨域的话，前端手动跳转到302的地址就可以了。但是因为CAS往往不是和前端部署在一起的，如果不做反向代理和CAS服务端不支持的话，基本上会发生跨域（不知道跨域的请自行百度）。如果为了避免跨域，我们可以把url就变成那个请求，这样子请求就不是AJAX请求，哪怕302也不算跨域。登出的时候也是这样子，前端发送登出请求，后台给出302，302的地址是CAS登出的地址。</p>
-<h3 id="思路2"><a href="#思路2" class="headerlink" title="思路2"></a>思路2</h3><p>&emsp;&emsp;前端发一个请求给后台，后台给出200，响应里面是CAS登录的地址，然后前端跳转到CAS登录的地址。登出的时候也是这样子。这个思路和上面不一样就是把302变成了200，好处是前端可控，可以做更多自定义的操作。</p>
-<h3 id="思路3"><a href="#思路3" class="headerlink" title="思路3"></a>思路3</h3><p>&emsp;&emsp;前端发现没登录，直接跳转到对应的CAS的登录页。登出的时候一样，直接把url变成对应的CAS登出请求。这种方法简单暴力，不需要和后台有交互，但是这样子的话，前端就需要配置CAS相关的信息（同时后台也是要配置的），就会和CAS产生耦合。</p>
-<h3 id="思路4"><a href="#思路4" class="headerlink" title="思路4"></a>思路4</h3><p>&emsp;&emsp;我们可以增加一个适配器，这个适配器代理CAS服务端，适配器去支持跨域，然后整个流程和思路1就一样了，虽然有点麻烦，但是也是可行的（我就用过这种思路），用的是freemarker，稍微分享下代码：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;**</span><br><span class="line"> * 登录转换（代理iar访问cas）</span><br><span class="line"> *&#x2F;</span><br><span class="line">@RequestMapping(value &#x3D; &quot;&#x2F;cas&#x2F;login&quot;, method &#x3D; RequestMethod.GET)</span><br><span class="line">@ResponseBody</span><br><span class="line">@CrossOrigin</span><br><span class="line">public ModelAndView beforeLogin(@RequestParam String service) &#123;</span><br><span class="line">    String casUrl &#x3D; casHost + casLoginUrl + &quot;?service&#x3D;&quot; + URLEncoder.encode(service);</span><br><span class="line">    ModelAndView modelAndView &#x3D; new ModelAndView(&quot;&#x2F;cas&quot;);</span><br><span class="line">    modelAndView.addObject(&quot;casUrl&quot;, casUrl);</span><br><span class="line">    return modelAndView;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span>&gt;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.location.href = <span class="string">"$&#123;casUrl&#125;"</span></span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+      <p>&emsp;&emsp;<strong>我其实是个记性不怎么好的人，所以希望写篇文章记录下Java中常用的各种转换，以便之后不会每次都去查，而是直接自己抄自己。</strong></p>
+<h2 id="常见类型"><a href="#常见类型" class="headerlink" title="常见类型"></a>常见类型</h2><ul>
+<li>String</li>
+<li>int</li>
+<li>Array（数组）</li>
+<li>List（列表）</li>
+<li>Set（集合）</li>
+<li>Object（对象，比如说Json/Map）</li>
+<li>下文中和Json有关的操作会用到以下依赖：<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 推荐使用fastjson（如果对数据准确性要求比较高建议用Gson） --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;fastjson.version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <br/>
-
-<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>&emsp;&emsp;所以我们仔细想下，会发现如果按照上面四个思路只有思路2和思路4是相对可行的。</p>
-<ul>
-<li>按照思路1，因为我们之后发的请求的肯定是ajax的，所以如果跨域，302就gg了。当然，如果你的CAS服务端支持跨域，那么思路1也是可行的，毕竟如果不发生跨域的话，前端就可以读取到302，并且手动跳转到302的地址。</li>
-<li>按照思路3，遇到另外的一个客户端登出的这种情况都不知道怎么办。</li>
-<li>所以只能按照思路2，在前端response的拦截器里面增加对应的处理，对数据增加判断，如果遇到后台说要跳转的信息，前端就跳转到响应里面的地址。</li>
-<li>或者思路4的方式，强行把跨域的CAS代理成不跨域的。<br/>
 
 </li>
 </ul>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>&emsp;&emsp;我们在前后端分离对接CAS时，会遇到一些平时没遇到的问题，这时候我们选用一个合适的方法见招拆招，去保证之前的CAS的流程可以顺利完成就可以了。只是这个合适的方法因项目而异，<strong>如果是CAS服务端支持跨域（一般很少），思路1无疑是最简单直接的。思路2可能是最容易让人接受的，而且也可以胜任绝大多数情况。思路3缺陷太大，无法兼容另一个客户端登出的情况。思路4则是比较麻烦，但是前端改动较少，只需要处理302的情况就可以了。</strong></p>
+<h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><h3 id="String转int"><a href="#String转int" class="headerlink" title="String转int"></a>String转int</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转换失败抛出NumberFormatException</span></span><br><span class="line">Integer.valueOf(String s)</span><br></pre></td></tr></table></figure>
+<h3 id="String转Array"><a href="#String转Array" class="headerlink" title="String转Array"></a>String转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//转为字符数组</span></span><br><span class="line"><span class="keyword">char</span>[] chars = <span class="string">"abbc"</span>.toCharArray();</span><br><span class="line"><span class="comment">//根据正则表达式分隔字符串为字符串数组</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line"><span class="comment">//这里需要注意的是如果出现了分隔重复的情况，会产生空字符串(两个分隔中间什么都没有就是空字符串)</span></span><br><span class="line"><span class="comment">//array = ["a","","c"];</span></span><br></pre></td></tr></table></figure>
+<h3 id="String转List"><a href="#String转List" class="headerlink" title="String转List"></a>String转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//如果最后的对象List&lt;String&gt;，实现是String先转为数组再转为列表</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line"><span class="comment">//如果最后的对象List&lt;Object&gt;，则需要用Json的方法以Object类型处理字符串</span></span><br><span class="line">List&lt;Object&gt; list = JSON.parseArray(s, Object<span class="class">.<span class="keyword">class</span>)</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="String转Set"><a href="#String转Set" class="headerlink" title="String转Set"></a>String转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现是先转为数组再转为列表再转为集合（去重）</span></span><br><span class="line">String[] array = <span class="string">"abbc"</span>.split(<span class="string">"b"</span>);</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
+<h3 id="String转Object"><a href="#String转Object" class="headerlink" title="String转Object"></a>String转Object</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String s = <span class="string">"&#123;\"key\":\"value\"&#125;"</span>;</span><br><span class="line">JSONObject json = JSONObject.parseObject(s);</span><br><span class="line">HashMap map = JSON.parseObject(s, HashMap<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"><span class="comment">//User user = JSON.parseObject(s, User.class);</span></span><br></pre></td></tr></table></figure>
+<br/>
 
+<h2 id="int"><a href="#int" class="headerlink" title="int"></a>int</h2><h3 id="int转String"><a href="#int转String" class="headerlink" title="int转String"></a>int转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//valueOf有很多重载，很多对象都可以用这个方法转为String</span></span><br><span class="line">String s = String.valueOf(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="int转对象"><a href="#int转对象" class="headerlink" title="int转对象"></a>int转对象</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Integer对象是java对int的封装，多了很多拓展方法</span></span><br><span class="line">Integer integer = <span class="keyword">new</span> Integer(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="Array（数组）"><a href="#Array（数组）" class="headerlink" title="Array（数组）"></a>Array（数组）</h2><h3 id="Array转String"><a href="#Array转String" class="headerlink" title="Array转String"></a>Array转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//自己用循环去拼接代码有点臃肿，直接用自带的工具类Arrays</span></span><br><span class="line">String s1 = Arrays.toString(<span class="string">"abbc"</span>.split(<span class="string">"b"</span>)); <span class="comment">//s1为[a, , c]</span></span><br><span class="line">String s2 = Arrays.toString(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>&#125;); <span class="comment">//s2为[1, 2]</span></span><br></pre></td></tr></table></figure>
+<h3 id="Array转List"><a href="#Array转List" class="headerlink" title="Array转List"></a>Array转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br></pre></td></tr></table></figure>
+<h3 id="Array转Set"><a href="#Array转Set" class="headerlink" title="Array转Set"></a>Array转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(array);</span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;(list);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="List（列表）"><a href="#List（列表）" class="headerlink" title="List（列表）"></a>List（列表）</h2><h3 id="List转String"><a href="#List转String" class="headerlink" title="List转String"></a>List转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//如果是List&lt;String&gt;，用String自带的方法（jdk1.8）</span></span><br><span class="line">List list = <span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">list.add(<span class="string">"1"</span>);</span><br><span class="line">list.add(<span class="string">"2"</span>);</span><br><span class="line">String s = String.join(<span class="string">"-"</span>, list);<span class="comment">//s为1-2</span></span><br><span class="line"><span class="comment">//如果是List&lt;Object&gt;，用Json的方式转</span></span><br><span class="line">String s = JSON.toJSONString(list);</span><br></pre></td></tr></table></figure>
+<h3 id="List转Array"><a href="#List转Array" class="headerlink" title="List转Array"></a>List转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//用自带的toArray方法</span></span><br><span class="line">String[] strArray = <span class="keyword">new</span> String[list.size()];</span><br><span class="line">list.toArray(strArray);</span><br></pre></td></tr></table></figure>
+<h3 id="List转Set"><a href="#List转Set" class="headerlink" title="List转Set"></a>List转Set</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//直接构造Set</span></span><br><span class="line">Set set = <span class="keyword">new</span> HashSet(list);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="Set（集合）"><a href="#Set（集合）" class="headerlink" title="Set（集合）"></a>Set（集合）</h2><h3 id="Set转String"><a href="#Set转String" class="headerlink" title="Set转String"></a>Set转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//如果是Set&lt;String&gt;，用String自带的方法（jdk1.8）</span></span><br><span class="line">Set set = <span class="keyword">new</span> HashSet();</span><br><span class="line">set.add(<span class="string">"1"</span>);</span><br><span class="line">set.add(<span class="string">"2"</span>);</span><br><span class="line">tring s = String.join(<span class="string">"-"</span>, set);<span class="comment">//s为1-2</span></span><br><span class="line"><span class="comment">//如果是Set&lt;Object&gt;，用Json的方式转</span></span><br><span class="line">String s = JSON.toJSONString(set);</span><br></pre></td></tr></table></figure>
+<h3 id="Set转Array"><a href="#Set转Array" class="headerlink" title="Set转Array"></a>Set转Array</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//用自带的toArray方法</span></span><br><span class="line">Set&lt;String&gt; set = <span class="keyword">new</span> HashSet();</span><br><span class="line">String[] strings = set.toArray(<span class="keyword">new</span> String[set.size()]);</span><br></pre></td></tr></table></figure>
+<h3 id="Set转List"><a href="#Set转List" class="headerlink" title="Set转List"></a>Set转List</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//直接构造List</span></span><br><span class="line">List list = <span class="keyword">new</span> ArrayList(set);</span><br></pre></td></tr></table></figure>
+<br/>
+
+<h2 id="Object（对象，比如说Json-Map）"><a href="#Object（对象，比如说Json-Map）" class="headerlink" title="Object（对象，比如说Json/Map）"></a>Object（对象，比如说Json/Map）</h2><h3 id="Object转String"><a href="#Object转String" class="headerlink" title="Object转String"></a>Object转String</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//万物皆可toJSONString</span></span><br><span class="line">String s = JSON.toJSONString(object);</span><br></pre></td></tr></table></figure>
+
+<br/>
       
       <!-- reward -->
       
@@ -196,14 +202,14 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/04/22/CAS/%E5%89%8D%E5%90%8E%E7%AB%AF%E5%88%86%E7%A6%BB%E5%AF%B9%E6%8E%A5CAS%E7%9A%84%E5%87%A0%E7%A7%8D%E6%80%9D%E8%B7%AF/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/05/10/Java%E5%9F%BA%E7%A1%80/Java%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E8%BD%AC%E6%8D%A2/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CAS/" rel="tag">CAS</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
 
 
     </footer>
@@ -214,19 +220,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/04/29/Java%E5%9F%BA%E7%A1%80/StringUtils%E7%9A%84%E4%BD%BF%E7%94%A8/" class="article-nav-link">
+      <a href="/2020/05/10/%E8%AF%BB%E5%90%8E%E6%84%9F/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            StringUtils的使用
+            少年的你
           
         </div>
       </a>
     
     
-      <a href="/2020/04/20/CAS/%E9%A1%B9%E7%9B%AE%E9%9B%86%E6%88%90CAS%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%B5%85%E6%9E%90/" class="article-nav-link">
+      <a href="/2020/05/05/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%A5%A5%E9%A5%BF%E7%AB%99%E5%8F%B0/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">项目集成CAS客户端浅析</div>
+        <div class="article-nav-title">饥饿站台</div>
       </a>
     
   </nav>
