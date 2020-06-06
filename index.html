@@ -116,7 +116,34 @@
 
       
       <p>&emsp;&emsp;最近由于工作的变动，会涉及到从零开发一个新项目，所以想简单分析下自己在构建新项目中的一些想法。</p>
-<h2 id="关于选型"><a href="#关于选型" class="headerlink" title="关于选型"></a>关于选型</h2><br/>
+<h2 id="关于框架"><a href="#关于框架" class="headerlink" title="关于框架"></a>关于框架</h2><p>&emsp;&emsp;没什么好说的，如果没什么特殊情况的话，基本上是基于SpringBoot构建。推荐使用SpringBoot初始化构建（如官网构建或者IDEA构建），直接选择需要集成到项目里面的框架和依赖。</p>
+<h2 id="关于项目构建"><a href="#关于项目构建" class="headerlink" title="关于项目构建"></a>关于项目构建</h2><h2 id="关于分层"><a href="#关于分层" class="headerlink" title="关于分层"></a>关于分层</h2><blockquote>
+<p>接入层（Controller、Action或者微服务里面的接口层），只负责转发和记录请求</p>
+<blockquote>
+<p>服务层（Service），负责具体的逻辑实现</p>
+<blockquote>
+<p>持久化层（Dao，Mapper等），负责数据的持久化</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>&emsp;&emsp;除了最上面的三层之后，还可能会抽出以下几个类和几层</p>
+<ul>
+<li>组件层（提供通用的组件服务，用于服务层调用）</li>
+<li>缓存层（提供常用数据的缓存，用于服务层调用）</li>
+<li>消息中间件层（提供消息的处理和推送，处理时调用服务层，被服务层调用推送消息）</li>
+</ul>
+<h2 id="关于ORM选型"><a href="#关于ORM选型" class="headerlink" title="关于ORM选型"></a>关于ORM选型</h2><h3 id="逆向工程"><a href="#逆向工程" class="headerlink" title="逆向工程"></a>逆向工程</h3><h3 id="连接池"><a href="#连接池" class="headerlink" title="连接池"></a>连接池</h3><h3 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h3><h3 id="拦截器"><a href="#拦截器" class="headerlink" title="拦截器"></a>拦截器</h3><h2 id="关于缓存"><a href="#关于缓存" class="headerlink" title="关于缓存"></a>关于缓存</h2><h2 id="关于消息中间件"><a href="#关于消息中间件" class="headerlink" title="关于消息中间件"></a>关于消息中间件</h2><h2 id="关于分布式事务"><a href="#关于分布式事务" class="headerlink" title="关于分布式事务"></a>关于分布式事务</h2><h2 id="关于异常处理"><a href="#关于异常处理" class="headerlink" title="关于异常处理"></a>关于异常处理</h2><h2 id="关于国际化"><a href="#关于国际化" class="headerlink" title="关于国际化"></a>关于国际化</h2><h2 id="关于日志"><a href="#关于日志" class="headerlink" title="关于日志"></a>关于日志</h2><ul>
+<li>使用Java日志门面（如Slf4j），方便后期切换日志框架（如log4j2和logback）</li>
+<li>合理规划级别，除了正常的info和error级别外，可以适量下debug级别的日志，方便后期遇到问题排查</li>
+<li>根据功能和类型的不同，可以输出到不同的日志文件</li>
+<li>如果对实时性没有要求，尽量使用异步日志模式而不是同步日志模式</li>
+<li>历史的日志文件建议根据年月日压缩归档</li>
+</ul>
+<h2 id="关于接口文档"><a href="#关于接口文档" class="headerlink" title="关于接口文档"></a>关于接口文档</h2><ul>
+<li>如果的mvc的项目，强烈建议使用Swagger2，不仅方便形成接口文档，还可以直接调用，利于测试和开发</li>
+<li>使用apiDoc生成形成接口文档，样式简洁，美观大方（至少比javadoc好看很多）</li>
+</ul>
+<br/>
 
       
       <!-- reward -->
