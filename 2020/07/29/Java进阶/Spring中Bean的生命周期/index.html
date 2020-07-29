@@ -9,7 +9,7 @@
     
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    BlockingQueue初体验 |  Arthur&#39;s Blog
+    Spring中Bean的生命周期 |  Arthur&#39;s Blog
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -41,7 +41,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-Java进阶/BlockingQueue初体验" class="article article-type-post" itemscope
+  <article id="post-Java进阶/Spring中Bean的生命周期" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -49,7 +49,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  BlockingQueue初体验
+  Spring中Bean的生命周期
 </h1>
  
 
@@ -58,8 +58,8 @@
 
     
     <div class="article-meta">
-      <a href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/BlockingQueue%E5%88%9D%E4%BD%93%E9%AA%8C/" class="article-date">
-  <time datetime="2020-07-27T13:16:43.000Z" itemprop="datePublished">2020-07-27</time>
+      <a href="/2020/07/29/Java%E8%BF%9B%E9%98%B6/Spring%E4%B8%ADBean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="article-date">
+  <time datetime="2020-07-29T06:16:43.000Z" itemprop="datePublished">2020-07-29</time>
 </a>
       
   <div class="article-category">
@@ -73,7 +73,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">895</span>
+            <span class="post-count">2</span>
         </span>
     </span>
 
@@ -82,7 +82,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">3 min</span>
+            <span class="post-count">1 min</span>
         </span>
     </span>
 </div>
@@ -93,8 +93,6 @@
 
     
     
-    <div class="tocbot"></div>
-
 
 
 
@@ -107,27 +105,7 @@
       
 
       
-      <h2 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h2><p>&emsp;&emsp;众所周知，最常用的ArrayList是线程不安全的。但是我们少不了面对多线程编程的情况，我们可以使用Collections.synchronizedList和Vector，但是效率比较低（由于），也可以使用CopyOnWriteArrayList，但是它适用于读远大于写的场景。这时候BlockingQueue是一个值得一试的尝试（ConcurrentLinkedQueue之类的也不错，吞吐量更高）。</p>
-<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>&emsp;&emsp;BlockingQueue即阻塞队列，它是基于ReentrantLock，常用的还是用于实现生产者与消费者模式。在Java中，BlockingQueue是一个接口，它的实现类有ArrayBlockingQueue、DelayQueue、 LinkedBlockingDeque、LinkedBlockingQueue、PriorityBlockingQueue、SynchronousQueue等，它们的区别主要体现在存储结构上或对元素操作上的不同，但是对于take与put操作的原理，却是类似的。平时最常用的可能是ArrayBlockingQueue和LinkedBlockingQueue，前者基于数组实现，后者基于链表实现。本文主要以ArrayBlockingQueue为演示。</p>
-<h2 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h2><h3 id="放入数据"><a href="#放入数据" class="headerlink" title="放入数据"></a>放入数据</h3><ul>
-<li><strong>offer(anObject)</strong>：表示如果可能的话,将anObject加到BlockingQueue里,即如果BlockingQueue可以容纳,则返回true,否则返回false.（本方法不阻塞当前执行方法的线程）。</li>
-<li><strong>offer(E o, long timeout, TimeUnit unit)</strong>：可以设定等待的时间，如果在指定的时间内，还不能往队列中加入BlockingQueue，则返回失败。</li>
-<li><strong>put(anObject)</strong>：把anObject加到BlockingQueue里,如果BlockQueue没有空间,则调用此方法的线程被阻断直到BlockingQueue里面有空间再继续。</li>
-</ul>
-<h3 id="获取数据"><a href="#获取数据" class="headerlink" title="获取数据"></a>获取数据</h3><ul>
-<li><strong>poll(time)</strong>：取走BlockingQueue里排在首位的对象,若不能立即取出,则可以等time参数规定的时间,取不到时返回null;</li>
-<li><strong>poll(long timeout, TimeUnit unit)</strong>：从BlockingQueue取出一个队首的对象，如果在指定时间内，队列一旦有数据可取，则立即返回队列中的数据。否则知道时间超时还没有数据可取，返回失败。</li>
-<li><strong>take()</strong>：取走BlockingQueue里排在首位的对象,若BlockingQueue为空,阻断进入等待状态直到BlockingQueue有新的数据被加入; </li>
-<li><strong>drainTo()</strong>：一次性从BlockingQueue获取所有可用的数据对象（还可以指定获取数据的个数），通过该方法，可以提升获取数据效率；不需要多次分批加锁或释放锁。</li>
-</ul>
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@EnableScheduling</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogQueue</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ArrayBlockingQueue&lt;TSysLog&gt; logQueue = <span class="keyword">new</span> ArrayBlockingQueue&lt;TSysLog&gt;(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> LogSender logSender;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 增加日志</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> log</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addLog</span><span class="params">(TSysLog log)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 如果可能的话，将log加到BlockingQueue里，可以容纳则返回true，否则返回false</span></span><br><span class="line">        <span class="keyword">if</span> (!logQueue.offer(log)) &#123;</span><br><span class="line">            <span class="comment">// 如果失败的话，推送队列</span></span><br><span class="line">            sendQueue();</span><br><span class="line">            <span class="comment">// 再尝试增加到队列</span></span><br><span class="line">            logQueue.add(log);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 将队列的日志发送（每5分钟一次）</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Scheduled</span>(cron = <span class="string">"0 0/5 * * * ? "</span>)</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sendQueue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 从队列中取出然后异步发送</span></span><br><span class="line">        List&lt;TSysLog&gt; logs = <span class="keyword">new</span> ArrayList&lt;TSysLog&gt;();</span><br><span class="line">        logQueue.drainTo(logs);</span><br><span class="line">        logSender.send(logs);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 优雅停机处理队列</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@PreDestroy</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clearQueueBeforeClose</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        sendQueue();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><h3 id="正确使用"><a href="#正确使用" class="headerlink" title="正确使用"></a>正确使用</h3><p>&emsp;&emsp;虽然BlockingQueue是线程安全的，但是使用它的时候不恰当的使用依旧会造成线程不安全，如果没有足够经验和把握的话，建议自己压测下验证下数据的准确性(比如使用Jmeter)。</p>
-<h3 id="优雅停机"><a href="#优雅停机" class="headerlink" title="优雅停机"></a>优雅停机</h3><p>&emsp;&emsp;我们存储在队列中的没有被处理的数据在停机时会被回收，这可能会导致数据丢失，下面推荐两种方法：</p>
-<ul>
-<li>增加一个处理队列内的剩余全部数据的方法，并加上@PreDestroy注解</li>
-<li>实现DisposableBean接口的destroy()方法，在destroy()方法内处理队列内的剩余全部数据</li>
-</ul>
+      <p>&emsp;&emsp;</p>
 <br/>
 <br/>
 
@@ -184,7 +162,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/07/27/Java%E8%BF%9B%E9%98%B6/BlockingQueue%E5%88%9D%E4%BD%93%E9%AA%8C/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/07/29/Java%E8%BF%9B%E9%98%B6/Spring%E4%B8%ADBean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -202,19 +180,10 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/07/28/Java%E8%BF%9B%E9%98%B6/Conditional%E7%B3%BB%E5%88%97%E6%B3%A8%E8%A7%A3%E9%9B%86%E5%90%88/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            Conditional系列注解集合
-          
-        </div>
-      </a>
     
-    
-      <a href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/ThreadLocal%E5%A6%99%E7%94%A8/" class="article-nav-link">
+      <a href="/2020/07/29/Java%E8%BF%9B%E9%98%B6/SpringBoot%E4%B8%ADBean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">ThreadLocal妙用</div>
+        <div class="article-nav-title">Spring中Bean的生命周期</div>
       </a>
     
   </nav>
