@@ -75,6 +75,338 @@
     
     
     
+    <article id="post-Java进阶/新项目应该如何架构" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/06/05/Java%E8%BF%9B%E9%98%B6/%E6%96%B0%E9%A1%B9%E7%9B%AE%E5%BA%94%E8%AF%A5%E5%A6%82%E4%BD%95%E6%9E%B6%E6%9E%84/"
+    >新项目应该如何架构</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/06/05/Java%E8%BF%9B%E9%98%B6/%E6%96%B0%E9%A1%B9%E7%9B%AE%E5%BA%94%E8%AF%A5%E5%A6%82%E4%BD%95%E6%9E%B6%E6%9E%84/" class="article-date">
+  <time datetime="2020-06-05T12:16:43.000Z" itemprop="datePublished">2020-06-05</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;最近由于工作的变动，会涉及到从零开发一个新项目，所以想简单分析下自己在构建新项目中的一些想法。</p>
+<h2 id="关于框架"><a href="#关于框架" class="headerlink" title="关于框架"></a>关于框架</h2><p>&emsp;&emsp;没什么好说的，如果没什么特殊情况的话，基本上是基于<strong>SpringBoot</strong>构建，围绕SpringBoot的体系选用其他的框架（当然如果公司自己有封装自己的框架，其实更加建议用公司封装的，毕竟万一到时候要整合什么其他的就麻烦了）。推荐使用SpringBoot初始化构建（如官网构建或者IDEA构建），直接选择需要集成到项目里面的框架和依赖。至于具体的选型，比如微服务是选dubbo还是SpringCloud全家桶，就不展开了，仁者见仁。</p>
+<br/>
+
+<h2 id="关于模块和项目构建"><a href="#关于模块和项目构建" class="headerlink" title="关于模块和项目构建"></a>关于模块和项目构建</h2><ul>
+<li>如果的小型的独立项目，那无需模块化。</li>
+<li>如果是大型的独立项目，那么建议根据功能或者类型来做模块化（<strong>SOA</strong>）。</li>
+<li>如果走在了时代的潮流中，选用了微服务的话，建议使用<strong>bom</strong>管理所有微服务的基本依赖以确保版本统一，而每个具体的微服务也至少抽成接口和具体的服务（根据具体的情况可以再抽）。</li>
+<li>如果项目是内嵌到别的项目里面去的框架或者组件，那么建议将整个项目<strong>彻底模块化</strong>，比如配置，接口，实现，依赖，组件，插件等都可以转化为独立的模块。一来根据灵活，方便做拓展，二来也方便客户重写。</li>
+</ul>
+<br/>
+
+<h2 id="关于分层"><a href="#关于分层" class="headerlink" title="关于分层"></a>关于分层</h2><blockquote>
+<p>接入层（Controller、Action或者微服务里面的接口层），只负责转发和记录请求</p>
+<blockquote>
+<p>服务层（Service），负责具体的逻辑实现</p>
+<blockquote>
+<p>持久化层（Dao，Mapper等），负责数据的持久化</p>
+<blockquote>
+<p>PS：如果有能力的话可以考虑DDD，分成4层，充血模型</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>&emsp;&emsp;除了最上面的三层之后，还可能会抽出以下几层：</p>
+<ul>
+<li><strong>拦截器层</strong>（位于接入层之上，拦截请求统一实现某些功能，不管是MVC还是微服务都可能会有）</li>
+<li><strong>组件层</strong>（提供通用的组件服务，用于服务层调用）</li>
+<li><strong>缓存层</strong>（提供常用数据的缓存，用于服务层调用）</li>
+<li><strong>消息中间件层</strong>（提供消息的处理和推送，处理时调用服务层，被服务层调用推送消息）</li>
+</ul>
+<p>&emsp;&emsp;分层的意义是使得整个项目结构更加合理，减少冗余，提高可读性和健壮性，也更利于之后拓展和维护。当然如果是一个很小很小的项目的话，分层意义也不是很大，但是如果是要长期维护的话，建议考虑好分层。</p>
+<br/>
+
+<h2 id="关于ORM"><a href="#关于ORM" class="headerlink" title="关于ORM"></a>关于ORM</h2><p>&emsp;&emsp;ORM框架这方面国内之前主要还是Mybatis和Hibernate的天下。如果习惯了Mybatis且要写复杂SQL，强烈建议使用<strong>tkMybatis</strong>或者<strong>MyBatis-Plus</strong>这种增强框架，谁用谁知道，如果是Hibernate的话也可以考虑转<strong>Spring Data Jpa</strong>(Spring全家桶不香吗)或者<strong>JOOQ</strong>这种轻量级的。</p>
+<h3 id="逆向工程"><a href="#逆向工程" class="headerlink" title="逆向工程"></a>逆向工程</h3><p>&emsp;&emsp;如果是快速开发可以试下逆向工程，感觉还是挺方便的，根据数据库的表直接生成一整套代码。</p>
+<h3 id="连接池"><a href="#连接池" class="headerlink" title="连接池"></a>连接池</h3><p>&emsp;&emsp;说到ORM，也必然会扯到连接池，抛去老旧的c3p0和dbcp，似乎只剩下了<strong>Druid</strong>和<strong>HikariCP</strong>，Druid胜在监控（有单独的页面），HikariCP作为SpringBoot内置的则是性能无敌。也可以根据自己的情况选择。</p>
+<h3 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h3><p>&emsp;&emsp;MyBatis-Plus功能强大，有很多插件，也自带了分页插件，tkMybatis的话可以外挂PageHelper做分页。Jpa和JOOQ也都自带了分页。</p>
+<h3 id="拦截器"><a href="#拦截器" class="headerlink" title="拦截器"></a>拦截器</h3><p>&emsp;&emsp;针对某些情况，增加拦截器是很好的选择，比如在多租户的情况下，可以统一对SQL进行处理，可以极大减少开发量。</p>
+<br/>
+
+<h2 id="关于缓存"><a href="#关于缓存" class="headerlink" title="关于缓存"></a>关于缓存</h2><p>&emsp;&emsp;一般来说，稍微大型的项目里面或者使用人数稍多的项目都需要上缓存，毕竟数据库的瓶颈摆在那里，区别只是用几重缓存而已。常用的缓存主要分为两种：本地缓存的和分布式用的NoSQL，本地缓存的性能肯定是最好的，但是通常来说满足不了分布式的需求，但是在某些情况下依旧适用（比如某些不大变动的数据）。NoSQL里面常用的有<strong>Redis</strong>，<strong>MongoDB</strong>和<strong>Couchbase</strong>。Redis主要把数据存储在内存中，其”缓存”的性质远大于其“数据存储“的性质，其中数据的增删改查也只是像变量操作一样简单；MongoDB更像是一个“存储数据”的系统，增删改查可以添加很多条件，就像SQL数据库一样灵活，适用于海量数据的访问；Couchbase号称是Best NoSQL Cloud Database Service，由于个人没有用过，跳过，有兴趣的可能自己研究下。</p>
+<h3 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h3><p>&emsp;&emsp;缓存穿透是指缓存和数据库中都没有的数据，而用户不断发起请求，导致数据库压力过大。一般解决的办法有增加校验拦截这种请求和直接缓存null，复杂一点的有布隆过滤器。</p>
+<h3 id="缓存击穿"><a href="#缓存击穿" class="headerlink" title="缓存击穿"></a>缓存击穿</h3><p>&emsp;&emsp;缓存击穿指的是某个热点key失效的瞬间，大量请求导致数据库压力过大。一般解决的办法是加锁(分布式锁)，防止都去数据库重复取数据。</p>
+<h3 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h3><p>&emsp;&emsp;缓存雪崩指的是缓存大批量到期，导致的数据库压力过大，就像雪崩一样。一般解决的办法有设置不同时间过期和或者部分设置为不过期。</p>
+<h3 id="保证最终一致性"><a href="#保证最终一致性" class="headerlink" title="保证最终一致性"></a>保证最终一致性</h3><p>&emsp;&emsp;在并发的情况下，缓存可能会和数据库的值产生不一致的情况。主流解决方案是先更新数据库然后删除缓存的策略（延时双删）。</p>
+<br/>
+
+<h2 id="关于消息中间件"><a href="#关于消息中间件" class="headerlink" title="关于消息中间件"></a>关于消息中间件</h2><p>&emsp;&emsp;消息中间件其实包括很多，4大MQ，我其实就接触过<strong>RabbitMQ</strong>和<strong>Kafka</strong>，ActiveMQ和阿里的RocketMQ则还没时间摸索。在项目需要和别的系统交互的时候，采用MQ无疑是最好的选择：支持异步，高并发，解耦，削峰，易拓展等等。<br>&emsp;&emsp;个人观感里面，不同的MQ虽然核心逻辑差不多，但是实际的实现和根据其特点的应用场景都不一样。比如RabbitMQ是Push模式，服务端主动发送消息到客户端，及时性好；Kafka则是Pull模式，客户端主动从服务器端获取信息，实时较差但是针对性强。所以RabbitMQ适合企业级的消息发送订阅，而Kafka由于其高性能，常用日志采集，数据采集上。</p>
+<h3 id="确保消费成功和解决重复消费"><a href="#确保消费成功和解决重复消费" class="headerlink" title="确保消费成功和解决重复消费"></a>确保消费成功和解决重复消费</h3><p>&emsp;&emsp;总的来说，MQ都会有自己的事务的机制或者确认的机制确保消息不丢失，一定消费成功，但是需要项目自己解决重复消费的问题（毕竟一旦消费时间就会重新消费）。解决的方法也有很多种，根据场景的不同增加额外的条件过滤即可。在使用MQ的时候，这两块是一定要注意的地方。</p>
+<br/>
+
+<h2 id="关于分布式事务"><a href="#关于分布式事务" class="headerlink" title="关于分布式事务"></a>关于分布式事务</h2><p>&emsp;&emsp;关于分布式事务，有多种解决方案，两阶段提交，<strong>三阶段提交</strong>，<strong>补偿事务TCC</strong>，基于消息队列和 Sagas事务模型。不同的解决方案有不同的框架，当然也可以自己实现。由于这块涉猎也不是很多，之后看官可以自己研究。需要拎出来讲的原因是如果是分布式系统的话，这一块很重要……<br><br/></p>
+<h2 id="关于国际化"><a href="#关于国际化" class="headerlink" title="关于国际化"></a>关于国际化</h2><p>&emsp;&emsp;这一块其实也谈不上很有经验，但是以我的粗浅之见，解决策略是用code或者key来表示对应的文本信息，然后根据语言映射到不同的文件。前端和后台对于<strong>i18n</strong>其实都有很成熟的解决方案。需要拎出来讲的原因是一定要考虑清楚之后是不是会国际化，如果没有考虑的话，之后的返工会是很大的工作量，尤其是当文本信息是代码里面写死的时候。</p>
+<br/>
+
+<h2 id="关于异常处理"><a href="#关于异常处理" class="headerlink" title="关于异常处理"></a>关于异常处理</h2><ul>
+<li>个人认为，最好的策略是框架<strong>统一封装处理</strong>。</li>
+<li>需要处理异常的时候才捕捉异常，否则直接<strong>往上抛</strong>，直到有人处理或者被框架处理。</li>
+<li>如果有需要，可以对异常进行封装和分类，根据类型做不同的处理。</li>
+</ul>
+<br/>
+
+<h2 id="关于日志"><a href="#关于日志" class="headerlink" title="关于日志"></a>关于日志</h2><ul>
+<li>使用Java日志门面（如<strong>Slf4j</strong>），方便后期切换日志框架（如log4j2和logback）。</li>
+<li>合理规划级别，除了正常的info和error级别外，可以适量加下debug级别的日志，方便后期遇到问题排查。</li>
+<li>根据功能和类型的不同，可以输出到不同的日志文件。</li>
+<li>如果对实时性没有要求，尽量使用异步日志模式而不是同步日志模式。</li>
+<li>历史的日志文件建议根据年月日压缩归档。</li>
+</ul>
+<br/>
+
+<h2 id="关于接口和文档"><a href="#关于接口和文档" class="headerlink" title="关于接口和文档"></a>关于接口和文档</h2><ul>
+<li>接口风格尽量保持统一，比如用了<strong>RESTful</strong>就全部都用REST风格，约定了接口都以get，pus，post和delete开头就以这些开头。</li>
+<li>如果的mvc的项目，强烈建议使用<strong>Swagger2</strong>（据说微服务也支持），不仅方便形成接口文档，还可以直接调用，利于测试和开发。</li>
+<li>或者可以使用<strong>apiDoc</strong>生成形成接口文档，样式简洁，美观大方（至少比javadoc好看很多），缺点是要写的注解比较多。</li>
+<li>如果不介意在外部维护接口文档的话，也很推荐使用<strong>yApi</strong>，缺点是需要额外部署服务器，但是优点是功能强大，更加适合于项目开发。</li>
+</ul>
+<br/>
+
+<h2 id="关于编码规范"><a href="#关于编码规范" class="headerlink" title="关于编码规范"></a>关于编码规范</h2><p>&emsp;&emsp;开发人员建议统一使用<strong>代码规范插件</strong>，常用的插件有：SonarQube，Fortify，阿里代码规范插件。用起来感觉都不错，可以约定一套习惯给项目配置规则。Sonar还可以与Jenkins集成，在CI集成的时候扫描，但是终究还是在源头上控制更有效，只能作为保险。</p>
+<br/>
+
+
+<h2 id="关于单元测试和自动化测试"><a href="#关于单元测试和自动化测试" class="headerlink" title="关于单元测试和自动化测试"></a>关于单元测试和自动化测试</h2><p>&emsp;&emsp;单元测试最好还是要有的，从顶层开始写用例可以尽量覆盖到全部代码。如果没有单元测试的话，可以寄希望于自动化的接口测试，通过自动化测试把控代码质量，否则很可能哪天接口就被改坏了，造成了严重的事故。<strong>自动化测试</strong>的工具也有很多，如果有能力甚至可能根据项目的情况自研。</p>
+<br/>
+
+<h2 id="关于DevOps"><a href="#关于DevOps" class="headerlink" title="关于DevOps"></a>关于DevOps</h2><p>&emsp;&emsp;DevOps可以说是现在的潮流，CI/CD的自动化和白屏化会给工程人员极大的便利和解放，也间接增强了项目的稳定性。<strong>Jenkins</strong>作为最受欢迎的自动化工具是肯定是我们的首选，里面有丰富的插件和扩展，基本可以满足所有的需求。</p>
+<br/>
+
+<h2 id="关于云和Docker"><a href="#关于云和Docker" class="headerlink" title="关于云和Docker"></a>关于云和Docker</h2><p>&emsp;&emsp;个人认为，上不上云还是看需求的，对于一些小公司和个人项目，上云是绝对有必要的…Docker这个很有说法， 我个人强烈建议新的项目部署的时候做成<strong>Docker镜像</strong>的形式的部署，虽然在某些情况下，可能是得不偿失的..毕竟变相增加了难度，但是为了未来考虑，镜像化是一个很好的选择。</p>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-Java基础/常用Maven插件" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/05/18/Java%E5%9F%BA%E7%A1%80/%E5%B8%B8%E7%94%A8Maven%E6%8F%92%E4%BB%B6/"
+    >常用Maven插件</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/05/18/Java%E5%9F%BA%E7%A1%80/%E5%B8%B8%E7%94%A8Maven%E6%8F%92%E4%BB%B6/" class="article-date">
+  <time datetime="2020-05-18T09:17:43.000Z" itemprop="datePublished">2020-05-18</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;Java生态体系中有三大构建工具:Ant、Maven和Gradle，Ant大家已经不怎么用了，Gradle是最新的也是最强的。由于工作的原因，Maven用的比较多，而且Maven很多功能也有，基本够用，所以想简单整理下自己用过的Maven插件，具体就不展开了，因为每个插件都会有很多配置，这里只是简单展示下功能和使用。</p>
+<h2 id="指定项目jdk版本和编码"><a href="#指定项目jdk版本和编码" class="headerlink" title="指定项目jdk版本和编码"></a>指定项目jdk版本和编码</h2><h3 id="maven-compiler-plugin"><a href="#maven-compiler-plugin" class="headerlink" title="maven-compiler-plugin"></a>maven-compiler-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-compiler-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">source</span>&gt;</span>1.8<span class="tag">&lt;/<span class="name">source</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">target</span>&gt;</span>1.8<span class="tag">&lt;/<span class="name">target</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">encoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">encoding</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="打包spring-boot项目"><a href="#打包spring-boot项目" class="headerlink" title="打包spring-boot项目"></a>打包spring-boot项目</h2><h3 id="spring-boot-maven-plugin"><a href="#spring-boot-maven-plugin" class="headerlink" title="spring-boot-maven-plugin"></a>spring-boot-maven-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">executable</span>&gt;</span>true<span class="tag">&lt;/<span class="name">executable</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>repackage<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="打包为可执行Jar"><a href="#打包为可执行Jar" class="headerlink" title="打包为可执行Jar"></a>打包为可执行Jar</h2><h3 id="maven-shade-plugin"><a href="#maven-shade-plugin" class="headerlink" title="maven-shade-plugin"></a>maven-shade-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-shade-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">goal</span>&gt;</span>shade<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">transformers</span>&gt;</span></span><br><span class="line">								<span class="tag">&lt;<span class="name">transformer</span> <span class="attr">implementation</span>=<span class="string">"org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"</span>&gt;</span></span><br><span class="line">									<span class="tag">&lt;<span class="name">mainClass</span>&gt;</span>包名+入口类<span class="tag">&lt;/<span class="name">mainClass</span>&gt;</span></span><br><span class="line">								<span class="tag">&lt;/<span class="name">transformer</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;/<span class="name">transformers</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="maven-assembly-plugin"><a href="#maven-assembly-plugin" class="headerlink" title="maven-assembly-plugin"></a>maven-assembly-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-assembly-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">archive</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">manifest</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">mainClass</span>&gt;</span>包名+入口类<span class="tag">&lt;/<span class="name">mainClass</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">archive</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">descriptorRefs</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">descriptorRef</span>&gt;</span>jar-with-dependencies<span class="tag">&lt;/<span class="name">descriptorRef</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">descriptorRefs</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">id</span>&gt;</span>make-assembly<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">goal</span>&gt;</span>single<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="maven-jar-plugin"><a href="#maven-jar-plugin" class="headerlink" title="maven-jar-plugin"></a>maven-jar-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-jar-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">version</span>&gt;</span>2.6<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">archive</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">manifest</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">mainClass</span>&gt;</span>com.mjw.app.DrawBordn<span class="tag">&lt;/<span class="name">mainClass</span>&gt;</span></span><br><span class="line">							<span class="comment">&lt;!-- to create a class path to your dependecies you have to fill true in this field --&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">addClasspath</span>&gt;</span>true<span class="tag">&lt;/<span class="name">addClasspath</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">classpathPrefix</span>&gt;</span>lib/<span class="tag">&lt;/<span class="name">classpathPrefix</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">manifestEntries</span>&gt;</span></span><br><span class="line">							<span class="tag">&lt;<span class="name">Class-Path</span>&gt;</span>./<span class="tag">&lt;/<span class="name">Class-Path</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;/<span class="name">manifestEntries</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">archive</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">excludes</span>&gt;</span></span><br><span class="line">						<span class="comment">&lt;!--注意从编译结果目录开始算目录结构 --&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">exclude</span>&gt;</span>/*.yml<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">exclude</span>&gt;</span>/*.properties<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">exclude</span>&gt;</span>/*.xml<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">excludes</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="打包为war或者zip"><a href="#打包为war或者zip" class="headerlink" title="打包为war或者zip"></a>打包为war或者zip</h2><h3 id="maven-assembly-plugin-1"><a href="#maven-assembly-plugin-1" class="headerlink" title="maven-assembly-plugin"></a>maven-assembly-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-assembly-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">id</span>&gt;</span>make-zip<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>single<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">descriptors</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">descriptor</span>&gt;</span>deploy/assembly.xml<span class="tag">&lt;/<span class="name">descriptor</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">descriptors</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="版本管理"><a href="#版本管理" class="headerlink" title="版本管理"></a>版本管理</h2><h3 id="maven-assembly-plugin-2"><a href="#maven-assembly-plugin-2" class="headerlink" title="maven-assembly-plugin"></a>maven-assembly-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-release-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">tagBase</span>&gt;</span>$&#123;scm.tag.url&#125;/$&#123;project.artifactId&#125;<span class="tag">&lt;/<span class="name">tagBase</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">branchBase</span>&gt;</span>$&#123;scm.branch.url&#125;/$&#123;project.artifactId&#125;<span class="tag">&lt;/<span class="name">branchBase</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="依赖管理"><a href="#依赖管理" class="headerlink" title="依赖管理"></a>依赖管理</h2><h3 id="maven-dependency-plugin"><a href="#maven-dependency-plugin" class="headerlink" title="maven-dependency-plugin"></a>maven-dependency-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-dependency-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">id</span>&gt;</span>copy-dependencies<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>copy-dependencies<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="comment">&lt;!-- jar包存放位置 --&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">outputDirectory</span>&gt;</span>$&#123;project.build.directory&#125;/alternateLocation<span class="tag">&lt;/<span class="name">outputDirectory</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overWriteReleases</span>&gt;</span>false<span class="tag">&lt;/<span class="name">overWriteReleases</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overWriteSnapshots</span>&gt;</span>false<span class="tag">&lt;/<span class="name">overWriteSnapshots</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overWriteIfNewer</span>&gt;</span>true<span class="tag">&lt;/<span class="name">overWriteIfNewer</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="资源管理"><a href="#资源管理" class="headerlink" title="资源管理"></a>资源管理</h2><h3 id="maven-resources-plugin"><a href="#maven-resources-plugin" class="headerlink" title="maven-resources-plugin"></a>maven-resources-plugin</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-resources-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.6<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">id</span>&gt;</span>copy-resources<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">phase</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">goal</span>&gt;</span>copy-resources<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overwrite</span>&gt;</span>false<span class="tag">&lt;/<span class="name">overwrite</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">outputDirectory</span>&gt;</span>$&#123;project.build.directory&#125;/classes<span class="tag">&lt;/<span class="name">outputDirectory</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">resource</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">directory</span>&gt;</span>$&#123;project.build.directory&#125;/classes/WEB-INF/classes<span class="tag">&lt;/<span class="name">directory</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">filtering</span>&gt;</span>false<span class="tag">&lt;/<span class="name">filtering</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">resource</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-读后感/少年的你" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/05/10/%E8%AF%BB%E5%90%8E%E6%84%9F/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/"
+    >少年的你</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/05/10/%E8%AF%BB%E5%90%8E%E6%84%9F/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/" class="article-date">
+  <time datetime="2020-05-10T10:21:09.000Z" itemprop="datePublished">2020-05-10</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="个人评分"><a href="#个人评分" class="headerlink" title="个人评分"></a>个人评分</h2><blockquote>
+<p>4（5分制）</p>
+</blockquote>
+<h2 id="电影梗概"><a href="#电影梗概" class="headerlink" title="电影梗概"></a>电影梗概</h2><p>&emsp;&emsp;陈念（周冬雨饰）是一名备战高考的高三复读生，她家境并不好，所以一心想努力学习考上好大学改变她现在糟糕的生活。故事发生于她的一个好朋友因为校园暴力而跳楼身亡，陈念没忍住把真相告诉了善良的警察。与此同时，她阴差阳错结实了一个叫小北（易烊千玺饰）的混混。小北心地善良，但是生活却残忍地对待着他，出于同情他想要保护要被报复的陈念，来往之下，他们暗生情愫。但是小北终究没有保护住，魏莱还是找到机会欺凌了小贝。而之后魏莱祈求和解时，陈念却失手杀推到间接死了她。小北为了保护她，装作了自己强奸未遂，然后杀人抛尸。而陈念也终于高考结束，取得不错的成绩。原本小北将要顶替陈念，而善良的警察并不愿看到小北死刑，将小北其实已经成年并将被判以死刑的消息告诉了陈年，陈年迷途知返，不愿看到爱人就这样子为了她离去，还是自首了。</p>
+<h2 id="感触"><a href="#感触" class="headerlink" title="感触"></a>感触</h2><p>&emsp;&emsp;这其实是一个很简单的故事，也许出彩的地方是拍摄了校园暴力这一个敏感的话题（起到了正能量的作用？？？），以及作为明星的易烊千玺和周冬雨的不拉胯的表演，尤其是易烊千玺能做到这样子尤为不易。电影里面关于高中和高考的描绘真的尤为到位，那一排排书，那一张张横幅，那一句句口号，我相信每一个高考过的人都会产生共鸣。我觉得不大舒服的地方可能是为了氛围和效果，所以将陈念和小北的生存环境弄的格外糟糕（也行并不过分，只是和我的观感不符）。我之所以没有打很高的分是因为这是一本比较好驾驭和拍摄的电影，虽然氛围和节奏还可以，但是掩盖不了故事其实很简单，并没有眼前一亮的感觉，我相信之后会有很多类似的电影。</p>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%B5%E5%BD%B1/" rel="tag">电影</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-Java基础/Java中的各种转换" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
