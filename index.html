@@ -75,6 +75,148 @@
     
     
     
+    <article id="post-Java进阶/线程池浅析" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/12/01/Java%E8%BF%9B%E9%98%B6/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%B5%85%E6%9E%90/"
+    >线程池浅析</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/12/01/Java%E8%BF%9B%E9%98%B6/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%B5%85%E6%9E%90/" class="article-date">
+  <time datetime="2020-12-01T08:16:43.000Z" itemprop="datePublished">2020-12-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;众所周知，多线程可以极大提高执行效率。阿里的Java规范规定<strong>线程资源必须通过线程池提供，不允许在应用中自行显式创建线程</strong>。因为线程池的好处是<strong>减少在创建和销毁线程上所消耗的时间以及系统资源的开销</strong>，解决资源不足的问题。如果不使用线程池，有可能造成系统创建大量同类线程而导致消耗完内存或者”过度切换”的问题。</p>
+<h2 id="Executors"><a href="#Executors" class="headerlink" title="Executors"></a>Executors</h2><p>&emsp;&emsp;Java通过Executors提供四种预设线程池，分别为：</p>
+<ul>
+<li><strong>newCachedThreadPool</strong>：创建一个可缓存线程池(线程池为无限大)，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，则新建线程。</li>
+<li><strong>newFixedThreadPool</strong>：创建一个定长线程池，可控制线程最大并发数，超出的线程会在队列中等待（这个感觉是比较常用的线程池）。</li>
+<li><strong>newScheduledThreadPool</strong>：创建一个定长线程池，支持定时及周期性任务执行。</li>
+<li><strong>newSingleThreadExecutor</strong>：创建一个单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行。</li>
+</ul>
+<h2 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h2><p>&emsp;&emsp;但是阿里Java规范规定线程池不允许使用Executors去创建，而是通过<strong>ThreadPoolExecutor</strong>的方式，这样的处理方式让写的同学<strong>更加明确线程池的运行规则</strong>，规避资源耗尽的风险。 </p>
+<p>&emsp;&emsp;例如Executors预设的线程池对象可能存在如下弊端： </p>
+<ul>
+<li>FixedThreadPool和SingleThreadPool：允许的请求队列长度为Integer.MAX_VALUE，可能会堆积大量的请求，从而导致OOM。 </li>
+<li>CachedThreadPool：允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量的线程，从而导致OOM。</li>
+</ul>
+<h3 id="ThreadPoolExecutor使用参数"><a href="#ThreadPoolExecutor使用参数" class="headerlink" title="ThreadPoolExecutor使用参数"></a>ThreadPoolExecutor使用参数</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用ThreadPoolExecutor创建线程池的</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,                  // <span class="number">1</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          <span class="keyword">int</span> maximumPoolSize,               // <span class="number">2</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          <span class="keyword">long</span> keepAliveTime,                // <span class="number">3</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          TimeUnit unit,                     // <span class="number">4</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          BlockingQueue&lt;Runnable&gt; workQueue, // <span class="number">5</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          ThreadFactory threadFactory,       // <span class="number">6</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          RejectedExecutionHandler handler   // <span class="number">7</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span> </span>&#123;&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;释义如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">序号</th>
+<th align="left">名称</th>
+<th align="left">类型</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">1</td>
+<td align="left">corePoolSize</td>
+<td align="left">int</td>
+<td align="left">核心线程池大小</td>
+</tr>
+<tr>
+<td align="left">2</td>
+<td align="left">maximumPoolSize</td>
+<td align="left">int</td>
+<td align="left">最大线程池大小</td>
+</tr>
+<tr>
+<td align="left">3</td>
+<td align="left">keepAliveTime</td>
+<td align="left">long</td>
+<td align="left">线程最大空闲时间</td>
+</tr>
+<tr>
+<td align="left">4</td>
+<td align="left">unit</td>
+<td align="left">TimeUnit</td>
+<td align="left">时间单位</td>
+</tr>
+<tr>
+<td align="left">5</td>
+<td align="left">workQueue</td>
+<td align="left">BlockingQueue<Runnable></td>
+<td align="left">线程等待队列</td>
+</tr>
+<tr>
+<td align="left">6</td>
+<td align="left">threadFactory</td>
+<td align="left">ThreadFactory</td>
+<td align="left">线程创建工厂</td>
+</tr>
+<tr>
+<td align="left">7</td>
+<td align="left">handler</td>
+<td align="left">RejectedExecutionHandler</td>
+<td align="left">拒绝策略</td>
+</tr>
+</tbody></table>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-Java基础/常用加密算法介绍" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -151,78 +293,6 @@
 <h4 id="SM4"><a href="#SM4" class="headerlink" title="SM4"></a>SM4</h4><p>&emsp;&emsp;SM4为无线局域网标准的分组数据算法，也是对称加密，对标的是AES。密钥长度和分组长度均为128位。</p>
 <p>PS：由于SM1、SM4加解密的分组大小为128bit，故对消息进行加解密时，若消息长度过长，需要进行分组，要消息长度不足，则要进行填充。</p>
 <br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-算法/回溯算法的经典应用" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/11/18/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%8F%E5%85%B8%E5%BA%94%E7%94%A8/"
-    >回溯算法的经典应用</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/11/18/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%8F%E5%85%B8%E5%BA%94%E7%94%A8/" class="article-date">
-  <time datetime="2020-11-18T09:17:43.000Z" itemprop="datePublished">2020-11-18</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;待补充</p>
 <br/>
 
       
@@ -296,6 +366,83 @@
 
       
       <p>&emsp;&emsp;待补充</p>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-算法/回溯算法的经典应用" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/11/18/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%8F%E5%85%B8%E5%BA%94%E7%94%A8/"
+    >回溯算法的经典应用</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/11/18/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%8F%E5%85%B8%E5%BA%94%E7%94%A8/" class="article-date">
+  <time datetime="2020-11-18T09:17:43.000Z" itemprop="datePublished">2020-11-18</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;由于兴趣问题，本人最近在刷LeetCode，总结发现算法中最常出现的思想无非是动态规划，回溯算法，贪心算法和位图算法等。其中回溯算法出现的个人体感频次高居第二，所以记录一个回溯算法的经典应用：<a href="https://leetcode-cn.com/problems/sudoku-solver/" target="_blank" rel="noopener">解数独</a>。</p>
+<h2 id="怎么解"><a href="#怎么解" class="headerlink" title="怎么解"></a>怎么解</h2><p>&emsp;&emsp;首先我们通过程序解数独的总体思路还是和人解数独是一样的，就是<strong>在空白处填入当前可能的值直到全部值都被填完</strong>。<br>&emsp;&emsp;但是解决方法可能截然不同，人做数独时（至少我是这样子的）会纵观整个数独，然后把那种<strong>根据当前条件可以确定的值填入</strong>，每填一个可以依靠的信息也越多，一个一个填下去直到全部填完，只有当迫不得已的时候才会在二个可能性里面二选一填入验证填入的值是不是对的。<br>&emsp;&emsp;而程序做不到像人一样纵观全局（或者说很难，需要抽离出解数独的多种规并则转换为代码），只能在当前的可能性里面一个一个试过去，比如当前的空可以填1，2，3三个值。程序会假设填入1，然后递归下去当当前空为1的时候是否可能存在解，如果不存在，再填入2，3。我们在每一个递归里面需要做的，就是<strong>在找到当前空白处的所有可能性并递归下去</strong>。如果全部填完则返回成功，如果找不到值填入或者所有可能的值填入后都失败则返回失败。可以试想下，这段递归的代码最核心的代码是两块：<strong>怎么快速找到空白处的所有可能性和怎么用最低的代价递归下去（尝试之后的可能性）</strong>。</p>
+<h2 id="如何运用回溯算法"><a href="#如何运用回溯算法" class="headerlink" title="如何运用回溯算法"></a>如何运用回溯算法</h2><p>&emsp;&emsp;回溯算法就是为了解决上述的第二个问题：怎么用最低的代价递归下去。我们在没有用回溯思想的时候可能会这样子做，<strong>深拷贝当前的数独，然后将可能的值填入之后再递归下去</strong>。这样子做从逻辑上来说是没什么问题，但是太吃内存了，每一次递归都会产生一个新的数独对象。而且由于大量创建对象，处理速度也很慢。<br>&emsp;&emsp;这时候我们是回溯算法就闪亮登场了，由于我们是在递归，我们<strong>无需拷贝当前数独，直接将可能的值填入之后再递归下去，如果成功最好，如果失败了再把状态还原，就相当于这次尝试失效，一切还原，我们来进行下一个尝试</strong>。有木有，有木有，这个感觉很像是原地算法，我们只需要用当前的一个数独对象就可以遍历所有结果。还是之前那个例子，比如当前的空可以填1，2，3三个值。程序会假设填入1，递归下去如果1找不出解，则还原状态，当前数独和尝试1之前是一样的，再尝试2和3两个值。<br>&emsp;&emsp;所以回溯算法的核心思想就是<strong>在尝试的过程中寻找解，当发现已经求不出解时，就回溯返回（还原状态），尝试下一个可能性，直到找到解或者遍历完全部的可能性</strong>。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 一个数独的解法需遵循如下规则：</span></span><br><span class="line"><span class="comment"> * 数字 1-9 在每一行只能出现一次。</span></span><br><span class="line"><span class="comment"> * 数字 1-9 在每一列只能出现一次。</span></span><br><span class="line"><span class="comment"> * 数字 1-9 在每一个以粗实线分隔的 3x3 宫内只能出现一次。</span></span><br><span class="line"><span class="comment"> * 空白格用 '.' 表示。</span></span><br><span class="line"><span class="comment"> * 提示：</span></span><br><span class="line"><span class="comment"> * 给定的数独序列只包含数字 1-9 和字符 '.' 。</span></span><br><span class="line"><span class="comment"> * 你可以假设给定的数独只有唯一解。</span></span><br><span class="line"><span class="comment"> * 给定数独永远是 9x9 形式的。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Solution solution = <span class="keyword">new</span> Solution();</span><br><span class="line">        <span class="keyword">char</span>[][] board1 = <span class="keyword">new</span> <span class="keyword">char</span>[<span class="number">9</span>][<span class="number">9</span>];</span><br><span class="line">        board1[<span class="number">0</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'5'</span>, <span class="string">'3'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'7'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">1</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'6'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'1'</span>, <span class="string">'9'</span>, <span class="string">'5'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">2</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'9'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'6'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">3</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'6'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'3'</span>&#125;;</span><br><span class="line">        board1[<span class="number">4</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'4'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'3'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'1'</span>&#125;;</span><br><span class="line">        board1[<span class="number">5</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'7'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'2'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'6'</span>&#125;;</span><br><span class="line">        board1[<span class="number">6</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'6'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'2'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">7</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'4'</span>, <span class="string">'1'</span>, <span class="string">'9'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'5'</span>&#125;;</span><br><span class="line">        board1[<span class="number">8</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'7'</span>, <span class="string">'9'</span>&#125;;</span><br><span class="line">        solution.solveSudoku(board1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 存储x轴上的已经被使用的值</span></span><br><span class="line"><span class="comment">     **/</span></span><br><span class="line">    <span class="keyword">boolean</span>[][] xArray = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>][<span class="number">9</span>];</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 存储y轴上的已经被使用的值</span></span><br><span class="line"><span class="comment">     **/</span></span><br><span class="line">    <span class="keyword">boolean</span>[][] yArray = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>][<span class="number">9</span>];</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 存储九宫格内的已经被使用的值</span></span><br><span class="line"><span class="comment">     **/</span></span><br><span class="line">    <span class="keyword">boolean</span>[][][] zArray = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">3</span>][<span class="number">3</span>][<span class="number">9</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 利用回溯算法解决数独，2ms内，超过95%</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> board 九宫格源数据</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">solveSudoku</span><span class="params">(<span class="keyword">char</span>[][] board)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 初始化数据，遍历源数据，存储已经被使用的值</span></span><br><span class="line">        <span class="keyword">boolean</span>[] tmp;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">9</span>; i++) &#123;</span><br><span class="line">            tmp = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>];</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">9</span>; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (board[i][j] != <span class="string">'.'</span>) &#123;</span><br><span class="line">                    tmp[board[i][j] - <span class="string">'1'</span>] = <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            xArray[i] = tmp;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">9</span>; i++) &#123;</span><br><span class="line">            tmp = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>];</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">9</span>; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (board[j][i] != <span class="string">'.'</span>) &#123;</span><br><span class="line">                    tmp[board[j][i] - <span class="string">'1'</span>] = <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            yArray[i] = tmp;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">9</span>; i += <span class="number">3</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">9</span>; j += <span class="number">3</span>) &#123;</span><br><span class="line">                tmp = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>];</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">0</span>; k &lt; <span class="number">3</span>; k++) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> l = <span class="number">0</span>; l &lt; <span class="number">3</span>; l++) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (board[i + k][j + l] != <span class="string">'.'</span>) &#123;</span><br><span class="line">                            tmp[board[i + k][j + l] - <span class="string">'1'</span>] = <span class="keyword">true</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                zArray[i / <span class="number">3</span>][j / <span class="number">3</span>] = tmp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 开始执行递归</span></span><br><span class="line">        loop(board, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行递归</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> board</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> x</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> y</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">loop</span><span class="params">(<span class="keyword">char</span>[][] board, <span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> i = x, j = y;</span><br><span class="line">        <span class="keyword">for</span> (; i &lt; <span class="number">9</span>; i++, j = <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (; j &lt; <span class="number">9</span>; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (board[i][j] == <span class="string">'.'</span>) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">0</span>; k &lt; <span class="number">9</span>; k++) &#123;</span><br><span class="line">                        <span class="comment">// 如果k是可能的，即在xArray、yArray和zArray都不存在（为false）</span></span><br><span class="line">                        <span class="keyword">if</span> (!xArray[i][k] &amp;&amp; !yArray[j][k] &amp;&amp; !zArray[i / <span class="number">3</span>][j / <span class="number">3</span>][k]) &#123;</span><br><span class="line">                            board[i][j] = (<span class="keyword">char</span>) (<span class="string">'1'</span> + k);</span><br><span class="line">                            <span class="comment">// 修改xArray，yArray和zArray，把当前值改为已经使用</span></span><br><span class="line">                            xArray[i][k] = <span class="keyword">true</span>;</span><br><span class="line">                            yArray[j][k] = <span class="keyword">true</span>;</span><br><span class="line">                            zArray[i / <span class="number">3</span>][j / <span class="number">3</span>][k] = <span class="keyword">true</span>;</span><br><span class="line">                            <span class="comment">// 递归下去</span></span><br><span class="line">                            <span class="keyword">if</span> (loop(board, i, j)) &#123;</span><br><span class="line">                                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                <span class="comment">// 如果不成功就开始回溯</span></span><br><span class="line">                                board[i][j] = <span class="string">'.'</span>;</span><br><span class="line">                                <span class="comment">// 修改xArray，yArray和zArray，把当前值改为尚未使用</span></span><br><span class="line">                                xArray[i][k] = <span class="keyword">false</span>;</span><br><span class="line">                                yArray[j][k] = <span class="keyword">false</span>;</span><br><span class="line">                                zArray[i / <span class="number">3</span>][j / <span class="number">3</span>][k] = <span class="keyword">false</span>;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">// 如果没有值了或者不可能了，返回false</span></span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <br/>
 
       
@@ -932,100 +1079,13 @@
 
 </article>
     
-    <article id="post-读后感/隐秘的角落" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/07/14/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%9A%90%E7%A7%98%E7%9A%84%E8%A7%92%E8%90%BD/"
-    >隐秘的角落</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/07/14/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%9A%90%E7%A7%98%E7%9A%84%E8%A7%92%E8%90%BD/" class="article-date">
-  <time datetime="2020-07-14T14:36:09.000Z" itemprop="datePublished">2020-07-14</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="个人评分"><a href="#个人评分" class="headerlink" title="个人评分"></a>个人评分</h2><blockquote>
-<p>4.8（5分制）</p>
-</blockquote>
-<h2 id="相遇"><a href="#相遇" class="headerlink" title="相遇"></a>相遇</h2><p>&emsp;&emsp;最早发现这部剧是因为百无聊赖，所以在豆瓣上找找看最近的高评分的剧（原谅我有点势力，主要是也没什么试错成本，万一选错了就浪费时间了），于是就看到了《隐秘的角落》和《十日游戏》，似乎都是爱奇艺迷雾剧场的，而且口碑都不错，当然还是《隐秘的角落》更加高一点。恰好又看到大学寝室群里面分别有一个人说《隐秘的角落》好看，另外一个说《十日游戏》好看，就干脆都把他们加到了收藏里面去，准备有时间的时候看看。没想到其实拖的还是有点久的，直到最近《隐秘的角落》口碑一直在发酵，然后还出了各种结局的讨论，才忍不住开始看起来。<br>&emsp;&emsp;首先说结论，是神剧无疑，的确是数一数二的质量，开局慢热，结尾炸裂。随着剧情的推进，越来越多的真相浮出水面，人物的性格愈发立体，矛盾也愈发剧烈。剧中有很多的伏笔，如果不仔细看的话会忽略这些伏笔（哪怕你知道你这里有点突兀，可能是伏笔，但是没多想下去），得夸下剧组，真的是细节满满！说到这里我有点自责。可能是因为基调有些灰暗的缘故，作为一个上班狗其实不愿意特别多的接触这种负能量的东西，所以有时候会稍微快进下，到了最高潮的最后几集也出现过这种情况，导致很多细节没办法细细品味，还是看到了影评之后才恍然大悟。真相由于过审的关系所以没有点出来，而是给出了一个好到不能再好的童话般的结局，而真正的真相是用隐喻的方式表达出来的（其实我想到了的！可惜没多想！后悔！）。</p>
-<h2 id="人物"><a href="#人物" class="headerlink" title="人物"></a>人物</h2><p>&emsp;&emsp;其实整篇最让我惊讶的是朱朝阳的借刀杀人，我完全没想到这点（还是看到了罗翔的视频才去看的解读）…我没想到他居然黑化了，居然想通过张东升除掉普普和黑子，从复制卡就开始包藏祸心，而且还写日记…可以算是货真价实的阴暗的角落了，可怜之人必有可恨之处，他应该算是个自私的人，从开始的被压迫和缺爱，到自以为的背叛，恶念已经爬上了他的心头，完全的控制住了他，他之后也可能生活在内心的阴影中无法自拔。<br>&emsp;&emsp;相比之下，黑子真的是正义的化身，单纯善良，没有恶意，相信友谊，帮助朋友，虽然做事鲁莽且冲动；普普我个人倾向还是一个传统意义上的乖孩子，虽然她真的很聪明，但是并没有太多的心机（比如利用黑子和装出一副乖宝宝的样子），这一点可用从她救小猫看出，明知道过敏还是忍不住去救小猫，最后害得自己付出了生命，这一点也导致了最终的矛盾的激变。<br>&emsp;&emsp;那乍看起，好像整本剧中的人好像都不是很坏，老警察是彻彻底底的好人；年轻警察也是；他父亲其实也是好人，最后为了救他付出了生命，但是他有很大的罪过，离婚了之后忽视了朱朝阳，缺少父爱和对父爱的渴望也是最终走向这种结局的重大原因。他母亲亦如是，在他的眼中，母亲也是一个自私的人，为了她自己而离婚（还推卸给父亲），看似很关心他，但是很多时候并没有陪伴着他，这也是他走上这样子的路的原因；朱晶晶的母亲任性，也纵容孩子（其实这一点也间接导致了朱晶晶的死亡），因为自己孩子的逝去歇斯底里，咬着朱朝阳和她母亲不放，虽然情有可原但是依旧有点过火，不可理喻，她的选择也导致了最后走向这样子的结局。<br>&emsp;&emsp;而最主要的主角，张东升，全篇用上帝视角赤裸裸地展现了他的内心世界，他虽然做了很多恶事，但是其实情有可原，是那一句句我还有机会吗的绝望回答一步步地逼他走向了内心的深渊，哪怕最后内心也终有一丝善意存留，对普普和黑子，尤其是普普。对于这种近乎洗白式的内心独白，难怪网上有那么多女生会粉他了，专一且痴情，为了爱情可以不顾一切，甚至杀人（我不确定有多少女生会无法拒绝这样子的爱，可能会是些小女生吧），而且内心世界还是善良的，如果没有那一出绿帽，他可能一直都会是个好人吧。善恶一念间，在抉择来临时，不够强大的内心让他选择了恶。</p>
-<h3 id="另外的角度"><a href="#另外的角度" class="headerlink" title="另外的角度"></a>另外的角度</h3><p>&emsp;&emsp;张东升的妻子的角度：其实她已经对张东升仁至义尽了，以一种温和的方式希望可以结束这一切，一拖再拖，但是没想到张东升对她的爱是如此的疯狂，最终害的她和她的父母走向了终结，也怪她没有看清。移情别恋这件事情或者是她的不对，她的自私，但是说起来可能也不能特别怪她，也许她的确遇到了真爱，也许是张东升那几乎病态的爱情使得她喘不过气或者压力很大。遇到张东升且使他走向疯狂，她不知算不算一个可怜人，粉张东升的人也可以想想看，如果你自己是她，你泉下有知知道了这一切又会怎么看待张东升？骂一句变态吗？</p>
-<h2 id="感触"><a href="#感触" class="headerlink" title="感触"></a>感触</h2><p>&emsp;&emsp;个人总结的全篇的中心思想是：作为父母，一定要尽职尽责，做好父母的义务，引导孩子三观的树立和陪伴他健康成长，走上正确的道路。</p>
-<ul>
-<li>如果张东升妻子的父母没有纵容张东升的妻子，他妻子也许就不会移情别恋（只是一个可能的原因）？张东升也因此会一直是个好人？</li>
-<li>如果朱朝阳的母亲没有因为自己的原因离婚导致缺少自己的陪伴和父亲的陪伴，朱朝阳会不会是个正常的孩子，最后也不会黑化？</li>
-<li>如果朱朝阳的父亲没有一心在女儿身上，可以给出朱朝阳足够的父爱，正确引导他，会不会朱朝阳就不会产生阴暗的角落了？</li>
-<li>如果朱晶晶的母亲没有纵容她女儿，会不会朱晶晶就不会死？</li>
-<li>如果严良的父亲没有吸毒，会不会严良会是个好孩子，也压根不会去福利院？</li>
-<li>如果普普的父母没有死（虽然可能不能怪她父母），普普和他弟弟又怎么会落得如此田地？会不会是另外一番风景？</li>
-</ul>
-<p>&emsp;&emsp;所有的这些问题最终阴差阳错，导致了最后这个最坏的结局。</p>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%B5%E8%A7%86%E5%89%A7/" rel="tag">电视剧</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
   </article>
   
 
   
   <nav class="page-nav">
     
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">下一页</a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">下一页</a>
   </nav>
   
 </section>
