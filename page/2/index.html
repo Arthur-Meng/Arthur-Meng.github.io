@@ -75,6 +75,98 @@
     
     
     
+    <article id="post-Java进阶/ThreadLocal妙用" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/ThreadLocal%E5%A6%99%E7%94%A8/"
+    >ThreadLocal妙用</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/ThreadLocal%E5%A6%99%E7%94%A8/" class="article-date">
+  <time datetime="2020-07-27T12:16:43.000Z" itemprop="datePublished">2020-07-27</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="什么是ThreadLocal"><a href="#什么是ThreadLocal" class="headerlink" title="什么是ThreadLocal"></a>什么是ThreadLocal</h2><p>&emsp;&emsp;ThreadLoal变量是线程局部变量，同一个ThreadLocal所包含的对象，在不同的Thread中有不同的副本。这里有几点需要注意：</p>
+<ul>
+<li>ThreadLocal提供了线程本地的实例。它与普通变量的区别在于，<strong>每个使用该变量的线程都会初始化一个完全独立的实例副本</strong>。</li>
+<li>因为每个Thread内有自己的实例副本，且该副本只能由当前Thread使用。这是也是ThreadLocal命名的由来。</li>
+<li>既然每个Thread有自己的实例副本，且其它Thread不可访问，那就不存在多线程间共享的问题。</li>
+<li>ThreadLocal变量通常被private static修饰。当一个线程结束时，它所使用的所有ThreadLocal相对的实例副本都可被回收。</li>
+<li>ThreadLocal是一个泛型类，保证可以接受任何类型的对象。</li>
+</ul>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>&emsp;&emsp;一个线程内可以存在多个ThreadLocal对象，所以其实是ThreadLocal内部维护了一个 Map ，这个Map不是直接使用的HashMap ，而是ThreadLoca 实现的一个叫做ThreadLocalMap的静态内部类。而我们使用的 get()、set() 方法其实都是调用了这个ThreadLocalMap类对应的 get()、set() 方法。</p>
+<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>&emsp;&emsp;<strong>ThreadLoal提供了线程级别的信息存储，可以用于存储当前线程的重要标准和信息，并且可以全局共享，使得代码耦合度更低，且实现更优雅（尤其是和注解联合起来使用）</strong>，例如：</p>
+<ul>
+<li>在接入层或者拦截器中将当前用户编号存入ThreadLoal，在之后的处理过程中都可以拿到当前用户编号</li>
+<li>通过注解将需要权限控制的标志存入ThreadLoal，在之后Mybatis的拦截器中根据标志判断是否需要进行权限过滤</li>
+<li><strong>通过注解数据源信息存入ThreadLoal，在获取数据库连接时根据ThreadLoal中的数据源信息获取对应的连接</strong></li>
+</ul>
+<h2 id="应用示例（通过注解实现多数据源）"><a href="#应用示例（通过注解实现多数据源）" class="headerlink" title="应用示例（通过注解实现多数据源）"></a>应用示例（通过注解实现多数据源）</h2><h3 id="定义存放ThreadLocal的类"><a href="#定义存放ThreadLocal的类" class="headerlink" title="定义存放ThreadLocal的类"></a>定义存放ThreadLocal的类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DynamicDataSourceContextHolder</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 定义ThreadLocal存储当前数据源</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;String&gt; contextHolder = <span class="keyword">new</span> ThreadLocal();</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> List&lt;String&gt; dataSourceIds = <span class="keyword">new</span> ArrayList();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DynamicDataSourceContextHolder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setDataSourceType</span><span class="params">(String dataSourceType)</span> </span>&#123;</span><br><span class="line">        contextHolder.set(dataSourceType);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">getDataSourceType</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (String)contextHolder.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">clearDataSourceType</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        contextHolder.remove();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">containsDataSource</span><span class="params">(String dataSourceId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dataSourceIds.contains(dataSourceId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="定义注解"><a href="#定义注解" class="headerlink" title="定义注解"></a>定义注解</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义注解</span></span><br><span class="line"><span class="meta">@Target</span>(&#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> TargetDataSource &#123;</span><br><span class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line"></span><br><span class="line">    Class&lt;?&gt; location() <span class="keyword">default</span> Void<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用注解</span></span><br><span class="line"><span class="meta">@TargetDataSource</span>(<span class="string">"default"</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="定义切面处理ThreadLocal的值"><a href="#定义切面处理ThreadLocal的值" class="headerlink" title="定义切面处理ThreadLocal的值"></a>定义切面处理ThreadLocal的值</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Order</span>(-<span class="number">1</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DynamicDataSourceAspect</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DynamicDataSourceAspect</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before</span>(<span class="string">"@annotation(targetDataSource)"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">changeDataSource</span><span class="params">(JoinPoint point, TargetDataSource targetDataSource)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="comment">// 根据注解的值设置当前数据源</span></span><br><span class="line">        String dsId = targetDataSource.value();</span><br><span class="line">        DynamicDataSourceContextHolder.setDataSourceType(dsId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@After</span>(<span class="string">"@annotation(targetDataSource)"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">restoreDataSource</span><span class="params">(JoinPoint point, TargetDataSource targetDataSource)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 方法结束后清理ThreadLocal中的值</span></span><br><span class="line">        DynamicDataSourceContextHolder.clearDataSourceType();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="使用ThreadLocal的值"><a href="#使用ThreadLocal的值" class="headerlink" title="使用ThreadLocal的值"></a>使用ThreadLocal的值</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DynamicDataSource</span> <span class="keyword">extends</span> <span class="title">AbstractRoutingDataSource</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Map&lt;Object, Object&gt; dataSourcesMap;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DynamicDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Object <span class="title">determineCurrentLookupKey</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 使用时从ThreadLocal取出当前数据源的值</span></span><br><span class="line">        <span class="keyword">return</span> DynamicDataSourceContextHolder.getDataSourceType();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getKey</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (String)<span class="keyword">this</span>.determineCurrentLookupKey();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">getTargetDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.determineTargetDataSource();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDataSourcesMap</span><span class="params">(Map&lt;Object, Object&gt; dataSourcesMap)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.dataSourcesMap = dataSourcesMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Map&lt;Object, Object&gt; <span class="title">getDataSourcesMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.dataSourcesMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">getCurrentDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (DataSource)<span class="keyword">this</span>.dataSourcesMap.get(DynamicDataSourceContextHolder.getDataSourceType() != <span class="keyword">null</span> ? DynamicDataSourceContextHolder.getDataSourceType() : <span class="string">"default"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">getDataSource</span><span class="params">(String dsId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (DataSource)<span class="keyword">this</span>.dataSourcesMap.get(dsId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-Java进阶/如何优雅地使用AOP" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -994,112 +1086,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-CAS/前后端分离对接CAS的几种思路" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/04/22/CAS/%E5%89%8D%E5%90%8E%E7%AB%AF%E5%88%86%E7%A6%BB%E5%AF%B9%E6%8E%A5CAS%E7%9A%84%E5%87%A0%E7%A7%8D%E6%80%9D%E8%B7%AF/"
-    >前后端分离对接CAS的几种思路</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/04/22/CAS/%E5%89%8D%E5%90%8E%E7%AB%AF%E5%88%86%E7%A6%BB%E5%AF%B9%E6%8E%A5CAS%E7%9A%84%E5%87%A0%E7%A7%8D%E6%80%9D%E8%B7%AF/" class="article-date">
-  <time datetime="2020-04-22T02:25:48.000Z" itemprop="datePublished">2020-04-22</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;前文中我们已经简单说了下项目怎么集成CAS客户端（如果没看过最好看下，不然可能下面的会看不懂），但是那些都是针对前后端不分离的系统的。而其实现在的很多项目，都是前后端分离的（这里的分离指的是部署分离），尤其是微服务架构的，很多甚至后台是网关。前端本身就已经像是一个服务了，它只是需要向后台请求数据。<strong>前后端分离时，我们的登录可能是这样子的：</strong></p>
-<ul>
-<li>前端发现没登录，跳转到登录页</li>
-<li>用户在我们的登录页进行登录</li>
-<li>登录完成，生成会话信息（比如使用cookie或者session）</li>
-<li>正常访问</li>
-</ul>
-<p>&emsp;&emsp;那我们来想下如果我们按照之前的CAS登录思路来走应该要怎么样。我们首先来确认一点，前后端分离时，前端和后台谁来作为CAS客户端和CAS服务端交互？很显然，肯定是后端，前端显然不能胜任这一任务。<strong>那我们预想的登录可能是这样子的：</strong></p>
-<ul>
-<li>前端发现没登录，这时候它该怎么办？它不能跳转到原先的登录页，而是去CAS的登录页</li>
-<li>到CAS的登录页进行登录的操作</li>
-<li>登录完成携带ST访问后台</li>
-<li>后台校验完ST之后再回到前端</li>
-<li>正常访问</li>
-</ul>
-<p>&emsp;&emsp;<strong>我们可以发现，整个流程和之前的对比最大的不同就是第一步。前端不能用自己原先那套登录逻辑了，而是发现没登录的时候跳转到CAS对应的登录页。</strong>那么我们应该怎么实现这一步？除此之外，我们需要考虑另外一个问题：<strong>如果另外的一个客户端登出，理论上我们的系统也要登出。那这时候我们前端请求的数据的时候，后台应该做出变动通知前端当前登录失效，需要重新登录。</strong>提供以下几个思路：</p>
-<h3 id="思路1"><a href="#思路1" class="headerlink" title="思路1"></a>思路1</h3><p>&emsp;&emsp;前端发一个请求给后台，后台给出302，302的地址是CAS登录的地址。如果支持跨域的话，前端手动跳转到302的地址就可以了。但是因为CAS往往不是和前端部署在一起的，如果不做反向代理和CAS服务端不支持的话，基本上会发生跨域（不知道跨域的请自行百度）。如果为了避免跨域，我们可以把url就变成那个请求，这样子请求就不是AJAX请求，哪怕302也不算跨域。登出的时候也是这样子，前端发送登出请求，后台给出302，302的地址是CAS登出的地址。</p>
-<h3 id="思路2"><a href="#思路2" class="headerlink" title="思路2"></a>思路2</h3><p>&emsp;&emsp;前端发一个请求给后台，后台给出200，响应里面是CAS登录的地址，然后前端跳转到CAS登录的地址。登出的时候也是这样子。这个思路和上面不一样就是把302变成了200，好处是前端可控，可以做更多自定义的操作。</p>
-<h3 id="思路3"><a href="#思路3" class="headerlink" title="思路3"></a>思路3</h3><p>&emsp;&emsp;前端发现没登录，直接跳转到对应的CAS的登录页。登出的时候一样，直接把url变成对应的CAS登出请求。这种方法简单暴力，不需要和后台有交互，但是这样子的话，前端就需要配置CAS相关的信息（同时后台也是要配置的），就会和CAS产生耦合。</p>
-<h3 id="思路4"><a href="#思路4" class="headerlink" title="思路4"></a>思路4</h3><p>&emsp;&emsp;我们可以增加一个适配器，这个适配器代理CAS服务端，适配器去支持跨域，然后整个流程和思路1就一样了，虽然有点麻烦，但是也是可行的（我就用过这种思路），用的是freemarker，稍微分享下代码：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;**</span><br><span class="line"> * 登录转换（代理iar访问cas）</span><br><span class="line"> *&#x2F;</span><br><span class="line">@RequestMapping(value &#x3D; &quot;&#x2F;cas&#x2F;login&quot;, method &#x3D; RequestMethod.GET)</span><br><span class="line">@ResponseBody</span><br><span class="line">@CrossOrigin</span><br><span class="line">public ModelAndView beforeLogin(@RequestParam String service) &#123;</span><br><span class="line">    String casUrl &#x3D; casHost + casLoginUrl + &quot;?service&#x3D;&quot; + URLEncoder.encode(service);</span><br><span class="line">    ModelAndView modelAndView &#x3D; new ModelAndView(&quot;&#x2F;cas&quot;);</span><br><span class="line">    modelAndView.addObject(&quot;casUrl&quot;, casUrl);</span><br><span class="line">    return modelAndView;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span>&gt;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.location.href = <span class="string">"$&#123;casUrl&#125;"</span></span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<br/>
-
-<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>&emsp;&emsp;所以我们仔细想下，会发现如果按照上面四个思路只有思路2和思路4是相对可行的。</p>
-<ul>
-<li>按照思路1，因为我们之后发的请求的肯定是ajax的，所以如果跨域，302就gg了。当然，如果你的CAS服务端支持跨域，那么思路1也是可行的，毕竟如果不发生跨域的话，前端就可以读取到302，并且手动跳转到302的地址。</li>
-<li>按照思路3，遇到另外的一个客户端登出的这种情况都不知道怎么办。</li>
-<li>所以只能按照思路2，在前端response的拦截器里面增加对应的处理，对数据增加判断，如果遇到后台说要跳转的信息，前端就跳转到响应里面的地址。</li>
-<li>或者思路4的方式，强行把跨域的CAS代理成不跨域的。<br/>
-
-</li>
-</ul>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>&emsp;&emsp;我们在前后端分离对接CAS时，会遇到一些平时没遇到的问题，这时候我们选用一个合适的方法见招拆招，去保证之前的CAS的流程可以顺利完成就可以了。只是这个合适的方法因项目而异，<strong>如果是CAS服务端支持跨域（一般很少），思路1无疑是最简单直接的。思路2可能是最容易让人接受的，而且也可以胜任绝大多数情况。思路3缺陷太大，无法兼容另一个客户端登出的情况。思路4则是比较麻烦，但是前端改动较少，只需要处理302的情况就可以了。</strong></p>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CAS/" rel="tag">CAS</a></li></ul>
 
 
     </footer>
