@@ -430,7 +430,7 @@
 <p>&emsp;&emsp;<strong>如果是http，我们就用上面那个，配置服务端口tomcatHttpPort和服务监听端口tomcatRedirectPort；如果是https的就用下面那个，配置服务端口tomcatHttpPort（一般是8443）、证书文件路径keystoreFilePath（绝对和相对路径都可以）和证书密码keystorePassword。</strong>不要问我证书和证书密码哪里来，问就是百度。但是如果要自己生成证书也要慎重，虽然自己生成的证书用也能用，但是在实际访问的时候会提示这个证书不合法或者不可用balabala（别问我怎么知道的，说多了都是泪）。<br><br/></p>
 <h2 id="支持跨域"><a href="#支持跨域" class="headerlink" title="支持跨域"></a>支持跨域</h2><p>&emsp;&emsp;跨域这个怎么说，理论上CAS是不支持跨域，但是如果你是前后端分离的话，这时候如果CAS服务端支持跨域就会很方便。当然你也可以用反向代理或者什么其他的方式去解决跨域的问题。我这边简单介绍下支持跨域的改造思路，<strong>其实思路就是配置CORS，我CAS服务端告诉浏览器它这个允许访问就可以了</strong>。实现方法如下：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String origin = request.getHeader(<span class="string">"Origin"</span>);</span><br><span class="line">response.setHeader(<span class="string">"Access-Control-Allow-Origin"</span>, origin);</span><br><span class="line">response.setHeader(<span class="string">"Access-Control-Allow-Credentials"</span>, <span class="string">"true"</span>);</span><br><span class="line">response.setHeader(<span class="string">"Access-Control-Allow-Headers"</span>, <span class="string">"Origin, X-Requested-With, Content-Type, Accept"</span>);</span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;<strong>给我们的response增加Access-Control-Allow-Origin、Access-Control-Allow-Credentials和Access-Control-Allow-Headers。</strong>至于在哪里加？仁者见仁智者见智了，我随便推荐两个地方，一个是top.jsp，一个是找个通用的Filter（如CharacterEncodingFilter）。<br><br/></p>
+<p>&emsp;&emsp;<strong>给我们的response增加Access-Control-Allow-Origin、Access-Control-Allow-Credentials和Access-Control-Allow-Headers。</strong>至于在哪里加？仁者见仁智者见智了，如新建一个Filter或者找一个通用的Filter（如CharacterEncodingFilter）。<br><br/></p>
 <h2 id="使用redis代替本地缓存（支持集群部署）"><a href="#使用redis代替本地缓存（支持集群部署）" class="headerlink" title="使用redis代替本地缓存（支持集群部署）"></a>使用redis代替本地缓存（支持集群部署）</h2><p>&emsp;&emsp;我之前在查询CAS怎么支持集群部署的时候看到两种解决方案：<strong>一种是tomcat的共享session，一种是用分布式缓存代替本地缓存</strong>。共享session的话程序就不用改，但是每次部署都很麻烦，对工程有要求。如果是使用分布式缓存代替本地缓存，那我们就要重新里面的源码，有一定的代码量，但是部署起来方便。斟酌再三，我决定还是能用代码解决的就用代码解决，使用redis代替本地缓存。由于涉及到公司的机密，我就不贴代码了，但是稍微说下需要重写的类：</p>
 <ul>
 <li><strong>DefaultTicketRegistry：Ticket注册类，就是原先的TGT和ST的本地缓存，我们改写这个类里面的方法就可以了</strong></li>
@@ -573,7 +573,7 @@
     <ul class="list-inline">
       <li>
         &copy;
-        2020
+        2020-2021
         Arthur Meng
       </li>
       <li>
