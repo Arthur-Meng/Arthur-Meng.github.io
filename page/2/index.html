@@ -75,6 +75,100 @@
     
     
     
+    <article id="post-Java进阶/BlockingQueue初体验" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/BlockingQueue%E5%88%9D%E4%BD%93%E9%AA%8C/"
+    >BlockingQueue初体验</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/BlockingQueue%E5%88%9D%E4%BD%93%E9%AA%8C/" class="article-date">
+  <time datetime="2020-07-27T13:16:43.000Z" itemprop="datePublished">2020-07-27</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h2><p>&emsp;&emsp;众所周知，最常用的ArrayList是线程不安全的。但是我们少不了面对多线程编程的情况，我们可以使用Collections.synchronizedList和Vector，但是效率比较低（由于），也可以使用CopyOnWriteArrayList，但是它适用于读远大于写的场景。这时候BlockingQueue是一个值得一试的尝试（ConcurrentLinkedQueue之类的也不错，吞吐量更高）。</p>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>&emsp;&emsp;BlockingQueue即阻塞队列，它是基于ReentrantLock，常用的还是用于实现生产者与消费者模式。在Java中，BlockingQueue是一个接口，它的实现类有ArrayBlockingQueue、DelayQueue、 LinkedBlockingDeque、LinkedBlockingQueue、PriorityBlockingQueue、SynchronousQueue等，它们的区别主要体现在存储结构上或对元素操作上的不同，但是对于take与put操作的原理，却是类似的。平时最常用的可能是ArrayBlockingQueue和LinkedBlockingQueue，前者基于数组实现，后者基于链表实现。本文主要以ArrayBlockingQueue为演示。</p>
+<h2 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h2><h3 id="放入数据"><a href="#放入数据" class="headerlink" title="放入数据"></a>放入数据</h3><ul>
+<li><strong>offer(anObject)</strong>：表示如果可能的话,将anObject加到BlockingQueue里,即如果BlockingQueue可以容纳,则返回true,否则返回false.（本方法不阻塞当前执行方法的线程）。</li>
+<li><strong>offer(E o, long timeout, TimeUnit unit)</strong>：可以设定等待的时间，如果在指定的时间内，还不能往队列中加入BlockingQueue，则返回失败。</li>
+<li><strong>put(anObject)</strong>：把anObject加到BlockingQueue里,如果BlockQueue没有空间,则调用此方法的线程被阻断直到BlockingQueue里面有空间再继续。</li>
+</ul>
+<h3 id="获取数据"><a href="#获取数据" class="headerlink" title="获取数据"></a>获取数据</h3><ul>
+<li><strong>poll(time)</strong>：取走BlockingQueue里排在首位的对象,若不能立即取出,则可以等time参数规定的时间,取不到时返回null;</li>
+<li><strong>poll(long timeout, TimeUnit unit)</strong>：从BlockingQueue取出一个队首的对象，如果在指定时间内，队列一旦有数据可取，则立即返回队列中的数据。否则知道时间超时还没有数据可取，返回失败。</li>
+<li><strong>take()</strong>：取走BlockingQueue里排在首位的对象,若BlockingQueue为空,阻断进入等待状态直到BlockingQueue有新的数据被加入; </li>
+<li><strong>drainTo()</strong>：一次性从BlockingQueue获取所有可用的数据对象（还可以指定获取数据的个数），通过该方法，可以提升获取数据效率；不需要多次分批加锁或释放锁。</li>
+</ul>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@EnableScheduling</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogQueue</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ArrayBlockingQueue&lt;TSysLog&gt; logQueue = <span class="keyword">new</span> ArrayBlockingQueue&lt;TSysLog&gt;(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> LogSender logSender;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 增加日志</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> log</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addLog</span><span class="params">(TSysLog log)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 如果可能的话，将log加到BlockingQueue里，可以容纳则返回true，否则返回false</span></span><br><span class="line">        <span class="keyword">if</span> (!logQueue.offer(log)) &#123;</span><br><span class="line">            <span class="comment">// 如果失败的话，推送队列</span></span><br><span class="line">            sendQueue();</span><br><span class="line">            <span class="comment">// 再尝试增加到队列</span></span><br><span class="line">            logQueue.add(log);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 将队列的日志发送（每5分钟一次）</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Scheduled</span>(cron = <span class="string">"0 0/5 * * * ? "</span>)</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sendQueue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 从队列中取出然后异步发送</span></span><br><span class="line">        List&lt;TSysLog&gt; logs = <span class="keyword">new</span> ArrayList&lt;TSysLog&gt;();</span><br><span class="line">        logQueue.drainTo(logs);</span><br><span class="line">        logSender.send(logs);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 优雅停机处理队列</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@PreDestroy</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clearQueueBeforeClose</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        sendQueue();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><h3 id="正确使用"><a href="#正确使用" class="headerlink" title="正确使用"></a>正确使用</h3><p>&emsp;&emsp;虽然BlockingQueue是线程安全的，但是使用它的时候不恰当的使用依旧会造成线程不安全，如果没有足够经验和把握的话，建议自己压测下验证下数据的准确性(比如使用Jmeter)。</p>
+<h3 id="优雅停机"><a href="#优雅停机" class="headerlink" title="优雅停机"></a>优雅停机</h3><p>&emsp;&emsp;我们存储在队列中的没有被处理的数据在停机时会被回收，这可能会导致数据丢失，下面推荐两种方法：</p>
+<ul>
+<li>增加一个处理队列内的剩余全部数据的方法，并加上@PreDestroy注解</li>
+<li>实现DisposableBean接口的destroy()方法，在destroy()方法内处理队列内的剩余全部数据</li>
+</ul>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-Java进阶/ThreadLocal妙用" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -98,7 +192,7 @@
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
   </div>
 
       
@@ -190,7 +284,7 @@
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+    <a class="article-category-link" href="/categories/AOP/">AOP</a>
   </div>
 
       
@@ -316,7 +410,7 @@
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+    <a class="article-category-link" href="/categories/%E6%B3%A8%E8%A7%A3/">注解</a>
   </div>
 
       
@@ -382,7 +476,7 @@
 
 </article>
     
-    <article id="post-读后感/隐秘的角落" class="article article-type-post" itemscope
+    <article id="post-生活/隐秘的角落" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -390,7 +484,7 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2020/07/14/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%9A%90%E7%A7%98%E7%9A%84%E8%A7%92%E8%90%BD/"
+  <a class="article-title" href="/2020/07/14/%E7%94%9F%E6%B4%BB/%E9%9A%90%E7%A7%98%E7%9A%84%E8%A7%92%E8%90%BD/"
     >隐秘的角落</a> 
 </h2>
  
@@ -400,12 +494,12 @@
 
     
     <div class="article-meta">
-      <a href="/2020/07/14/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%9A%90%E7%A7%98%E7%9A%84%E8%A7%92%E8%90%BD/" class="article-date">
+      <a href="/2020/07/14/%E7%94%9F%E6%B4%BB/%E9%9A%90%E7%A7%98%E7%9A%84%E8%A7%92%E8%90%BD/" class="article-date">
   <time datetime="2020-07-14T14:36:09.000Z" itemprop="datePublished">2020-07-14</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a>
+    <a class="article-category-link" href="/categories/%E7%94%B5%E8%A7%86%E5%89%A7/">电视剧</a>
   </div>
 
       
@@ -450,7 +544,7 @@
     <footer class="article-footer">
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%B5%E8%A7%86%E5%89%A7/" rel="tag">电视剧</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
 
 
     </footer>
@@ -656,7 +750,7 @@
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+    <a class="article-category-link" href="/categories/Maven/">Maven</a>
   </div>
 
       
@@ -725,7 +819,7 @@
 
 </article>
     
-    <article id="post-读后感/少年的你" class="article article-type-post" itemscope
+    <article id="post-生活/少年的你" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -733,7 +827,7 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2020/05/10/%E8%AF%BB%E5%90%8E%E6%84%9F/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/"
+  <a class="article-title" href="/2020/05/10/%E7%94%9F%E6%B4%BB/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/"
     >少年的你</a> 
 </h2>
  
@@ -743,12 +837,12 @@
 
     
     <div class="article-meta">
-      <a href="/2020/05/10/%E8%AF%BB%E5%90%8E%E6%84%9F/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/" class="article-date">
+      <a href="/2020/05/10/%E7%94%9F%E6%B4%BB/%E5%B0%91%E5%B9%B4%E7%9A%84%E4%BD%A0/" class="article-date">
   <time datetime="2020-05-10T10:21:09.000Z" itemprop="datePublished">2020-05-10</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a>
+    <a class="article-category-link" href="/categories/%E7%94%B5%E5%BD%B1/">电影</a>
   </div>
 
       
@@ -782,7 +876,7 @@
     <footer class="article-footer">
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%B5%E5%BD%B1/" rel="tag">电影</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
 
 
     </footer>
@@ -913,7 +1007,7 @@
 
 </article>
     
-    <article id="post-读后感/饥饿站台" class="article article-type-post" itemscope
+    <article id="post-生活/饥饿站台" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -921,7 +1015,7 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2020/05/05/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%A5%A5%E9%A5%BF%E7%AB%99%E5%8F%B0/"
+  <a class="article-title" href="/2020/05/05/%E7%94%9F%E6%B4%BB/%E9%A5%A5%E9%A5%BF%E7%AB%99%E5%8F%B0/"
     >饥饿站台</a> 
 </h2>
  
@@ -931,12 +1025,12 @@
 
     
     <div class="article-meta">
-      <a href="/2020/05/05/%E8%AF%BB%E5%90%8E%E6%84%9F/%E9%A5%A5%E9%A5%BF%E7%AB%99%E5%8F%B0/" class="article-date">
+      <a href="/2020/05/05/%E7%94%9F%E6%B4%BB/%E9%A5%A5%E9%A5%BF%E7%AB%99%E5%8F%B0/" class="article-date">
   <time datetime="2020-05-05T10:21:09.000Z" itemprop="datePublished">2020-05-05</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a>
+    <a class="article-category-link" href="/categories/%E7%94%B5%E5%BD%B1/">电影</a>
   </div>
 
       
@@ -971,121 +1065,7 @@
     <footer class="article-footer">
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%B5%E5%BD%B1/" rel="tag">电影</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java基础/StringUtils的使用" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/04/29/Java%E5%9F%BA%E7%A1%80/StringUtils%E7%9A%84%E4%BD%BF%E7%94%A8/"
-    >StringUtils的使用</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/04/29/Java%E5%9F%BA%E7%A1%80/StringUtils%E7%9A%84%E4%BD%BF%E7%94%A8/" class="article-date">
-  <time datetime="2020-04-29T14:18:23.000Z" itemprop="datePublished">2020-04-29</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;<strong>这篇文章是我对之前学的StringUtils的整理，没什么技术含量，适用于刚刚毕业的崽，如果你已经是个中老手，就不用浪费时间往下看了。</strong></p>
-<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>&emsp;&emsp;StringUtils是一个apache基金会提供的用于字符串处理的常用工具类，功能强大，使用方便，到几乎每个项目里面都用了，每个Java开发都或多或少见过和用过。熟练地掌握并使用它会让你在开发中事半功倍，代码可读性更高且更加健壮。</p>
-<h2 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">commons-lang3.version</span>&gt;</span>3.4<span class="tag">&lt;/<span class="name">commons-lang3.version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.commons<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-lang3<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;commons-lang3.version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<br/>
-
-<h2 id="空字符串"><a href="#空字符串" class="headerlink" title="空字符串"></a>空字符串</h2><p>&emsp;&emsp;很多时候，我们在判断一个字符串是不是空字符串的时候，往往需要考虑很多情况，比如字符串对象是不是null，是不是空，是不是空格等。这会导致我们的判断写的很长，且容易遗漏某些判断。所以强烈建议使用StringUtils里面提供的对空字符串的判断的方法，简单明了。这些方法可以判断某一个字符串，也可以批量判断。常用的是判断某一个字符串的是不是空字符串的有以下4个方法：<br>1、<strong>public static boolean isEmpty(String str)：判断某字符串是否为空，为空的标准是为null或者长度为0</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.isEmpty(<span class="keyword">null</span>) <span class="comment">// true</span></span><br><span class="line">StringUtils.isEmpty(<span class="string">""</span>)   <span class="comment">// true </span></span><br><span class="line">StringUtils.isEmpty(<span class="string">" "</span>)  <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
-<p>2、<strong>public static boolean isNotEmpty(String str)：判断某字符串是否不为空，不为空的标准是不为null且长度大于0（就是isEmpty()方法的反向判断）</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.isNotEmpty(<span class="keyword">null</span>) <span class="comment">// false</span></span><br><span class="line">StringUtils.isNotEmpty(<span class="string">""</span>)   <span class="comment">// false</span></span><br><span class="line">StringUtils.isNotEmpty(<span class="string">" "</span>)  <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
-
-<p>3、<strong>public static boolean isBlank(String str)：判断某字符串是否为空，为空的标准是为null或者长度为0或者全是空白符组成</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.isBlank(<span class="keyword">null</span>)          <span class="comment">// true</span></span><br><span class="line">StringUtils.isBlank(<span class="string">""</span>)            <span class="comment">// true</span></span><br><span class="line">StringUtils.isBlank(<span class="string">" "</span>)           <span class="comment">// true</span></span><br><span class="line">StringUtils.isBlank(<span class="string">"        "</span>)    <span class="comment">// true</span></span><br><span class="line">StringUtils.isBlank(<span class="string">"\t \n \f \r"</span>) <span class="comment">// true，制表符、换行符、换页符和回车符都是空白符</span></span><br><span class="line">StringUtils.isBlank(<span class="string">"arthur"</span>)      <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
-
-<p>4、<strong>public static boolean isNotBlank(String str)：判断某字符串是否不为空，不为空的标准是不为null且长度大于0且不全是空白符组成（就是isBlank()方法的反向判断）</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.isNotBlank(<span class="keyword">null</span>)          <span class="comment">// false</span></span><br><span class="line">StringUtils.isNotBlank(<span class="string">""</span>)            <span class="comment">// false</span></span><br><span class="line">StringUtils.isNotBlank(<span class="string">" "</span>)           <span class="comment">// false</span></span><br><span class="line">StringUtils.isNotBlank(<span class="string">"        "</span>)    <span class="comment">// false</span></span><br><span class="line">StringUtils.isNotBlank(<span class="string">"\t \n \f \r"</span>) <span class="comment">// false，制表符、换行符、换页符和回车符都是空白符</span></span><br><span class="line">StringUtils.isNotBlank(<span class="string">"arthur"</span>)      <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;我们可以发现isEmpty()和isBlank()不一样的地方是isBlank()更加严格，连空格等都算成是空的。个人感觉isBlank()和isNotBlank()会比isEmpty()和isNotEmpty()更建议用。<br><br/></p>
-<h2 id="大小写"><a href="#大小写" class="headerlink" title="大小写"></a>大小写</h2><p>&emsp;&emsp;Java原生的String类中就有一些对大小写的处理，与原生的不用的是，StringUtils兼容了对null的处理，当被处理的字符串为null时，会返回null（避免了空指针的报错）。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">String a = <span class="keyword">null</span>;</span><br><span class="line">a.toUpperCase();  <span class="comment">//throw java.lang.NullPointerException</span></span><br><span class="line">a.toLowerCase();  <span class="comment">//throw java.lang.NullPointerException</span></span><br><span class="line"></span><br><span class="line">StringUtils.upperCase(<span class="keyword">null</span>); <span class="comment">// null</span></span><br><span class="line">StringUtils.lowerCase(<span class="keyword">null</span>); <span class="comment">// null</span></span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;StringUtils而且还拓展了更多的方法，首字母大写或者小写，判断字符串是不是全大写或者小写。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.capitalize(<span class="string">"arthur"</span>));    <span class="comment">// Arthur (首字母转大写)</span></span><br><span class="line">StringUtils.uncapitalize(<span class="string">"ABC"</span>));     <span class="comment">// aBC (首字母转小写)</span></span><br><span class="line"></span><br><span class="line">StringUtils.isAllUpperCase(<span class="keyword">null</span>));    <span class="comment">// false</span></span><br><span class="line">StringUtils.isAllUpperCase(<span class="string">""</span>));      <span class="comment">// false</span></span><br><span class="line">StringUtils.isAllUpperCase(<span class="string">" "</span>));     <span class="comment">// false(如果是空字符串就不算)</span></span><br><span class="line">StringUtils.isAllUpperCase(<span class="string">"ABC"</span>));   <span class="comment">// true(是否全是大写)</span></span><br><span class="line">StringUtils.isAllLowerCase(<span class="keyword">null</span>));    <span class="comment">// false</span></span><br><span class="line">StringUtils.isAllLowerCase(<span class="string">""</span>));      <span class="comment">// false</span></span><br><span class="line">StringUtils.isAllLowerCase(<span class="string">" "</span>));     <span class="comment">// false(如果是空字符串就不算)</span></span><br><span class="line">StringUtils.isAllLowerCase(<span class="string">"abc"</span>));   <span class="comment">// true(是否全是小写)</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="查找"><a href="#查找" class="headerlink" title="查找"></a>查找</h2><p>&emsp;&emsp;String原生也支持了indexOf的查找，不同的是，StringUtils兼容了对null的处理，除此之外还可以支持查询第几次出现的位置。</p>
-<ul>
-<li><strong>public static int indexOf(String str, char searchChar, int startPos)：返回字符 searchChar 从 startPos 开始在字符串 str 中第一次出现的位置。</strong><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.indexOf(<span class="keyword">null</span>, *, *) = -<span class="number">1</span></span><br><span class="line">StringUtils.indexOf(*, <span class="keyword">null</span>, *) = -<span class="number">1</span></span><br><span class="line">StringUtils.indexOf(<span class="string">""</span>, <span class="string">""</span>, <span class="number">0</span>) = <span class="number">0</span></span><br><span class="line">StringUtils.indexOf(<span class="string">"aabc"</span>, <span class="string">"a"</span>, <span class="number">0</span>) = <span class="number">0</span></span><br><span class="line">StringUtils.indexOf(<span class="string">"aabc"</span>, <span class="string">"a"</span>, <span class="number">1</span>) = <span class="number">1</span></span><br></pre></td></tr></table></figure></li>
-<li><strong>public static int ordinalIndexOf(String str, String searchStr, int ordinal)：返回字符串 searchStr 在字符串 str 中第 ordinal 次出现的位置。</strong><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.ordinalIndexOf(<span class="keyword">null</span>, *, *) = -<span class="number">1</span></span><br><span class="line">StringUtils.ordinalIndexOf(*, <span class="keyword">null</span>, *) = -<span class="number">1</span></span><br><span class="line">StringUtils.ordinalIndexOf(<span class="string">""</span>, <span class="string">""</span>, *) = <span class="number">0</span></span><br><span class="line">StringUtils.ordinalIndexOf(<span class="string">"aabc"</span>, <span class="string">"a"</span>, <span class="number">1</span>) = <span class="number">0</span></span><br><span class="line">StringUtils.ordinalIndexOf(<span class="string">"aabc"</span>, <span class="string">"a"</span>, <span class="number">2</span>) = <span class="number">1</span></span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h2 id="替换"><a href="#替换" class="headerlink" title="替换"></a>替换</h2><p>&emsp;&emsp;同样的，StringUtils的replace也兼容了对null的处理，除此之外还支持只会替换一次或者指定最大替换的个数。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.replace(<span class="string">"abc"</span>, <span class="keyword">null</span>, <span class="string">"c"</span>)); <span class="comment">// abc (此处被替换字符序列为null，因此替换会被忽略，返回原字符串)</span></span><br><span class="line">StringUtils.replace(<span class="string">"abc"</span>, <span class="string">"c"</span>, <span class="keyword">null</span>)); <span class="comment">// abc (此处替换字符序列为null，因此替换也被忽略，返回原字符串)</span></span><br><span class="line">StringUtils.replace(<span class="string">"abc"</span>, <span class="string">"a"</span>, <span class="string">"c"</span>));  <span class="comment">// cbc</span></span><br><span class="line"></span><br><span class="line">StringUtils.replaceOnce(<span class="string">"aba"</span>, <span class="string">"a"</span>, <span class="string">"c"</span>)); <span class="comment">// cba</span></span><br><span class="line"></span><br><span class="line">StringUtils.replace(<span class="string">"aabaaa"</span>, <span class="string">"a"</span>, <span class="string">"z"</span>, <span class="number">0</span>));  <span class="comment">// aabaaa (0表示替换的个数为0，也就是不替换)</span></span><br><span class="line">StringUtils.replace(<span class="string">"aabaaa"</span>, <span class="string">"a"</span>, <span class="string">"z"</span>, <span class="number">1</span>));  <span class="comment">// zabaaa (1表示最多替换1个)</span></span><br><span class="line">StringUtils.replace(<span class="string">"aabaaa"</span>, <span class="string">"a"</span>, <span class="string">"z"</span>, -<span class="number">1</span>)); <span class="comment">// zzbzzz (-1表示全部替换)</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="移除"><a href="#移除" class="headerlink" title="移除"></a>移除</h2><p>&emsp;&emsp;还是同样的，StringUtils的remove也兼容了对null的处理，除此之外支持移除开头和结尾的（其实我们也可以用replace成空的字符串来完成remove的操作，但是个人不是很建议）。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.remove(<span class="string">"abc"</span>, <span class="string">"a"</span>));      <span class="comment">// bc</span></span><br><span class="line">StringUtils.removeStart(<span class="string">"aba"</span>, <span class="string">"a"</span>)); <span class="comment">// ba (移除第一个)</span></span><br><span class="line">StringUtils.removeEnd(<span class="string">"aba"</span>, <span class="string">"a"</span>));   <span class="comment">// ab (移除最后一个)</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="截取"><a href="#截取" class="headerlink" title="截取"></a>截取</h2><p>&emsp;&emsp;截取也是我们常用的方法，StringUtils的截取支持指定位置，或者指定字符串前后截取。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.substring(<span class="string">"abcde"</span>, <span class="number">3</span>);   <span class="comment">// de （从3开始截取）</span></span><br><span class="line">StringUtils.substring(<span class="string">"abcde"</span>, <span class="number">3</span>,<span class="number">4</span>); <span class="comment">// c  （从3截取到4，3不算，4算）</span></span><br><span class="line"></span><br><span class="line">StringUtils.substringBefore(<span class="string">"aabbb"</span>,<span class="string">"b"</span>);     <span class="comment">//aa   （截取第一个b之前的）</span></span><br><span class="line">StringUtils.substringBeforeLast(<span class="string">"aabbb"</span>,<span class="string">"b"</span>); <span class="comment">//aabb （截取最后一个b之前的）</span></span><br><span class="line">StringUtils.substringAfter(<span class="string">"aabbb"</span>,<span class="string">"a"</span>);      <span class="comment">//abbb （截取第一个a之后的）</span></span><br><span class="line">StringUtils.substringAfterLast(<span class="string">"aabbb"</span>,<span class="string">"a"</span>);  <span class="comment">//bbb  （截取最后一个a之后的）</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="反转"><a href="#反转" class="headerlink" title="反转"></a>反转</h2><p>&emsp;&emsp;反转是一个很有意思的功能，StringBuffer也有reverse方法，但是如果想直接处理还需要把String转为StringBuffer就比较麻烦，还是StringUtils的reverse比较简单。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.reverse(<span class="string">"abc"</span>); <span class="comment">// cba</span></span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;StringUtils的reverse还支持根据字符镜像反转。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">StringUtils.reverseDelimited(<span class="string">"abc"</span>,<span class="string">'b'</span>)     <span class="comment">// cba</span></span><br><span class="line">StringUtils.reverseDelimited(<span class="string">"abc"</span>,<span class="string">'d'</span>)     <span class="comment">// abc</span></span><br><span class="line">StringUtils.reverseDelimited(<span class="string">"ababcbc"</span>,<span class="string">'d'</span>) <span class="comment">// cbcbaba</span></span><br><span class="line">StringUtils.reverseDelimited(<span class="string">"ab123bc"</span>,<span class="string">'d'</span>) <span class="comment">// cb123ba</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>&emsp;&emsp;commons-lang3包中， 除了StringUtils这个常用类之后，还有ArrayUtils（数组工具类），CharUtils（字符串工具类）,NumberUtils(数字工具类)等，大家有兴趣也可以去了解下！</p>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
 
 
     </footer>
