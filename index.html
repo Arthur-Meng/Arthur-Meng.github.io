@@ -75,7 +75,7 @@
     
     
     
-    <article id="post-Java进阶/Druid如何获取连接和归还连接" class="article article-type-post" itemscope
+    <article id="post-数据库/Druid常用配置" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -83,7 +83,247 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2021/01/13/Java%E8%BF%9B%E9%98%B6/Druid%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E8%BF%9E%E6%8E%A5%E5%92%8C%E5%BD%92%E8%BF%98%E8%BF%9E%E6%8E%A5/"
+  <a class="article-title" href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Druid%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE/"
+    >Druid常用配置</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Druid%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE/" class="article-date">
+  <time datetime="2021-01-14T15:17:33.000Z" itemprop="datePublished">2021-01-14</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%BF%9E%E6%8E%A5%E6%B1%A0/">连接池</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;网上有很多关于Druid的配置，个人感觉最好还是从官方找：</p>
+<ul>
+<li><a href="https://github.com/alibaba/druid/wiki/DruidDataSource%E9%85%8D%E7%BD%AE" target="_blank" rel="noopener">DruidDataSource通用配置</a></li>
+<li><a href="https://github.com/alibaba/druid/wiki/DruidDataSource%E9%85%8D%E7%BD%AE%E5%B1%9E%E6%80%A7%E5%88%97%E8%A1%A8" target="_blank" rel="noopener">DruidDataSource配置属性列表(虽然不全)</a></li>
+</ul>
+<h1 id="配置Tips"><a href="#配置Tips" class="headerlink" title="配置Tips"></a>配置Tips</h1><p>&emsp;&emsp;下面放了一些个人常用的配置，仅供参考：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">#初始化时建立物理连接的个数</span><br><span class="line">druid.initialSize&#x3D;1</span><br><span class="line">#最小连接池数量</span><br><span class="line">druid.minIdle&#x3D;1</span><br><span class="line">#最大连接池数量：有一个说法是合适的连接数 &#x3D; ((核心数 * 2) + 有效磁盘数)</span><br><span class="line">druid.maxActive&#x3D;20</span><br><span class="line"></span><br><span class="line">#获取连接时最大等待时间，单位毫秒。配置了maxWait之后，缺省启用公平锁，并发效率会有所下降，如果需要可以通过配置useUnfairLock属性为true使用非公平锁。</span><br><span class="line">druid.maxWait&#x3D;60000</span><br><span class="line"># 配置一个连接在池中最小生存的时间，单位是毫秒</span><br><span class="line">druid.minEvictableIdleTimeMillis: 30000</span><br><span class="line"></span><br><span class="line">#拦截器（监控统计用的filter:stat   日志用的filter:log4j   防御sql注入的filter:wall）</span><br><span class="line">druid.filters&#x3D;wall</span><br><span class="line">#记录慢sql，开发和测试环境可以开</span><br><span class="line">druid.stat.logSlowSql&#x3D;false</span><br><span class="line">#监控页面，开发和测试环境可以开</span><br><span class="line">druid.statViewServlet.enabled&#x3D;false</span><br><span class="line"></span><br><span class="line">#是否自动回收超时连接</span><br><span class="line">druid.removeAbandoned&#x3D;true</span><br></pre></td></tr></table></figure>
+
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-数据库/Spring如何保证同一个事务获取的是同一个连接" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Spring%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%90%8C%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E8%8E%B7%E5%8F%96%E7%9A%84%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5/"
+    >Spring如何保证同一个事务获取的是同一个连接</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Spring%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%90%8C%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E8%8E%B7%E5%8F%96%E7%9A%84%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5/" class="article-date">
+  <time datetime="2021-01-14T14:16:43.000Z" itemprop="datePublished">2021-01-14</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1/">数据库事务</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;在上文中提到过，Druid连接池并并不能保证同一个事务获取到的同一个连接，这个是由Spring的事务保证的。那Spring是如何保证同一个事务获取的是同一个连接呢？</p>
+<h1 id="获取连接时的源码分析"><a href="#获取连接时的源码分析" class="headerlink" title="获取连接时的源码分析"></a>获取连接时的源码分析</h1><p>&emsp;&emsp;Mybatis等ORM框架或者Spring自带的jdbcTemplate都会通过DataSourceUtils的getConnection方法来获取连接，让我们来看下源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">getConnection</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> CannotGetJdbcConnectionException </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 直接调用了doGetConnection方法</span></span><br><span class="line">        <span class="keyword">return</span> doGetConnection(dataSource);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (SQLException var2) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> CannotGetJdbcConnectionException(<span class="string">"Could not get JDBC Connection"</span>, var2);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 这一层方法确保了如果有事务则同一个事务获取到的是同一个连接</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">doGetConnection</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    Assert.notNull(dataSource, <span class="string">"No DataSource specified"</span>);</span><br><span class="line">    <span class="comment">// 根据dataSource尝试获取连接的持有者</span></span><br><span class="line">    ConnectionHolder conHolder = (ConnectionHolder)TransactionSynchronizationManager.getResource(dataSource);</span><br><span class="line">    <span class="keyword">if</span> (conHolder == <span class="keyword">null</span> || !conHolder.hasConnection() &amp;&amp; !conHolder.isSynchronizedWithTransaction()) &#123;</span><br><span class="line">        <span class="comment">// 如果不存在连接的持有者，则从dataSource获取连接</span></span><br><span class="line">        logger.debug(<span class="string">"Fetching JDBC Connection from DataSource"</span>);</span><br><span class="line">        Connection con = dataSource.getConnection();</span><br><span class="line">        <span class="keyword">if</span> (TransactionSynchronizationManager.isSynchronizationActive()) &#123;</span><br><span class="line">            <span class="comment">// 如果开启了事务</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 把连接放到连接的持有者</span></span><br><span class="line">                ConnectionHolder holderToUse = conHolder;</span><br><span class="line">                <span class="keyword">if</span> (conHolder == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    holderToUse = <span class="keyword">new</span> ConnectionHolder(con);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    conHolder.setConnection(con);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                holderToUse.requested();</span><br><span class="line">                <span class="comment">// 存储连接的持有者以供后续调用时获取，确保同一个事务获取的是同一个连接</span></span><br><span class="line">                TransactionSynchronizationManager.registerSynchronization(<span class="keyword">new</span> DataSourceUtils.ConnectionSynchronization(holderToUse, dataSource));</span><br><span class="line">                holderToUse.setSynchronizedWithTransaction(<span class="keyword">true</span>);</span><br><span class="line">                <span class="keyword">if</span> (holderToUse != conHolder) &#123;</span><br><span class="line">                    TransactionSynchronizationManager.bindResource(dataSource, holderToUse);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (RuntimeException var4) &#123;</span><br><span class="line">                releaseConnection(con, dataSource);</span><br><span class="line">                <span class="keyword">throw</span> var4;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> con;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果存在连接的持有者，则直接从连接的持有者获取连接</span></span><br><span class="line">        conHolder.requested();</span><br><span class="line">        <span class="keyword">if</span> (!conHolder.hasConnection()) &#123;</span><br><span class="line">            logger.debug(<span class="string">"Fetching resumed JDBC Connection from DataSource"</span>);</span><br><span class="line">            conHolder.setConnection(dataSource.getConnection());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> conHolder.getConnection();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-数据库/Druid如何自动回收超时连接" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Druid%E5%A6%82%E4%BD%95%E8%87%AA%E5%8A%A8%E5%9B%9E%E6%94%B6%E8%B6%85%E6%97%B6%E8%BF%9E%E6%8E%A5/"
+    >Druid如何自动回收超时连接</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Druid%E5%A6%82%E4%BD%95%E8%87%AA%E5%8A%A8%E5%9B%9E%E6%94%B6%E8%B6%85%E6%97%B6%E8%BF%9E%E6%8E%A5/" class="article-date">
+  <time datetime="2021-01-14T13:16:43.000Z" itemprop="datePublished">2021-01-14</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%BF%9E%E6%8E%A5%E6%B1%A0/">连接池</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;我们在排查Druid连接泄露的时候，网上往往会说打开removeAbandoned和logAbandoned来打开自动回收超时连接和打印日志，我们直接来跟踪下源码看看Druid是如何实现自动回收超时连接的？</p>
+<h1 id="参数配置"><a href="#参数配置" class="headerlink" title="参数配置"></a>参数配置</h1><p>&emsp;&emsp;我们先来看下与之相关的几个参数及其含义：</p>
+<ul>
+<li><strong>removeAbandoned</strong>：是否自动回收超时连接，默认关闭，当该参数开启时下面两个参数才会生效。</li>
+<li><strong>logAbandoned</strong>：是否在自动回收超时连接的时候打印连接的超时错误，默认开启。</li>
+<li><strong>removeAbandonedTimeout</strong>：超时时间(与其他配置不一样，以秒数为单位)，默认180秒。</li>
+<li><strong>timeBetweenEvictionRunsMillis</strong>：检测连接的间隔时间(毫秒数为单位)，默认60000（1分钟）。</li>
+</ul>
+<h1 id="如何定时执行"><a href="#如何定时执行" class="headerlink" title="如何定时执行"></a>如何定时执行</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * DruidDataSource初始化的时候会调用这个方法</span></span><br><span class="line"><span class="comment"> * 创建销毁连接的调度任务或者线程，两者的效果是一样的，都是为了保证定时执行destroyTask</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">createAndStartDestroyThread</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.destroyTask = <span class="keyword">new</span> DruidDataSource.DestroyTask();</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.destroyScheduler != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">long</span> period = <span class="keyword">this</span>.timeBetweenEvictionRunsMillis;</span><br><span class="line">        <span class="keyword">if</span> (period &lt;= <span class="number">0L</span>) &#123;</span><br><span class="line">            period = <span class="number">1000L</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// destroyScheduler是一个ScheduledExecutorService，每隔配置的时间执行destroyTask</span></span><br><span class="line">        <span class="keyword">this</span>.destroySchedulerFuture = <span class="keyword">this</span>.destroyScheduler.scheduleAtFixedRate(<span class="keyword">this</span>.destroyTask, period, period, TimeUnit.MILLISECONDS);</span><br><span class="line">        <span class="keyword">this</span>.initedLatch.countDown();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        String threadName = <span class="string">"Druid-ConnectionPool-Destroy-"</span> + System.identityHashCode(<span class="keyword">this</span>);</span><br><span class="line">        <span class="comment">// 创建销毁连接的线程</span></span><br><span class="line">        <span class="keyword">this</span>.destroyConnectionThread = <span class="keyword">new</span> DruidDataSource.DestroyConnectionThread(threadName);</span><br><span class="line">        <span class="keyword">this</span>.destroyConnectionThread.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 销毁连接的线程</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DestroyConnectionThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DestroyConnectionThread</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(name);</span><br><span class="line">        <span class="keyword">this</span>.setDaemon(<span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        DruidDataSource.<span class="keyword">this</span>.initedLatch.countDown();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (DruidDataSource.<span class="keyword">this</span>.closed) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (DruidDataSource.<span class="keyword">this</span>.timeBetweenEvictionRunsMillis &gt; <span class="number">0L</span>) &#123;</span><br><span class="line">                    Thread.sleep(DruidDataSource.<span class="keyword">this</span>.timeBetweenEvictionRunsMillis);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">1000L</span>);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (Thread.interrupted()) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 每隔配置的时间执行destroyTask</span></span><br><span class="line">                DruidDataSource.<span class="keyword">this</span>.destroyTask.run();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException var2) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 销毁连接的任务</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DestroyTask</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DestroyTask</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        DruidDataSource.<span class="keyword">this</span>.shrink(<span class="keyword">true</span>, DruidDataSource.<span class="keyword">this</span>.keepAlive);</span><br><span class="line">        <span class="keyword">if</span> (DruidDataSource.<span class="keyword">this</span>.isRemoveAbandoned()) &#123;</span><br><span class="line">            <span class="comment">// 如果开启的话，就会执行removeAbandoned方法</span></span><br><span class="line">            DruidDataSource.<span class="keyword">this</span>.removeAbandoned();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="如何回收连接"><a href="#如何回收连接" class="headerlink" title="如何回收连接"></a>如何回收连接</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 回收超时连接，原理是遍历当前激活的连接，把其中不在运行且超时的连接给关闭并移除</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">removeAbandoned</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> removeCount = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> currrentNanos = System.nanoTime();</span><br><span class="line">    List&lt;DruidPooledConnection&gt; abandonedList = <span class="keyword">new</span> ArrayList();</span><br><span class="line">    <span class="comment">// 锁住当前激活的连接，确保不被其他的线程修改</span></span><br><span class="line">    <span class="keyword">this</span>.activeConnectionLock.lock();</span><br><span class="line"></span><br><span class="line">    Iterator iter;</span><br><span class="line">    DruidPooledConnection pooledConnection;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 遍历当前激活的连接，activeConnections的数据格式是Map&lt;DruidPooledConnection, Object&gt;</span></span><br><span class="line">        iter = <span class="keyword">this</span>.activeConnections.keySet().iterator();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span>(iter.hasNext()) &#123;</span><br><span class="line">            pooledConnection = (DruidPooledConnection)iter.next();</span><br><span class="line">            <span class="keyword">if</span> (!pooledConnection.isRunning()) &#123;</span><br><span class="line">                <span class="comment">// 如果当前连接不在运行中</span></span><br><span class="line">                <span class="keyword">long</span> timeMillis = (currrentNanos - pooledConnection.getConnectedTimeNano()) / <span class="number">1000000L</span>;</span><br><span class="line">                <span class="keyword">if</span> (timeMillis &gt;= <span class="keyword">this</span>.removeAbandonedTimeoutMillis) &#123;</span><br><span class="line">                    <span class="comment">// 如果当前连接超过了超时时间，则移出当前激活的连接</span></span><br><span class="line">                    iter.remove();</span><br><span class="line">                    pooledConnection.setTraceEnable(<span class="keyword">false</span>);</span><br><span class="line">                    <span class="comment">// 添加到移除列表</span></span><br><span class="line">                    abandonedList.add(pooledConnection);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>.activeConnectionLock.unlock();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果存在移除的连接</span></span><br><span class="line">    <span class="keyword">if</span> (abandonedList.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        iter = abandonedList.iterator();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="comment">// 遍历要被移除的连接</span></span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!iter.hasNext()) &#123;</span><br><span class="line">                        <span class="comment">// 如果没有下一个了就返回移除的总数</span></span><br><span class="line">                        <span class="keyword">return</span> removeCount;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    pooledConnection = (DruidPooledConnection)iter.next();</span><br><span class="line">                    ReentrantLock lock = pooledConnection.lock;</span><br><span class="line">                    lock.lock();</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (pooledConnection.isDisable()) &#123;</span><br><span class="line">                            <span class="comment">// 如果当前连接已经不可用，则跳过移除</span></span><br><span class="line">                            <span class="keyword">continue</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="comment">// 如果不是则跳出循环</span></span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                        lock.unlock();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 关闭连接并调用抛弃的方法</span></span><br><span class="line">                JdbcUtils.close(pooledConnection);</span><br><span class="line">                pooledConnection.abandond();</span><br><span class="line">                <span class="comment">// 移除连接计数+1</span></span><br><span class="line">                ++<span class="keyword">this</span>.removeAbandonedCount;</span><br><span class="line">                ++removeCount;</span><br><span class="line">            &#125; <span class="keyword">while</span>(!<span class="keyword">this</span>.isLogAbandoned());</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 如果需要打印日志</span></span><br><span class="line">            StringBuilder buf = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">            buf.append(<span class="string">"abandon connection, owner thread: "</span>);</span><br><span class="line">            buf.append(pooledConnection.getOwnerThread().getName());</span><br><span class="line">            buf.append(<span class="string">", connected at : "</span>);</span><br><span class="line">            buf.append(pooledConnection.getConnectedTimeMillis());</span><br><span class="line">            buf.append(<span class="string">", open stackTrace\n"</span>);</span><br><span class="line">            StackTraceElement[] trace = pooledConnection.getConnectStackTrace();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">int</span> i;</span><br><span class="line">            <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; trace.length; ++i) &#123;</span><br><span class="line">                buf.append(<span class="string">"\tat "</span>);</span><br><span class="line">                buf.append(trace[i].toString());</span><br><span class="line">                buf.append(<span class="string">"\n"</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            buf.append(<span class="string">"ownerThread current state is "</span> + pooledConnection.getOwnerThread().getState() + <span class="string">", current stackTrace\n"</span>);</span><br><span class="line">            trace = pooledConnection.getOwnerThread().getStackTrace();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; trace.length; ++i) &#123;</span><br><span class="line">                buf.append(<span class="string">"\tat "</span>);</span><br><span class="line">                buf.append(trace[i].toString());</span><br><span class="line">                buf.append(<span class="string">"\n"</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            LOG.error(buf.toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> removeCount;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-数据库/Druid如何获取连接和归还连接" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/01/13/%E6%95%B0%E6%8D%AE%E5%BA%93/Druid%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E8%BF%9E%E6%8E%A5%E5%92%8C%E5%BD%92%E8%BF%98%E8%BF%9E%E6%8E%A5/"
     >Druid如何获取连接和归还连接</a> 
 </h2>
  
@@ -93,12 +333,12 @@
 
     
     <div class="article-meta">
-      <a href="/2021/01/13/Java%E8%BF%9B%E9%98%B6/Druid%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E8%BF%9E%E6%8E%A5%E5%92%8C%E5%BD%92%E8%BF%98%E8%BF%9E%E6%8E%A5/" class="article-date">
+      <a href="/2021/01/13/%E6%95%B0%E6%8D%AE%E5%BA%93/Druid%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E8%BF%9E%E6%8E%A5%E5%92%8C%E5%BD%92%E8%BF%98%E8%BF%9E%E6%8E%A5/" class="article-date">
   <time datetime="2021-01-13T07:16:43.000Z" itemprop="datePublished">2021-01-13</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>
+    <a class="article-category-link" href="/categories/%E8%BF%9E%E6%8E%A5%E6%B1%A0/">连接池</a>
   </div>
 
       
@@ -149,7 +389,7 @@
     <footer class="article-footer">
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
 
 
     </footer>
@@ -729,286 +969,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-算法/回溯算法的经典应用" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/11/18/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%8F%E5%85%B8%E5%BA%94%E7%94%A8/"
-    >回溯算法的经典应用</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/11/18/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%8F%E5%85%B8%E5%BA%94%E7%94%A8/" class="article-date">
-  <time datetime="2020-11-18T09:17:43.000Z" itemprop="datePublished">2020-11-18</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%AE%97%E6%B3%95/">算法</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;由于兴趣问题，本人最近在刷LeetCode，总结发现算法中最常出现的思想无非是动态规划，回溯算法，贪心算法和位图算法等。其中回溯算法出现的个人体感频次高居第二，所以记录一个回溯算法的经典应用：<a href="https://leetcode-cn.com/problems/sudoku-solver/" target="_blank" rel="noopener">解数独</a>。</p>
-<h2 id="怎么解"><a href="#怎么解" class="headerlink" title="怎么解"></a>怎么解</h2><p>&emsp;&emsp;首先我们通过程序解数独的总体思路还是和人解数独是一样的，就是<strong>在空白处填入当前可能的值直到全部值都被填完</strong>。<br>&emsp;&emsp;但是解决方法可能截然不同，人做数独时（至少我是这样子的）会纵观整个数独，然后把那种<strong>根据当前条件可以确定的值填入</strong>，每填一个可以依靠的信息也越多，一个一个填下去直到全部填完，只有当迫不得已的时候才会在二个可能性里面二选一填入验证填入的值是不是对的。<br>&emsp;&emsp;而程序做不到像人一样纵观全局（或者说很难，需要抽离出解数独的多种规并则转换为代码），只能在当前的可能性里面一个一个试过去，比如当前的空可以填1，2，3三个值。程序会假设填入1，然后递归下去当当前空为1的时候是否可能存在解，如果不存在，再填入2，3。我们在每一个递归里面需要做的，就是<strong>在找到当前空白处的所有可能性并递归下去</strong>。如果全部填完则返回成功，如果找不到值填入或者所有可能的值填入后都失败则返回失败。可以试想下，这段递归的代码最核心的代码是两块：<strong>怎么快速找到空白处的所有可能性和怎么用最低的代价递归下去（尝试之后的可能性）</strong>。</p>
-<h2 id="如何运用回溯算法"><a href="#如何运用回溯算法" class="headerlink" title="如何运用回溯算法"></a>如何运用回溯算法</h2><p>&emsp;&emsp;回溯算法就是为了解决上述的第二个问题：怎么用最低的代价递归下去。我们在没有用回溯思想的时候可能会这样子做，<strong>深拷贝当前的数独，然后将可能的值填入之后再递归下去</strong>。这样子做从逻辑上来说是没什么问题，但是太吃内存了，每一次递归都会产生一个新的数独对象。而且由于大量创建对象，处理速度也很慢。<br>&emsp;&emsp;这时候我们是回溯算法就闪亮登场了，由于我们是在递归，我们<strong>无需拷贝当前数独，直接将可能的值填入之后再递归下去，如果成功最好，如果失败了再把状态还原，就相当于这次尝试失效，一切还原，我们来进行下一个尝试</strong>。有木有，有木有，这个感觉很像是原地算法，我们只需要用当前的一个数独对象就可以遍历所有结果。还是之前那个例子，比如当前的空可以填1，2，3三个值。程序会假设填入1，递归下去如果1找不出解，则还原状态，当前数独和尝试1之前是一样的，再尝试2和3两个值。<br>&emsp;&emsp;所以回溯算法的核心思想就是<strong>在尝试的过程中寻找解，当发现已经求不出解时，就回溯返回（还原状态），尝试下一个可能性，直到找到解或者遍历完全部的可能性</strong>。</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 一个数独的解法需遵循如下规则：</span></span><br><span class="line"><span class="comment"> * 数字 1-9 在每一行只能出现一次。</span></span><br><span class="line"><span class="comment"> * 数字 1-9 在每一列只能出现一次。</span></span><br><span class="line"><span class="comment"> * 数字 1-9 在每一个以粗实线分隔的 3x3 宫内只能出现一次。</span></span><br><span class="line"><span class="comment"> * 空白格用 '.' 表示。</span></span><br><span class="line"><span class="comment"> * 提示：</span></span><br><span class="line"><span class="comment"> * 给定的数独序列只包含数字 1-9 和字符 '.' 。</span></span><br><span class="line"><span class="comment"> * 你可以假设给定的数独只有唯一解。</span></span><br><span class="line"><span class="comment"> * 给定数独永远是 9x9 形式的。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Solution solution = <span class="keyword">new</span> Solution();</span><br><span class="line">        <span class="keyword">char</span>[][] board1 = <span class="keyword">new</span> <span class="keyword">char</span>[<span class="number">9</span>][<span class="number">9</span>];</span><br><span class="line">        board1[<span class="number">0</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'5'</span>, <span class="string">'3'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'7'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">1</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'6'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'1'</span>, <span class="string">'9'</span>, <span class="string">'5'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">2</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'9'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'6'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">3</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'6'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'3'</span>&#125;;</span><br><span class="line">        board1[<span class="number">4</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'4'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'3'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'1'</span>&#125;;</span><br><span class="line">        board1[<span class="number">5</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'7'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'2'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'6'</span>&#125;;</span><br><span class="line">        board1[<span class="number">6</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'6'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'2'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>&#125;;</span><br><span class="line">        board1[<span class="number">7</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'4'</span>, <span class="string">'1'</span>, <span class="string">'9'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'5'</span>&#125;;</span><br><span class="line">        board1[<span class="number">8</span>] = <span class="keyword">new</span> <span class="keyword">char</span>[]&#123;<span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'8'</span>, <span class="string">'.'</span>, <span class="string">'.'</span>, <span class="string">'7'</span>, <span class="string">'9'</span>&#125;;</span><br><span class="line">        solution.solveSudoku(board1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 存储x轴上的已经被使用的值</span></span><br><span class="line"><span class="comment">     **/</span></span><br><span class="line">    <span class="keyword">boolean</span>[][] xArray = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>][<span class="number">9</span>];</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 存储y轴上的已经被使用的值</span></span><br><span class="line"><span class="comment">     **/</span></span><br><span class="line">    <span class="keyword">boolean</span>[][] yArray = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>][<span class="number">9</span>];</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 存储九宫格内的已经被使用的值</span></span><br><span class="line"><span class="comment">     **/</span></span><br><span class="line">    <span class="keyword">boolean</span>[][][] zArray = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">3</span>][<span class="number">3</span>][<span class="number">9</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 利用回溯算法解决数独，2ms内，超过95%</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> board 九宫格源数据</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">solveSudoku</span><span class="params">(<span class="keyword">char</span>[][] board)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 初始化数据，遍历源数据，存储已经被使用的值</span></span><br><span class="line">        <span class="keyword">boolean</span>[] tmp;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">9</span>; i++) &#123;</span><br><span class="line">            tmp = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>];</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">9</span>; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (board[i][j] != <span class="string">'.'</span>) &#123;</span><br><span class="line">                    tmp[board[i][j] - <span class="string">'1'</span>] = <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            xArray[i] = tmp;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">9</span>; i++) &#123;</span><br><span class="line">            tmp = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>];</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">9</span>; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (board[j][i] != <span class="string">'.'</span>) &#123;</span><br><span class="line">                    tmp[board[j][i] - <span class="string">'1'</span>] = <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            yArray[i] = tmp;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">9</span>; i += <span class="number">3</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">9</span>; j += <span class="number">3</span>) &#123;</span><br><span class="line">                tmp = <span class="keyword">new</span> <span class="keyword">boolean</span>[<span class="number">9</span>];</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">0</span>; k &lt; <span class="number">3</span>; k++) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> l = <span class="number">0</span>; l &lt; <span class="number">3</span>; l++) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (board[i + k][j + l] != <span class="string">'.'</span>) &#123;</span><br><span class="line">                            tmp[board[i + k][j + l] - <span class="string">'1'</span>] = <span class="keyword">true</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                zArray[i / <span class="number">3</span>][j / <span class="number">3</span>] = tmp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 开始执行递归</span></span><br><span class="line">        loop(board, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行递归</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> board</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> x</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> y</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">loop</span><span class="params">(<span class="keyword">char</span>[][] board, <span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> i = x, j = y;</span><br><span class="line">        <span class="keyword">for</span> (; i &lt; <span class="number">9</span>; i++, j = <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (; j &lt; <span class="number">9</span>; j++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (board[i][j] == <span class="string">'.'</span>) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">0</span>; k &lt; <span class="number">9</span>; k++) &#123;</span><br><span class="line">                        <span class="comment">// 如果k是可能的，即在xArray、yArray和zArray都不存在（为false）</span></span><br><span class="line">                        <span class="keyword">if</span> (!xArray[i][k] &amp;&amp; !yArray[j][k] &amp;&amp; !zArray[i / <span class="number">3</span>][j / <span class="number">3</span>][k]) &#123;</span><br><span class="line">                            board[i][j] = (<span class="keyword">char</span>) (<span class="string">'1'</span> + k);</span><br><span class="line">                            <span class="comment">// 修改xArray，yArray和zArray，把当前值改为已经使用</span></span><br><span class="line">                            xArray[i][k] = <span class="keyword">true</span>;</span><br><span class="line">                            yArray[j][k] = <span class="keyword">true</span>;</span><br><span class="line">                            zArray[i / <span class="number">3</span>][j / <span class="number">3</span>][k] = <span class="keyword">true</span>;</span><br><span class="line">                            <span class="comment">// 递归下去</span></span><br><span class="line">                            <span class="keyword">if</span> (loop(board, i, j)) &#123;</span><br><span class="line">                                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                <span class="comment">// 如果不成功就开始回溯</span></span><br><span class="line">                                board[i][j] = <span class="string">'.'</span>;</span><br><span class="line">                                <span class="comment">// 修改xArray，yArray和zArray，把当前值改为尚未使用</span></span><br><span class="line">                                xArray[i][k] = <span class="keyword">false</span>;</span><br><span class="line">                                yArray[j][k] = <span class="keyword">false</span>;</span><br><span class="line">                                zArray[i / <span class="number">3</span>][j / <span class="number">3</span>][k] = <span class="keyword">false</span>;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">// 如果没有值了或者不可能了，返回false</span></span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java进阶/Spring中Bean的生命周期" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/07/29/Java%E8%BF%9B%E9%98%B6/Spring%E4%B8%ADBean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/"
-    >Spring中Bean的生命周期</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/07/29/Java%E8%BF%9B%E9%98%B6/Spring%E4%B8%ADBean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="article-date">
-  <time datetime="2020-07-29T06:16:43.000Z" itemprop="datePublished">2020-07-29</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Spring/">Spring</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="四个阶段"><a href="#四个阶段" class="headerlink" title="四个阶段"></a>四个阶段</h2><p>&emsp;&emsp;Spring由IOC容器管理Bean的生命周期，帮我们自动创建和销毁Bean，使得我们可以很简单的使用Bean。Spring中Bean的生命周期大致分为这四个阶段：<strong>Instantiation、Populate、Initialization、Destruction</strong>，流程如下：</p>
-<ul>
-<li>通过构造器或工厂方法创建Bean实例，也就是实例化：Instantiation</li>
-<li>为Bean的属性设置值和对其他Bean的引用，也就是属性赋值：Populate</li>
-<li>调用Bean的初始化方法，也是就初始化：Initialization</li>
-<li>使用Bean</li>
-<li>当容器关闭时，调用Bean的销毁方法。也就是销毁：Destruction</li>
-</ul>
-<h2 id="执行顺序"><a href="#执行顺序" class="headerlink" title="执行顺序"></a>执行顺序</h2><p>&emsp;&emsp;Spring允许在Bean在初始化完成后以及Bean销毁前执行特定的操作，常用的设定方式有以下三种：</p>
-<ul>
-<li>通过实现<strong>InitializingBean/DisposableBean</strong>接口来定制初始化之后/销毁之前的操作方法； </li>
-<li>通过元素的<strong>init-method/destroy-method</strong>属性指定初始化之后/销毁之前调用的操作方法； </li>
-<li>在指定方法上加上<strong>@PostConstruct或@PreDestroy</strong>注解(JSR规定的)来制定该方法是在初始化之后还是销毁之前调用。</li>
-</ul>
-<p>&emsp;&emsp;那么问题来了，这三种的执行顺序是怎么样的？有兴趣的话可以自己验证下，答案如下：</p>
-<blockquote>
-<p><strong>初始化时：构造器Construct  -&gt;  属性注入  -&gt;  @PostConstruct  -&gt;  InitializingBean  -&gt;  定义的initMethod</strong><br><strong>销毁时：@PreDestroy  -&gt;  DisposableBean接口 -&gt;  bean定义的destoryMethod</strong></p>
-</blockquote>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java进阶/Conditional系列注解集合" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/07/28/Java%E8%BF%9B%E9%98%B6/Conditional%E7%B3%BB%E5%88%97%E6%B3%A8%E8%A7%A3%E9%9B%86%E5%90%88/"
-    >Conditional系列注解集合</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/07/28/Java%E8%BF%9B%E9%98%B6/Conditional%E7%B3%BB%E5%88%97%E6%B3%A8%E8%A7%A3%E9%9B%86%E5%90%88/" class="article-date">
-  <time datetime="2020-07-28T06:16:43.000Z" itemprop="datePublished">2020-07-28</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%B3%A8%E8%A7%A3/">注解</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;在项目中，有时我们想在满足指定条件的时候才将某个bean加载到应用上下文中，这种时候我们就可以通过Conditional系列注解来实现这个目的。</p>
-<h2 id="Conditional"><a href="#Conditional" class="headerlink" title="@Conditional"></a>@Conditional</h2><p>&emsp;&emsp;@Conditional注解接收的参数是实现了Condition接口的泛型类，也就是说@Conditional需要配合自定义的实现Condition接口的类一起使用。Condition接口如下，需要实现matches方法，返回boolean：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Condition</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Determine if the condition matches.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> context the condition context</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> metadata metadata of the &#123;<span class="doctag">@link</span> org.springframework.core.type.AnnotationMetadata class&#125;</span></span><br><span class="line"><span class="comment">	 * or &#123;<span class="doctag">@link</span> org.springframework.core.type.MethodMetadata method&#125; being checked.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> &#123;<span class="doctag">@code</span> true&#125; if the condition matches and the component can be registered</span></span><br><span class="line"><span class="comment">	 * or &#123;<span class="doctag">@code</span> false&#125; to veto registration.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;使用示例：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注解使用</span></span><br><span class="line"><span class="meta">@Conditional</span>(OnEnabledEndpointCondition<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">// 自定义的实现<span class="title">Condition</span>接口的类</span></span><br><span class="line"><span class="class"><span class="title">public</span> <span class="title">class</span> <span class="title">OnEnabledEndpointCondition</span> <span class="keyword">extends</span> <span class="title">SpringBootCondition</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringBootCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
-
-<br/>
-
-<h2 id="ConditionalOnXxxx"><a href="#ConditionalOnXxxx" class="headerlink" title="@ConditionalOnXxxx"></a>@ConditionalOnXxxx</h2><p>&emsp;&emsp;除了自定义外，Spring还预设了许多可以直接使用的注解，基本可以满足常规使用。常见的如下：</p>
-<h3 id="ConditionalOnProperty"><a href="#ConditionalOnProperty" class="headerlink" title="@ConditionalOnProperty"></a>@ConditionalOnProperty</h3><p>&emsp;&emsp;当配置文件application.properties或application.yml文件中的配置为true才会加载被注解的Bean。非常常用，默认值是 false。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 当配置文件中log.enable为true，加载被注解的Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnProperty</span>(<span class="string">"log.enable"</span>)</span><br></pre></td></tr></table></figure>
-
-<h3 id="ConditionalOnBean"><a href="#ConditionalOnBean" class="headerlink" title="@ConditionalOnBean"></a>@ConditionalOnBean</h3><p>&emsp;&emsp;顾名思义，在某个Bean已经存在应用上下文时才会加载被注解的Bean。支持的参数如下：</p>
-<ul>
-<li>Class&lt;?&gt;[] value : 需要作为条件的类的Class对象数组</li>
-<li>String[] type : 需要作为条件的类的Name,Class.getName()</li>
-<li>Class&lt;? extends Annotation&gt;[] annotation : (用指定注解修饰的bean)条件所需的注解类</li>
-<li>String[] name : spring容器中bean的名字</li>
-<li>SearchStrategy search:搜索容器层级,当前容器,父容器<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 当CacheManager的bean已经注入时，加载被注解的Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnBean</span>(CacheManager<span class="class">.<span class="keyword">class</span>)</span></span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h3 id="ConditionalOnMissingBean"><a href="#ConditionalOnMissingBean" class="headerlink" title="@ConditionalOnMissingBean"></a>@ConditionalOnMissingBean</h3><p>&emsp;&emsp;与上一个注解相反，在某个Bean不存在应用上下文时才会加载被注解的Bean。【name】用来指定目标Bean的名字，属性【value】和【type】用来指定目标Bean的类型，如果这三个属性都不存在，则会通过推到方法【deducedBeanType】将@Bean方法的返回值类型作为目标Bean的类型。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// @Bean方法的返回值类型作为ConditionalOnMissingBean目标Bean的类型。</span></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="ConditionalOnClass"><a href="#ConditionalOnClass" class="headerlink" title="@ConditionalOnClass"></a>@ConditionalOnClass</h3><p>&emsp;&emsp;也是顾名思义，如果某个类存在于classpath中，加载被注解的Bean。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ConditionalOnClass</span>(&#123; SqlSessionFactory<span class="class">.<span class="keyword">class</span>, <span class="title">SqlSessionFactoryBean</span>.<span class="title">class</span> &#125;)</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="ConditionalOnMissingClass"><a href="#ConditionalOnMissingClass" class="headerlink" title="@ConditionalOnMissingClass"></a>@ConditionalOnMissingClass</h3><p>&emsp;&emsp;也是与上一个注解相反，如果某个类不存在于classpath中，加载被注解的Bean。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ConditionalOnMissingClass</span>(<span class="string">"javax.servlet.ServletRegistration"</span>)</span><br></pre></td></tr></table></figure>
-<h3 id="ConditionalOnExpression"><a href="#ConditionalOnExpression" class="headerlink" title="@ConditionalOnExpression"></a>@ConditionalOnExpression</h3><p>&emsp;&emsp;当有复杂的多个配置属性一起判断时可以用这个表达式。</p>
-<h3 id="ConditionalOnResource"><a href="#ConditionalOnResource" class="headerlink" title="@ConditionalOnResource"></a>@ConditionalOnResource</h3><p>&emsp;&emsp;如果我们要加载的bean依赖指定资源是否存在于classpath中，那么我们就可以使用这个注解，也是一个很常用的注解。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ConditionalOnResource</span>(resources = <span class="string">"$&#123;spring.info.build.location:classpath:META-INF/build-info.properties&#125;"</span>)</span><br></pre></td></tr></table></figure>
-
-<h3 id="ConditionalOnJava"><a href="#ConditionalOnJava" class="headerlink" title="@ConditionalOnJava"></a>@ConditionalOnJava</h3><p>&emsp;&emsp;只有运行指定版本的Java才会加载Bean</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ConditionalOnJava</span>(ConditionalOnJava.JavaVersion.EIGHT)</span><br></pre></td></tr></table></figure>
-
-<h3 id="ConditionalOnWebApplication"><a href="#ConditionalOnWebApplication" class="headerlink" title="@ConditionalOnWebApplication"></a>@ConditionalOnWebApplication</h3><p>&emsp;&emsp;只有运行在web应用里才会加载被注解的Bean。</p>
-<h3 id="ConditionalOnNotWebApplication"><a href="#ConditionalOnNotWebApplication" class="headerlink" title="@ConditionalOnNotWebApplication"></a>@ConditionalOnNotWebApplication</h3><p>&emsp;&emsp;只有运行在非web应用里才会加载被注解的Bean。</p>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
 
 
     </footer>
