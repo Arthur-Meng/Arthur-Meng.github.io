@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    批量插入和更新的优化 |  Arthur&#39;s Blog
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-数据库/批量插入和更新的优化" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  批量插入和更新的优化
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/20/%E6%95%B0%E6%8D%AE%E5%BA%93/%E6%89%B9%E9%87%8F%E6%8F%92%E5%85%A5%E5%92%8C%E6%9B%B4%E6%96%B0%E7%9A%84%E4%BC%98%E5%8C%96/" class="article-date">
+  <time datetime="2021-01-20T15:13:13.000Z" itemprop="datePublished">2021-01-20</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1/">数据库事务</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">8 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;我们项目中，难免会遇到需要大量插入和更新的情况，本文罗列了几种常见的批量插入和更新的方法，计算了耗时并尝试优化，希望找到了一个批量插入和更新的较优解。</p>
+<h1 id="Java代码循环"><a href="#Java代码循环" class="headerlink" title="Java代码循环"></a>Java代码循环</h1><h2 id="Java代码循环-1"><a href="#Java代码循环-1" class="headerlink" title="Java代码循环"></a>Java代码循环</h2><p>&emsp;&emsp;我们可以在代码里面直接for循环插入或者更新对象，如下面的代码，formId是form对象的主键：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    form.setFormId(i + <span class="string">""</span>);</span><br><span class="line">    formMapper.insert(form);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    form.setFormId(i + <span class="string">""</span>);</span><br><span class="line">    formMapper.updateByPrimaryKeySelective(form);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>99秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>96秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;很显然，这种方式一条一条语句执行，所以效率很低。</p>
+<h2 id="使用PreparedStatement"><a href="#使用PreparedStatement" class="headerlink" title="使用PreparedStatement"></a>使用PreparedStatement</h2><p>&emsp;&emsp;我们可以直接获取连接后使用PreparedStatement进行批量插入和更新，如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"插入的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.execute();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"更新的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.executeUpdate();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>67秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>89秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;PreparedStatement就是<strong>预编译</strong>，可以优化sql的执行，且编译一次之后后续的sql就不需要再次编译，所以在这种情况下可以极大提升性能。之所以和上一种方式效率差不多是因为<strong>#{}</strong>在mybatis中的底层就是运用了PreparedStatement。但是相较于上一种方式还是有所提升，究其原因是直接使用了底层的方法，抛弃了mybatis的一些处理。</p>
+<h2 id="关闭自动提交"><a href="#关闭自动提交" class="headerlink" title="关闭自动提交"></a>关闭自动提交</h2><p>&emsp;&emsp;我们可以上述方法的基础上关闭自动提交进行批量插入和更新，如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line"><span class="comment">// 关闭自动提交</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"插入的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.execute();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line"><span class="comment">// 完成后再次打开还原初始状态</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line"><span class="comment">// 关闭自动提交</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"更新的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.executeUpdate();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line"><span class="comment">// 完成后再次打开还原初始状态</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>26秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>27秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;MySQL默认的数据提交操作模式是自动提交模式（autocommit）。这就表示除非显式地开始一个事务，否则<strong>每个查询都被当做一个单独的事务自动执行</strong>。所以当我们关闭自动提交，会发现执行速度有了一个小的质变。</p>
+<h2 id="批量执行"><a href="#批量执行" class="headerlink" title="批量执行"></a>批量执行</h2><p>&emsp;&emsp;我们可以上述方法的基础上再使用批量执行去执行插入和更新的操作，如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"插入的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.addBatch();</span><br><span class="line">    <span class="keyword">if</span> (i % <span class="number">10000</span> == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 每1w条批量执行一次</span></span><br><span class="line">        preparedStatement.executeBatch();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"更新的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.addBatch();</span><br><span class="line">    <span class="keyword">if</span> (i % <span class="number">10000</span> == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 每1w条批量执行一次</span></span><br><span class="line">        preparedStatement.executeBatch();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>20秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>23秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;addBatch()是把若干sql语句装载到一起，然后<strong>一次性传送到数据库执行</strong>。我们可以发现，在加上了批量提交了之后，执行的速度又微微提升了一点，由于我在测试的时候数据库没有别的访问，所以差距不大。在实际情况下，由于数据库需要处理很多请求，这种方式的优势会更加明显。</p>
+<br/>
+
+
+<h1 id="构造批量插入的SQL"><a href="#构造批量插入的SQL" class="headerlink" title="构造批量插入的SQL"></a>构造批量插入的SQL</h1><p>&emsp;&emsp;除了直接循环外，我们也可以通过构造批量插入的SQL的方法来达到批量执行的目的。批量插入的写法比较简单，有以下两种方式：</p>
+<h2 id="使用foreach构造"><a href="#使用foreach构造" class="headerlink" title="使用foreach构造"></a>使用foreach构造</h2><p>&emsp;&emsp;我们使用mybatis的foreach标签构造sql语句，下面是示例：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">insert</span> <span class="attr">id</span>=<span class="string">"saveList"</span> <span class="attr">parameterType</span>=<span class="string">"java.util.List"</span>&gt;</span></span><br><span class="line">    insert into form(form_id,form_name) values</span><br><span class="line">    <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span> <span class="attr">separator</span>=<span class="string">","</span>&gt;</span></span><br><span class="line">        (#&#123;form.formId&#125;,</span><br><span class="line">        #&#123;form.formName&#125;)</span><br><span class="line">    <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">insert</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>7秒</strong>。</li>
+</ul>
+<h2 id="使用ORM框架的批量插入接口构造"><a href="#使用ORM框架的批量插入接口构造" class="headerlink" title="使用ORM框架的批量插入接口构造"></a>使用ORM框架的批量插入接口构造</h2><p>&emsp;&emsp;很多ORM都自带有批量插入的接口的实现，如tkmybatis和mybatisplus。<strong>在tkmybatis中mapper只需要继承InsertListMapper接口就可以直接使用insertList接口</strong>，这还是十分方便的。</p>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>7秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;我们可以发现，构造批量插入的SQL执行的效率相较于前面的一种方法又有了极大的提升（哭泣，枉费我们优化了那么多次）。毕竟<strong>构造批量插入的SQL可以把之前需要执行的sql的数量降低好几个数量级，不快都不行</strong>。而使用ORM框架的批量插入接口构造和使用foreach构造只是使用方法不一样，最后构造出来的sql是一致的，所以执行效率一致。</p>
+<br/>
+
+
+<h1 id="构造批量更新的SQL"><a href="#构造批量更新的SQL" class="headerlink" title="构造批量更新的SQL"></a>构造批量更新的SQL</h1><h2 id="使用case-when"><a href="#使用case-when" class="headerlink" title="使用case when"></a>使用case when</h2><p>&emsp;&emsp;使用case when构造批量更新这种方式，根据主键的值来更新需要更新的值，有几个需要字段，就要遍历几遍，下面是示例：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">update</span> <span class="attr">id</span>=<span class="string">"updateList"</span>&gt;</span></span><br><span class="line">     update form</span><br><span class="line">     <span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">"set"</span> <span class="attr">suffixOverrides</span>=<span class="string">","</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">"form_name = case form_id"</span> <span class="attr">suffix</span>=<span class="string">"end,"</span>&gt;</span></span><br><span class="line">             <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span>&gt;</span></span><br><span class="line">                 when #&#123;form.formId&#125; then #&#123;form.formName&#125;</span><br><span class="line">             <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">"form_type = case form_id"</span> <span class="attr">suffix</span>=<span class="string">"end"</span>&gt;</span></span><br><span class="line">             <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span>&gt;</span></span><br><span class="line">                 when #&#123;form.formId&#125; then #&#123;form.formType&#125;</span><br><span class="line">             <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">where</span>&gt;</span></span><br><span class="line">         form_id in (</span><br><span class="line">         <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">separator</span>=<span class="string">","</span> <span class="attr">item</span>=<span class="string">"form"</span>&gt;</span></span><br><span class="line">             #&#123;form.formId&#125;</span><br><span class="line">         <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line">         )</span><br><span class="line">     <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;/<span class="name">update</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>26秒</strong>。<br>&emsp;&emsp;我们可以发现，这种方式效率其实不是很高。主要是因为当更新的字段很多时或者数量较多时，SQL语句会特别长，特别复杂，这导致了执行效率比较低。</li>
+</ul>
+<h2 id="使用foreach"><a href="#使用foreach" class="headerlink" title="使用foreach"></a>使用foreach</h2><p>&emsp;&emsp;用foreach组装成多条update语句，需要注意的是，Mybatis映射文件中的sql语句默认是不支持以”;” 结尾的，也就是不支持多条sql语句的执行。所以需要在<strong>连接mysql的url上加&amp;allowMultiQueries=true</strong>这个才可以执行。下面是示例：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">update</span> <span class="attr">id</span>=<span class="string">"updateList"</span>  <span class="attr">parameterType</span>=<span class="string">"java.util.List"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span> <span class="attr">index</span>=<span class="string">"index"</span> <span class="attr">open</span>=<span class="string">""</span> <span class="attr">close</span>=<span class="string">""</span> <span class="attr">separator</span>=<span class="string">";"</span>&gt;</span></span><br><span class="line">        update form</span><br><span class="line">        <span class="tag">&lt;<span class="name">set</span>&gt;</span></span><br><span class="line">            form_name= #&#123;form.formName&#125;</span><br><span class="line">        <span class="tag">&lt;/<span class="name">set</span>&gt;</span></span><br><span class="line">        where form_id = #&#123;form.formId&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">update</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>63秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;我们可以发现这种方法的效率并不高。究其原因，虽然说构造处理的sql是一整个SQL，但是实际上也是执行的时候是以单个sql执行，所以效率并不高。</p>
+<h2 id="使用ON-DUPLICATE-KEY-UPDATE"><a href="#使用ON-DUPLICATE-KEY-UPDATE" class="headerlink" title="使用ON DUPLICATE KEY UPDATE"></a>使用ON DUPLICATE KEY UPDATE</h2><p>&emsp;&emsp;只能在mysql可以使用，oracle不支持，不推荐，跳过。</p>
+<h2 id="使用replace-into"><a href="#使用replace-into" class="headerlink" title="使用replace into"></a>使用replace into</h2><p>&emsp;&emsp;只能在mysql可以使用，oracle不支持，不推荐，跳过。</p>
+<br/>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>&emsp;&emsp;我们刚刚试验了很多批量插入和批量更新的方法，最后得出结论：</p>
+<ul>
+<li><strong>批量插入：推荐使用ORM框架的批量插入接口构造（其次是使用foreach构造），原因是使用最简单，效率最高。</strong></li>
+<li><strong>批量更新：推荐使用Java代码循环+PreparedStatement+关闭自动提交+批量执行的方式，原因是使用相对简单，效率也可以接受。</strong></li>
+</ul>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/01/20/%E6%95%B0%E6%8D%AE%E5%BA%93/%E6%89%B9%E9%87%8F%E6%8F%92%E5%85%A5%E5%92%8C%E6%9B%B4%E6%96%B0%E7%9A%84%E4%BC%98%E5%8C%96/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+    
+      <a href="/2021/01/19/%E6%95%B0%E6%8D%AE%E5%BA%93/PostConstruct%E6%B3%A8%E8%A7%A3%E5%92%8CTransactional%E6%B3%A8%E8%A7%A3%E5%86%B2%E7%AA%81/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">PostConstruct注解和Transactional注解冲突</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: '',
+        app_key: '',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'mp',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>
+        &copy;
+        2020-2021
+        Arthur Meng
+      </li>
+      <li>
+        
+      </li>
+    </ul>
+    <ul class="list-inline">
+      <li>
+        
+        
+        <span>
+  <i>PV:<span id="busuanzi_value_page_pv"></span></i>
+  <i>UV:<span id="busuanzi_value_site_uv"></span></i>
+</span>
+        
+      </li>
+      
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src=''></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/xm.jpeg" style="border-radius:50%" alt="Arthur&#39;s Blog"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/2020/04/14/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search" title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script>
+  try {
+    var typed = new Typed("#subtitle", {
+      strings: ['May the Force be with you', '我太南了', '长夜安隐，多所饶益'],
+      startDelay: 0,
+      typeSpeed: 200,
+      loop: true,
+      backSpeed: 100,
+      showCursor: true
+    });
+  } catch (err) {
+  }
+
+</script>
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+      tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+  });
+
+  MathJax.Hub.Queue(function() {
+      var all = MathJax.Hub.getAllJax(), i;
+      for(i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.6/unpacked/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script>
+  var ayerConfig = {
+    mathjax: true
+  }
+</script>
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+  </div>
+</body>
+
+</html>
