@@ -9,7 +9,7 @@
     
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    Https证书基础知识一览 |  Arthur&#39;s Blog
+    浅拷贝和深拷贝引发的思考 |  Arthur&#39;s Blog
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -41,7 +41,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-网络/Https证书基础知识一览" class="article article-type-post" itemscope
+  <article id="post-Java基础/浅拷贝和深拷贝引发的思考" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -49,7 +49,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  Https证书基础知识一览
+  浅拷贝和深拷贝引发的思考
 </h1>
  
 
@@ -58,12 +58,12 @@
 
     
     <div class="article-meta">
-      <a href="/2021/03/10/%E7%BD%91%E7%BB%9C/Https%E8%AF%81%E4%B9%A6%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%B8%80%E8%A7%88/" class="article-date">
-  <time datetime="2021-03-10T06:17:43.000Z" itemprop="datePublished">2021-03-10</time>
+      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/" class="article-date">
+  <time datetime="2021-03-17T10:25:19.000Z" itemprop="datePublished">2021-03-17</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/Https/">Https</a>
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
   </div>
 
       
@@ -73,7 +73,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">2k</span>
+            <span class="post-count">984</span>
         </span>
     </span>
 
@@ -82,7 +82,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">7 min</span>
+            <span class="post-count">3 min</span>
         </span>
     </span>
 </div>
@@ -107,70 +107,18 @@
       
 
       
-      <p>&emsp;&emsp;由于工作关系，最近接触到了Https证书，做一个相关知识的整理。我们先来回顾下Https的原理和过程，再来看证书相关的知识，最后分享一些实用的命令。</p>
-<h2 id="Https"><a href="#Https" class="headerlink" title="Https"></a>Https</h2><h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>&emsp;&emsp;Https协议是由HTTP加上TLS/SSL协议构建的可进行加密传输、身份认证的网络协议(TLS基于SSL3.0)。所以Https的安全基础是SSL，Https有一个不同于HTTP的默认端口(443)及一个加密/身份验证层（在HTTP与TCP之间）。</p>
-<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><p>&emsp;&emsp;Https采用了<strong>非对称加密和对称加密两种加密模式。其中正文使用的是对称加密，这样子效率较高，会使用一个随机数来进行对称加密，而随机数依靠非对称加密进行传输，也就是使用公钥和私钥的加密解密形式保证随机数不被泄露，确保了安全性</strong>。过程如下：</p>
-<ul>
-<li>客户端发送请求到服务器端</li>
-<li>服务器端返回<strong>证书和公钥</strong>，公钥作为证书的一部分而存在</li>
-<li>客户端验证证书和公钥的<strong>有效性</strong>，如果有效，则生成<strong>随机数</strong>并使用公钥加密发送到服务器端</li>
-<li>服务器端使用<strong>私钥解密数据</strong>，并使用收到的随机数加密数据，发送到客户端</li>
-<li>客户端使用随机数解密数据</li>
-<li>SSL加密建立</li>
+      <p>&emsp;&emsp;众所周知，拷贝有浅拷贝和深拷贝。但是在研究过程中我发现了很多有意思的地方，我们先来看一个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span>  </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            A a = <span class="keyword">new</span> A();</span><br><span class="line">            B b = <span class="keyword">new</span> B();</span><br><span class="line">            b.setX(<span class="string">"1"</span>);</span><br><span class="line">            a.setB(b);</span><br><span class="line">            A a1 = a.clone();</span><br><span class="line">            b.setX(<span class="string">"2"</span>);</span><br><span class="line">            System.out.println(a.getB().getX()); <span class="comment">// 输出1</span></span><br><span class="line">            System.out.println(a1.getB().getX());<span class="comment">// 输出2</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (CloneNotSupportedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> B b;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setB</span><span class="params">(B b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.b = b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> B <span class="title">getB</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> A <span class="title">clone</span><span class="params">()</span> <span class="keyword">throws</span> CloneNotSupportedException </span>&#123;</span><br><span class="line">        A a = (A) <span class="keyword">super</span>.clone();</span><br><span class="line">        <span class="comment">// a.b = b.clone();</span></span><br><span class="line">        <span class="keyword">return</span> a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String x;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setX</span><span class="params">(String x)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.x = x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getX</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> B <span class="title">clone</span><span class="params">()</span> <span class="keyword">throws</span> CloneNotSupportedException </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (B) <span class="keyword">super</span>.clone();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
+<li>super.clone()做了什么？</li>
+<li>为什么这样子拷贝算是浅拷贝？深拷贝该怎么做？</li>
+<li>重写clone方法为什么要实现Cloneable接口，明明Cloneable接口是个空的接口？</li>
+<li>clone方法是Object类里面的方法，如果不实现Cloneable接口，会怎么样？</li>
 </ul>
-<br/>
-
-<h2 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h2><h3 id="CA"><a href="#CA" class="headerlink" title="CA"></a>CA</h3><p>&emsp;&emsp;容我拷贝下百度里面的定义：证书颁发机构（CA, Certificate Authority）即颁发数字证书的机构。是负责<strong>发放和管理数字证书</strong>的权威机构，并作为电子商务交易中受信任的第三方，承担公钥体系中公钥的合法性检验的责任。</p>
-<h3 id="申请流程"><a href="#申请流程" class="headerlink" title="申请流程"></a>申请流程</h3><ul>
-<li>1、服务方S向第三方机构CA提交公钥、组织信息、个人信息(域名)等信息并申请认证</li>
-<li>2、CA通过线上、线下等多种手段验证申请者提供信息的真实性，如组织是否存在、企业是否合法，是否拥有域名的所有权等</li>
-<li>3、如信息审核通过，CA会向申请者签发认证文件，即证书</li>
-<li>4、证书一般是cer或者crt格式的，个人体感中间证书一般是crt格式的。</li>
-</ul>
-<h3 id="包含"><a href="#包含" class="headerlink" title="包含"></a>包含</h3><p>&emsp;&emsp;证书包含以下信息：<strong>申请者公钥、申请者的组织信息和个人信息、签发机构CA的信息（用于向CA校验）、有效时间、证书</strong>等信息的明文，基本上还会绑定<strong>域名</strong>，同时包含一个<strong>签名</strong>。</p>
-<h3 id="校验过程"><a href="#校验过程" class="headerlink" title="校验过程"></a>校验过程</h3><ul>
-<li>1、客户端C向服务器S发出请求时，<strong>服务器S返回证书文件</strong></li>
-<li>2、客户端C读取证书中的相关的明文信息，采用相同的散列函数计算得到信息摘要，然后利用<strong>对应CA的公钥解密签名数据</strong>，对比证书的信息摘要，如果一致，则可以确认证书的合法性，即公钥合法</li>
-<li>3、客户端然后<strong>验证证书相关的域名信息、有效时间</strong>等信息</li>
-<li>4、客户端会内置信任CA的证书信息(包含公钥)，如果CA不被信任，则找不到对应CA的证书，证书也会被判定非法</li>
-</ul>
-<h3 id="要点"><a href="#要点" class="headerlink" title="要点"></a>要点</h3><ul>
-<li>申请证书不需要提供私钥，确保私钥永远只能服务器掌握</li>
-<li>证书的合法性仍然依赖于非对称加密算法，证书主要是增加了服务器信息以及签名</li>
-<li>内置CA对应的证书称为<strong>根证书</strong>，颁发者和使用者相同，自己为自己签名，即自签名证书，否则需要向CA校验</li>
-<li>证书=公钥+申请者与颁发者信息+签名</li>
-<li>数字签名的签发过程是私钥加密，公钥解密</li>
-</ul>
-<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><ul>
-<li>DV证书（Domain Validated），适合个人网站，请求该类证书的速度较快，审核较宽松</li>
-<li>OV证书（Organization Validated），则会严对服务器实体的身份信息进行审查，适合企业等机构对安全性的高要求</li>
-<li>EV证书（Extended Validation），对于身份信息的审核比DV和OV证书都要严格，拥有EV证书的服务器访问时除了会有“绿色小锁”标志外，还会显示该企业的名字，而DV证书和OV证书只会显示“绿色小锁”标志。</li>
-</ul>
-<h3 id="SAN"><a href="#SAN" class="headerlink" title="SAN"></a>SAN</h3><p>&emsp;&emsp;SAN（Subject Alternative Name）即用户可选择名称，该属性项可以配置IP地址，域名和电子邮件地址等，且这些属性的值可以不止一个，例如域名，拿域名来举例，在CA证书里，如果配置了SAN，表示该<strong>证书被多个域名拥有，也就是可以被很多域名一起使用</strong>。</p>
-<h3 id="信任链"><a href="#信任链" class="headerlink" title="信任链"></a>信任链</h3><p>&emsp;&emsp;多网站的数字证书都是有信任链中的中间结点签发的，然而浏览器并没有这些中间结点的根证书，那么是如何判断这些中间签发机构的可信任性呢？答案就是信任链，证书中的<strong>Authority Information Access</strong>这一项就配置了中间证书，这个中间证书可以下载下来，我们可以看到这些中间证书是由其他的中间证书（最终也指向了受信任的根证书）或者直接由受信任的根证书颁发的。这样子证书就完成了一个信任链。关于信任链，本文讲的有点简略，详细的描述可以看<a href="https://cjting.me/2021/03/02/how-to-validate-tls-certificate/" target="_blank" rel="noopener">这里</a>。</p>
-<h3 id="CRL"><a href="#CRL" class="headerlink" title="CRL"></a>CRL</h3><p>&emsp;&emsp;CRL（CRL Distribution Points）即证书吊销列表，该文件包含了证书颁发机构CA<strong>已经吊销的证书的序列号及其吊销日期</strong>。 CRL文件中还包含证书颁发机构信息、吊销列表失效时间和下一次更新时间，以及采用的签名算法等。值得注意的是：目前有些CA颁发的证书和大部分自签SSL证书都没有提供吊销列表(CRL)服务或证书 吊销列表分发点是不可访问的 ，当然更别提<strong>OSCP服务（在线证书状态协议）</strong>，这是非常危险的，因为如果证书丢失或被盗而无法吊销的话，就极有可能被用于非法用途而让用户蒙受损失。</p>
-<br/>
-
-<h2 id="Keytool"><a href="#Keytool" class="headerlink" title="Keytool"></a>Keytool</h2><p>&emsp;&emsp;Keytool是一个Java数据证书的管理工具 ，Keytool将密钥（key）和证书（certificates）存在一个称为keystore的文件中。 在keystore里，包含两种数据：</p>
-<ul>
-<li>密钥实体（Key entity）——密钥（secret key）又或者是私钥和配对公钥（采用非对称加密）</li>
-<li>可信任的证书实体（trusted certificate entries）——只包含公钥</li>
-</ul>
-<p>&emsp;&emsp;Keystore可以简单理解为一个存放应用签名的文件。所谓<strong>JKS（Java Key Store）就是利用Java Keytool 工具生成的Keystore文件（其实就是keystore，密钥库类型是 jks），JKS文件由公钥和密钥构成，其中的公钥就是我们所说的证书，即cer为后缀的文件，而私钥就是密钥，即以key为后缀的文件</strong>。我们通过Keytool结合Openssl提取jks文件的公钥和私钥，或者通过网站<a href="https://myssl.com/cert_convert.html" target="_blank" rel="noopener">https://myssl.com/cert_convert.html</a></p>
-<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><h4 id="查看keystore文件"><a href="#查看keystore文件" class="headerlink" title="查看keystore文件"></a>查看keystore文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -v -list -keystore  server.keystore（或者是jks文件）</span><br></pre></td></tr></table></figure>
-
-<h4 id="创建keystore文件"><a href="#创建keystore文件" class="headerlink" title="创建keystore文件"></a>创建keystore文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">keytool -genkey -keyalg RSA -alias server -keypass changeit -keystore server.keystore -storepass changeit</span><br><span class="line">然后输入一些信息，其中what&#39;s you name?这个问题的时候最好使用域名。</span><br></pre></td></tr></table></figure>
-
-<h4 id="通过cer公钥生成keystore文件"><a href="#通过cer公钥生成keystore文件" class="headerlink" title="通过cer公钥生成keystore文件"></a>通过cer公钥生成keystore文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -import -file server.cer -keystore server.keystore -alias server</span><br></pre></td></tr></table></figure>
-
-<h4 id="keystore文件导出里面的cer公钥"><a href="#keystore文件导出里面的cer公钥" class="headerlink" title="keystore文件导出里面的cer公钥"></a>keystore文件导出里面的cer公钥</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -alias hundsun -exportcert -keystore &#x2F;keystore.keystore -file keystore.cer</span><br></pre></td></tr></table></figure>
-
-<h4 id="查看cer文件"><a href="#查看cer文件" class="headerlink" title="查看cer文件"></a>查看cer文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl x509 -in keystore.cer -noout -text</span><br></pre></td></tr></table></figure>
-
-<h4 id="把cer公钥打到jdk"><a href="#把cer公钥打到jdk" class="headerlink" title="把cer公钥打到jdk"></a>把cer公钥打到jdk</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -import -file keystore.cer -keystore &quot;%JAVA_HOME%\jre\lib\security\cacerts&quot; -alias keystore</span><br></pre></td></tr></table></figure>
-
-
-<br/>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><h3 id="问题一"><a href="#问题一" class="headerlink" title="问题一"></a>问题一</h3><p>&emsp;&emsp;在上一篇文章中，我们讲到super是一个Java关键字，代表了当前对象中从父类继承过来的那部分特征，而所有类都继承了Object，所以最终super.clone()会调用到<strong>Object的clone(</strong>)方法，而Object的clone()方法是一个<strong>native</strong>方法（jvm托管调用的本地方法），使用了<strong>RTTI</strong>（run-time  type  identification）的机制，动态得找到目前正在调用clone方法的那个<strong>reference</strong>，根据它的大小申请内存空间，然后进行<strong>bitwise的复制</strong>，将该对象的内存空间完全复制到新的空间中去，从而达到shallowcopy的目的。<br>&emsp;&emsp;所以总而言之，super.clone()就是<strong>一模一样拷贝了一个当前的对象</strong>。</p>
+<h3 id="问题二"><a href="#问题二" class="headerlink" title="问题二"></a>问题二</h3><p>&emsp;&emsp;在解释问题二前，我们先来看一个知识点，Java中的数据类型分为<strong>基本数据类型</strong>（六种数字类型（四个整数型，两个浮点型），一种字符类型，还有一种布尔型）和<strong>引用数据类型</strong>（除了基本数据类型的都是引用类型）。<br>&emsp;&emsp;对于这两种数据类型，我们<strong>在进行赋值操作、用作方法参数或返回值时，会有值传递和引用（地址）传递的差别</strong>。在我们这个例子就是的体现是，对象里面的字段如果是基础数据类型， 比如int，那么存储的是值；如果字段是对象，那边存储的是引用。<br>&emsp;&emsp;说到这里就解释了问题二，为什么这样子算是浅拷贝，因为我们是一模一样拷贝了一个对象，如果这个对象里面引用了别的，那这个引用也拷贝过去了，<strong>两个对象都指向了同一个引用</strong>。一旦这个引用发生变化，那这两个对象都会受到影响。那深拷贝该怎么做呢？答案就是<strong>把引用也进行拷贝</strong>，在上面的例子里面就是把a.b = b.clone();的注释给放开。这样子的话，新拷贝的对象里面会指向新的引用，那这两个对象就是完全独立的了。</p>
+<h3 id="问题三和四"><a href="#问题三和四" class="headerlink" title="问题三和四"></a>问题三和四</h3><p>&emsp;&emsp;问题三和四可以合并说明。首先，Cloneable接口虽然没有任何内容，但是对于重写clone方法是必要的，原因是<strong>Cloneable接口是一个标记接口</strong>（类似于Serializable）。我们只有加了这个标记接口，才能触发RTTI机制（不清楚是编译的时候）。我们如果不实现Cloneable接口，那么在运行的时候就会报出是<strong>CloneNotSupportedException是</strong>，也就是我们在重写clone()方法的时候必须要显式抛出的报错（编译的时候不知道当前类或者继承的父类有没有实现Cloneable接口）。</p>
 
       
       <!-- reward -->
@@ -225,14 +173,14 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/03/10/%E7%BD%91%E7%BB%9C/Https%E8%AF%81%E4%B9%A6%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%B8%80%E8%A7%88/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag">网络</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
 
 
     </footer>
@@ -243,19 +191,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/super%E7%A9%B6%E7%AB%9F%E6%98%AF%E4%BB%80%E4%B9%88/" class="article-nav-link">
+      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E8%B4%A3%E4%BB%BB%E9%93%BE/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            super究竟是什么
+            设计模式之责任链
           
         </div>
       </a>
     
     
-      <a href="/2021/01/25/Linux/%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%89%A9%E5%AE%B9/" class="article-nav-link">
+      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/super%E7%A9%B6%E7%AB%9F%E6%98%AF%E4%BB%80%E4%B9%88/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">虚拟机扩容</div>
+        <div class="article-nav-title">super究竟是什么</div>
       </a>
     
   </nav>
