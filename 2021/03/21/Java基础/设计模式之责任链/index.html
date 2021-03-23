@@ -58,8 +58,8 @@
 
     
     <div class="article-meta">
-      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E8%B4%A3%E4%BB%BB%E9%93%BE/" class="article-date">
-  <time datetime="2021-03-17T10:25:19.000Z" itemprop="datePublished">2021-03-17</time>
+      <a href="/2021/03/21/Java%E5%9F%BA%E7%A1%80/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E8%B4%A3%E4%BB%BB%E9%93%BE/" class="article-date">
+  <time datetime="2021-03-21T10:25:19.000Z" itemprop="datePublished">2021-03-21</time>
 </a>
       
   <div class="article-category">
@@ -73,7 +73,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">6</span>
+            <span class="post-count">1.5k</span>
         </span>
     </span>
 
@@ -82,7 +82,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">5 min</span>
         </span>
     </span>
 </div>
@@ -107,7 +107,58 @@
       
 
       
-      <h2 id="电影梗概"><a href="#电影梗概" class="headerlink" title="电影梗概"></a>电影梗概</h2><p>&emsp;&emsp;</p>
+      <h2 id="责任链"><a href="#责任链" class="headerlink" title="责任链"></a>责任链</h2><p>&emsp;&emsp;众所周知，WEB开发中有一个很好用的功能就是过滤器(Filter)和拦截器(Interceptor)。这其实思想来自于一种设计模式，叫做责任链模式。</p>
+<h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>&emsp;&emsp;首先搬出菜鸟教程里面的定义，责任链模式（Chain of Responsibility Pattern）<strong>为请求创建了一个接收者对象的链</strong>。这种模式给予请求的类型，对请求的发送者和接收者进行解耦。这种类型的设计模式属于行为型模式。<br>在这种模式中，通常每个接收者都包含对另一个接收者的引用。如果一个对象不能处理该请求，那么它会把相同的请求传给下一个接收者，依此类推。</p>
+<ul>
+<li><p><strong>意图</strong>：<strong>避免请求发送者与接收者耦合在一起，让多个对象都有可能接收请求，将这些对象连接成一条链，并且沿着这条链传递请求，直到有对象处理它为止</strong>。</p>
+</li>
+<li><p><strong>主要解决</strong>：职责链上的处理者负责处理请求，客户只需要将请求发送到职责链上即可，无须关心请求的处理细节和请求的传递，所以<strong>职责链将请求的发送者和请求的处理者解耦</strong>了。</p>
+</li>
+<li><p><strong>何时使用</strong>：在处理消息的时候以过滤很多道。</p>
+</li>
+<li><p><strong>如何解决</strong>：拦截的类都<strong>实现统一接口</strong>。</p>
+</li>
+<li><p><strong>优点</strong>： 1、<strong>降低耦合度</strong>。它将请求的发送者和接收者解耦。 2、简化了对象。使得对象不需要知道链的结构。 3、增强给对象指派职责的灵活性。通过改变链内的成员或者调动它们的次序，允许动态地新增或者删除责任。 4、增加新的请求处理类很方便。</p>
+</li>
+<li><p><strong>缺点</strong>： 1、不能保证请求一定被接收。 2、<strong>系统性能将受到一定影响</strong>，而且在进行代码调试时不太方便，可能会造成循环调用。 3、可能不容易观察运行时的特征，有碍于除错。</p>
+</li>
+<li><p><strong>使用场景</strong>： 1、有多个对象可以处理同一个请求，具体哪个对象处理该请求由运行时刻自动确定。 2、在不明确指定接收者的情况下，向多个对象中的一个提交一个请求。 3、可动态指定一组对象处理请求。</p>
+</li>
+</ul>
+<h2 id="过滤器-Filter"><a href="#过滤器-Filter" class="headerlink" title="过滤器(Filter)"></a>过滤器(Filter)</h2><h3 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h3><ul>
+<li>依赖于servlet容器（也就是tomcat）</li>
+<li>可以对几乎所有请求进行过滤</li>
+<li>使用场景如：修改字符编码；修改HttpServletRequest的一些参数；过滤低俗文字、危险字符等。</li>
+</ul>
+<h3 id="实现细节"><a href="#实现细节" class="headerlink" title="实现细节"></a>实现细节</h3><p>&emsp;&emsp;我们在使用Filter的时候往往是继承Filter的类（比如OncePerRequestFilter），然后重写以下方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response, FilterChain filterChain)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    <span class="comment">// doSomething</span></span><br><span class="line">   	<span class="comment">// 做完之后，传递到filterChain中的下一个Filter</span></span><br><span class="line">    filterChain.doFilter(request, response);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;所以问题来了，FilterChain到底是怎么样的一个对象，为什么可以把那么多Filter聚合起来按照一定顺序去处理请求。说来也很简单，看下面的代码（简略了一些代码，只保留了核心逻辑）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">internalDoFilter</span><span class="params">(ServletRequest request, ServletResponse response)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (<span class="keyword">this</span>.pos &lt; <span class="keyword">this</span>.n) &#123;</span><br><span class="line">       	<span class="comment">// this.filters是一个存储了当前Filter的数组</span></span><br><span class="line">       	<span class="comment">// this.n表示当前执行进度</span></span><br><span class="line">       	<span class="comment">// 会按照顺序把Filter一个一个都执行了</span></span><br><span class="line">           ApplicationFilterConfig filterConfig = <span class="keyword">this</span>.filters[<span class="keyword">this</span>.pos++];</span><br><span class="line">           Filter filter = filterConfig.getFilter();</span><br><span class="line">           filter.doFilter(request, response, <span class="keyword">this</span>);</span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">       	<span class="comment">// Filter全部执行结果会交给Service</span></span><br><span class="line">           <span class="keyword">this</span>.servlet.service(request, response);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="拦截器-Interceptor"><a href="#拦截器-Interceptor" class="headerlink" title="拦截器(Interceptor)"></a>拦截器(Interceptor)</h2><h3 id="说明-1"><a href="#说明-1" class="headerlink" title="说明"></a>说明</h3><ul>
+<li>依赖于web框架（如SpringMVC框架）</li>
+<li>基于Java的反射机制，属于面向切面编程（AOP）的一种运用</li>
+<li>同时一个拦截器实例在一个controller生命周期之内可以多次调用</li>
+</ul>
+<h3 id="Filter和Interceptor的异同"><a href="#Filter和Interceptor的异同" class="headerlink" title="Filter和Interceptor的异同"></a>Filter和Interceptor的异同</h3><ul>
+<li>Filter需要在web.xml中配置，依赖于Servlet</li>
+<li>Interceptor需要在SpringMVC中配置，依赖于框架</li>
+<li>Filter的执行顺序在Interceptor之前</li>
+<li>拦截器（Interceptor）是基于Java的反射机制，而过滤器（Filter）是基于函数回调</li>
+<li>从灵活性上说拦截器功能更强大些，Filter能做的事情，都能做，而且可以在请求前，请求后执行，比较灵活。</li>
+</ul>
+<h3 id="实现细节-1"><a href="#实现细节-1" class="headerlink" title="实现细节"></a>实现细节</h3><p>&emsp;&emsp;我们在使用Interceptor的时候往往是继承WebMvcConfigurer，然后重写以下方法增加Interceptor：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyWebMvcConfigurer</span> <span class="keyword">implements</span> <span class="title">WebMvcConfigurer</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addInterceptors</span><span class="params">(InterceptorRegistry registry)</span> </span>&#123;</span><br><span class="line">        registry.addInterceptor(<span class="keyword">new</span> LoginHandlerInterceptor())</span><br><span class="line">                .addPathPatterns(<span class="string">"/**"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;和Filter不同的是，Interceptor是有前置处理和后置处理的，他们的顺序和实现是这样子的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 先执行前置，如果返回true则继续</span></span><br><span class="line"><span class="keyword">if</span> (!mappedHandler.applyPreHandle(processedRequest, response)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            mv = ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br><span class="line">            <span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">this</span>.applyDefaultViewName(processedRequest, mv);</span><br><span class="line">            <span class="comment">// 最后执行后置</span></span><br><span class="line">            mappedHandler.applyPostHandle(processedRequest, response, mv);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">applyPreHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	<span class="comment">// 所有需要操作的Interceptor通过getInterceptors获取后也是一个数组，然后逐一处理</span></span><br><span class="line">    HandlerInterceptor[] interceptors = <span class="keyword">this</span>.getInterceptors();</span><br><span class="line">    <span class="keyword">if</span> (!ObjectUtils.isEmpty(interceptors)) &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; interceptors.length; <span class="keyword">this</span>.interceptorIndex = i++) &#123;</span><br><span class="line">            HandlerInterceptor interceptor = interceptors[i];</span><br><span class="line">            <span class="keyword">if</span> (!interceptor.preHandle(request, response, <span class="keyword">this</span>.handler)) &#123;</span><br><span class="line">                <span class="keyword">this</span>.triggerAfterCompletion(request, response, (Exception)<span class="keyword">null</span>);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">applyPostHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, @Nullable ModelAndView mv)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	<span class="comment">// 后置也一样</span></span><br><span class="line">    HandlerInterceptor[] interceptors = <span class="keyword">this</span>.getInterceptors();</span><br><span class="line">    <span class="keyword">if</span> (!ObjectUtils.isEmpty(interceptors)) &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = interceptors.length - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i) &#123;</span><br><span class="line">            HandlerInterceptor interceptor = interceptors[i];</span><br><span class="line">            interceptor.postHandle(request, response, <span class="keyword">this</span>.handler, mv);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="核心思想"><a href="#核心思想" class="headerlink" title="核心思想"></a>核心思想</h3><p>&emsp;&emsp;看了两者的核心实现后，我们其实可以发现，责任链模式最关键的就是用约定大于配置的方式，定义好接口，然后把在统一的处理器里面把他们聚合在一起，按照顺序把他们处理成链（其实就是数组），然后在实际运行过程中会一个一个处理下去直到处理完。</p>
 
       
       <!-- reward -->
@@ -162,7 +213,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E8%B4%A3%E4%BB%BB%E9%93%BE/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/03/21/Java%E5%9F%BA%E7%A1%80/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E8%B4%A3%E4%BB%BB%E9%93%BE/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -180,19 +231,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2021/03/18/%E7%94%9F%E6%B4%BB/%E6%97%A9%E6%9C%9F%E5%93%B2%E5%AD%A6%E5%A4%87%E5%BF%98%E5%BD%95/" class="article-nav-link">
+      <a href="/2021/03/23/%E7%94%9F%E6%B4%BB/%E8%BF%91%E4%BB%A3%E5%93%B2%E5%AD%A6%E5%A4%87%E5%BF%98%E5%BD%95/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            早期哲学备忘录
+            近代哲学备忘录
           
         </div>
       </a>
     
     
-      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/" class="article-nav-link">
+      <a href="/2021/03/20/%E7%AE%97%E6%B3%95/%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95%E7%9A%84%E4%BD%8D%E6%95%B0%E5%8F%AF%E4%BB%A5%E9%98%89%E5%89%B2%E5%90%97/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">浅拷贝和深拷贝引发的思考</div>
+        <div class="article-nav-title">雪花算法的位数可以阉割吗</div>
       </a>
     
   </nav>
