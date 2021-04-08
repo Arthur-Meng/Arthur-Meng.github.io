@@ -9,7 +9,7 @@
     
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    近代哲学备忘录 |  Arthur&#39;s Blog
+    常用Lambda表达式汇总 |  Arthur&#39;s Blog
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -41,7 +41,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-生活/近代哲学备忘录" class="article article-type-post" itemscope
+  <article id="post-Java进阶/常用Lambda表达式汇总" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -49,7 +49,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  近代哲学备忘录
+  常用Lambda表达式汇总
 </h1>
  
 
@@ -58,12 +58,12 @@
 
     
     <div class="article-meta">
-      <a href="/2021/03/23/%E7%94%9F%E6%B4%BB/%E8%BF%91%E4%BB%A3%E5%93%B2%E5%AD%A6%E5%A4%87%E5%BF%98%E5%BD%95/" class="article-date">
-  <time datetime="2021-03-23T10:25:19.000Z" itemprop="datePublished">2021-03-23</time>
+      <a href="/2021/03/29/Java%E8%BF%9B%E9%98%B6/%E5%B8%B8%E7%94%A8Lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%87%E6%80%BB/" class="article-date">
+  <time datetime="2021-03-29T12:16:43.000Z" itemprop="datePublished">2021-03-29</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%93%B2%E5%AD%A6/">哲学</a>
+    <a class="article-category-link" href="/categories/Lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F/">Lambda表达式</a>
   </div>
 
       
@@ -73,7 +73,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.5k</span>
+            <span class="post-count">965</span>
         </span>
     </span>
 
@@ -107,67 +107,41 @@
       
 
       
-      <p>&emsp;&emsp;近代哲学备忘录是为了记下自己最近看过的哲学家及其思想，方便以后回顾和记忆，用于感(zhuang)悟(x)。</p>
-<h2 id="近代哲学"><a href="#近代哲学" class="headerlink" title="近代哲学"></a>近代哲学</h2><p>&emsp;&emsp;15世纪中—19世纪40年代，称为近代哲学。</p>
-<h3 id="布鲁诺"><a href="#布鲁诺" class="headerlink" title="布鲁诺"></a>布鲁诺</h3><ul>
-<li><strong>反教会、反经院哲学、反对地心说</strong></li>
-<li>汲取了文艺复兴时期先进哲学和自然科学成果，论证了唯物主义和辩证法思想</li>
-<li>万事万物都处在普遍联系和不断运动变化，人类也历史是不断变化和前进的，所以主张社会变革</li>
+      <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>&emsp;&emsp;众所周知，Lambda表达式是Java8发布的最重要的新特性，它允许把函数作为一个方法的参数（函数作为参数传递进方法中），可以使代码变的更加简洁紧凑，是我们平时写代码的好帮手。本文记录了一些常用的Lambda表达式，防止自己每次忘记了还得去百度。</p>
+<h3 id="List转Map"><a href="#List转Map" class="headerlink" title="List转Map"></a>List转Map</h3><p>&emsp;&emsp;选取list或set中的数据作为key和value组合成map，使用lambda表达式的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Object&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="comment">// stream 表示打开流</span></span><br><span class="line"><span class="comment">// collect 表示执行收集的操作</span></span><br><span class="line"><span class="comment">// Collectors.toMap 表示执行聚合成map的操作</span></span><br><span class="line"><span class="comment">// Object::Function 表示调用Object类的Function方法作为map的key</span></span><br><span class="line"><span class="comment">// o表示对象中的元素，可以用别的标识符来代替</span></span><br><span class="line"><span class="comment">// o -&gt; o 表示使用list中的完整对象作为map的value</span></span><br><span class="line">Map&lt;String, Object&gt; map = list.stream().collect(Collectors.toMap(Object::Function, o -&gt; o));</span><br><span class="line"></span><br><span class="line"><span class="comment">// o -&gt; o.Function2 表示使用list中对象的Function2函数的返回值作为map的value（类型为Object2）</span></span><br><span class="line">Map&lt;String, Object2&gt; map = list.stream().collect(Collectors.toMap(Object::Function1, o -&gt; o.Function2));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 需要注意的是虽然Collectors.toMap返回的是HashMap，但是当遇到key重复的时候，还是会报错</span></span><br><span class="line"><span class="comment">// 这时候的解决方案是配置合并策略，也是就mergeFunction</span></span><br><span class="line"><span class="comment">// (v1, v2) -&gt; v1) 表示当有两个版本，也就是开始的v1和后面新增的v2时，选择开始的版本v1</span></span><br><span class="line">Map&lt;String, Object&gt; map = list.stream().collect(Collectors.toMap(Object::Function, o -&gt; o, (v1, v2) -&gt; v1));</span><br></pre></td></tr></table></figure>
+
+<h3 id="Map转List"><a href="#Map转List" class="headerlink" title="Map转List"></a>Map转List</h3><p>&emsp;&emsp;选取map中的数据组合成list，如果是key列表或者是value列表，无需使用lambda表达式，直接通过map的方法获取即可，写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list =  <span class="keyword">new</span> ArrayList&lt;String&gt;(map.keySet());</span><br><span class="line">List&lt;Object&gt; list =  <span class="keyword">new</span> ArrayList&lt;Object&gt;(map.values());</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;如果是要从map对象中的数据筛选出来部分组合成list（其实就是先过滤在收集成list）。写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// filter 表示进行过滤的操作</span></span><br><span class="line"><span class="comment">// Collectors.toList() 表示最后转为list</span></span><br><span class="line"><span class="comment">// 表达式有很多种形式，表示true or false即可</span></span><br><span class="line"><span class="comment">// e 表示map中的Entry</span></span><br><span class="line">List&lt;Map.Entry&gt; list = map.entrySet().stream().filter(e -&gt; 表达式).collect(Collectors.toList());</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="List筛选"><a href="#List筛选" class="headerlink" title="List筛选"></a>List筛选</h3><p>&emsp;&emsp;筛选list或set中的数据组合成新的list，使用lambda表达式的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// o 表示对象中的元素、</span></span><br><span class="line">List&lt;Object&gt; newList = list.stream().filter(o -&gt; 表达式).collect(Collectors.toList());</span><br></pre></td></tr></table></figure>
+
+<h3 id="Map筛选"><a href="#Map筛选" class="headerlink" title="Map筛选"></a>Map筛选</h3><p>&emsp;&emsp;筛选map中的数据组合成新的map，使用lambda表达式的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// e 表示map中的Entry</span></span><br><span class="line">Map&lt;String, String&gt; newMap = map.entrySet().stream().filter(e -&gt; 表达式))</span><br><span class="line">                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));</span><br></pre></td></tr></table></figure>
+
+<h3 id="List和Map转String"><a href="#List和Map转String" class="headerlink" title="List和Map转String"></a>List和Map转String</h3><p>&emsp;&emsp;使用list或者map中的数据组合成String，使用lambda表达式的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Object::Function 表示调用Object类的Function方法获取字符串组成集合，作为拼接的元素</span></span><br><span class="line"><span class="comment">// Collectors.joining(",") 表示对集合中的字符串支持拼接操作，用","分隔</span></span><br><span class="line">String s = list.stream().map(Object::Function).collect(Collectors.joining(<span class="string">","</span>));</span><br><span class="line"></span><br><span class="line"><span class="comment">// map(Map.Entry::getValue) 表示使用Entry的value作为字符串组成集合，作为拼接的元素</span></span><br><span class="line"><span class="comment">// Collectors.joining(",","start","end") 表示拼接时用start开头，end结尾，用","分隔</span></span><br><span class="line">String s = map.entrySet().stream().map(Map.Entry::getValue)</span><br><span class="line">                .collect(Collectors.joining(<span class="string">","</span>, <span class="string">"start"</span>, <span class="string">"end"</span>));</span><br></pre></td></tr></table></figure>
+
+<h3 id="List转Map-lt-String-List-gt"><a href="#List转Map-lt-String-List-gt" class="headerlink" title="List转Map&lt;String,List&gt;"></a>List转Map&lt;String,List&gt;</h3><p>&emsp;&emsp;有时候我们需要对list中的数据进行分组，最后组合成Map&lt;String,List&gt;，使用lambda表达式的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Collectors.groupingBy 表示聚合操作，依据Object::Function来聚合</span></span><br><span class="line">Map&lt;String, List&lt;Object&gt;&gt; map = list.stream().collect(Collectors.groupingBy(Object::Function));</span><br></pre></td></tr></table></figure>
+
+<br/>
+
+<h2 id="记忆要点"><a href="#记忆要点" class="headerlink" title="记忆要点"></a>记忆要点</h2><ul>
+<li>使用前需要打开流，即.stream()</li>
+<li>执行收集操作是.collect()</li>
+<li>收集操作支持：Collectors.toList()，Collectors.toSet()，Collectors.toMap()，Collectors.joining()</li>
+<li>执行过滤的操作是.filter()</li>
+<li>执行集合操作的是.map()</li>
+<li>声明操作有两种写法，一种是Object::Function，另外一种是o -&gt; o.function()</li>
 </ul>
-<h3 id="笛卡尔"><a href="#笛卡尔" class="headerlink" title="笛卡尔"></a>笛卡尔</h3><ul>
-<li>近代唯理论的第一个代表，近代西方哲学的三大理性主义者之一</li>
-<li>从普遍的怀疑开始的，<strong>把一切打倒，重新建立，完全运用思维以达到客观真理</strong></li>
-<li>名言：<strong>我思故我在</strong></li>
-<li>认为有神，精神，物质三个实体，所以是典型的<strong>二元论者：除了机械的世界外，还有一个精神世界</strong></li>
-<li>提出“<strong>天赋观念</strong>”说</li>
-</ul>
-<h3 id="斯宾诺莎"><a href="#斯宾诺莎" class="headerlink" title="斯宾诺莎"></a>斯宾诺莎</h3><ul>
-<li>近代西方哲学的三大理性主义者之二</li>
-<li><strong>一元论者或泛神论者（神无处不在，与世界一体）</strong>：实体只有一个，即是“自然即神化身”</li>
-<li>所以只要<strong>和上帝达成一致，人们就不再受制于这种影响，能获得相对的自由</strong></li>
-<li><strong>决定论者，他认为所有已发生事情的出现绝对贯穿着必然的作用</strong></li>
-<li>经历：由于不承认神是自然的创造主，其认为自然本身就是神化身被教会驱逐，只能悲惨地磨镜片，因为吸入了大量的硒尘而死。</li>
-</ul>
-<h3 id="莱布尼茨"><a href="#莱布尼茨" class="headerlink" title="莱布尼茨"></a>莱布尼茨</h3><ul>
-<li>近代西方哲学的三大理性主义者之三</li>
-<li>在数学史和哲学史上都占有重要地位（微积分）</li>
-<li>欧陆理性主义哲学的高峰：提出了单子论，<strong>单子独立和封闭，但是可以通过神彼此互相发生作用</strong>；<strong>可能性是在神的目光之下的实在，而没有真正的将世界的可能性看作为可能性</strong></li>
-<li>名言：<strong>我们的宇宙，在某种意义上是上帝所创造的最好的一个</strong></li>
-</ul>
-<h3 id="洛克"><a href="#洛克" class="headerlink" title="洛克"></a>洛克</h3><ul>
-<li><strong>唯物主义的经验论</strong></li>
-<li>反对笛卡尔的“天赋观念”说，提出<strong>白板说</strong>：人的心灵开始时就像一块“白板”，而向它提供精神内容的是经验</li>
-</ul>
-<h3 id="培根"><a href="#培根" class="headerlink" title="培根"></a>培根</h3><ul>
-<li><strong>实验科学</strong>的创始人，<strong>近代归纳法</strong>的创始人</li>
-<li><strong>经验主义</strong></li>
-<li>在哲学史上，培根的地位似乎微不足道</li>
-</ul>
-<h3 id="休谟"><a href="#休谟" class="headerlink" title="休谟"></a>休谟</h3><ul>
-<li>彻底的<strong>怀疑主义（不可知论）</strong></li>
-<li><strong>休谟问题：从“是”能否推出“应该”，又称“实然与应然问题”</strong></li>
-<li><strong>对于道德问题，科学是无能为力的</strong>，科学只能回答“是什么”的问题，而不能告诉我们“应该怎样”的问题</li>
-</ul>
-<h2 id="康德"><a href="#康德" class="headerlink" title="康德"></a>康德</h2><ul>
-<li>提出了三大批判，即<strong>《纯粹理性批判》、《实践理性批判》和《判断力批判》</strong></li>
-<li>《纯粹理性批判》回答了：我们能知道什么？<strong>真理似乎只有在人的头脑中才成为可能</strong>，即知识的普遍必然性，<strong>调和了勒内·笛卡儿的理性主义与弗朗西斯·培根的经验主义</strong>：他一方面赞同经验论的观点，即世人的一切知识都是经验知识，离开经验世人没有任何知识；另一方面，也赞同唯理论对经验论的批评：对科学知识来说仅有经验是不够的，它们的普遍必然性只能是先天的</li>
-<li>《实践理性批判》，对于实践理性的“批判”就是要考察那规定道德行为的“意志”的本质以及它们遵循的原则，提出了人是目的而非手段</li>
-<li>康德给哲学带来了巨大转变：<strong>不是事物在影响人，而是人在影响事物</strong>；<strong>是人在构造现实世界，在认识事物的过程中，人比事物本身更重要</strong></li>
-<li>提出了著名论断就是：<strong>人是万物的尺度</strong>；<strong>人其实根本不可能认识到事物的真性，我们只能认识事物的表象</strong>。</li>
-</ul>
-<h3 id="黑格尔"><a href="#黑格尔" class="headerlink" title="黑格尔"></a>黑格尔</h3><ul>
-<li>古代辩证法：在辩论中以揭露对方议论中的矛盾并克服这些矛盾来求得真理的方法</li>
-<li>黑格尔的辩证法认为整个历史和精神的世界是一个过程，就是说是在不断地运动着，变化着，发展着和改造着的，<strong>过程内部的矛盾是事物自身运动和发展的源泉</strong></li>
-<li>辩证法是由正题、反题与合题组成的，即<strong>三段式解读法</strong>：完全按照太极图的正、反、和的三维形式</li>
-<li>强调逻辑：逻辑学是这个世界的“理性结构”——也是我们精神认识这个世界的逻辑</li>
-<li>客观唯心主义：<strong>绝对精神是世界的本源，世界的运动变化乃是“绝对精神”自我发展的结果</strong></li>
-<li>名言：<strong>存在即合理（准确是翻译是凡合乎理性的即是真实的，凡真实的即是合乎理性的；即”绝对精神“自在地具备着一切，然后外化出其他，最后在更高的层次上回归自身。因此，凡是在这个发展轨迹上的就是合理的</strong>）</li>
-</ul>
-<h3 id="马克思"><a href="#马克思" class="headerlink" title="马克思"></a>马克思</h3><ul>
-<li>马克思通过黑格尔创建的辩证法创建了辩证唯物主义和历史唯物主义</li>
-<li>辩证唯物主义：<strong>物质是第一性的，意识是第二性的</strong>；<strong>事物的矛盾规律，即对立统一的规律，它是物质世界运动、变化和发展的最根本的规律</strong></li>
-<li>历史唯物主义：<strong>社会历史的发展有其自身固有的客观规律</strong></li>
-</ul>
+<br/>
+<br/>
 
       
       <!-- reward -->
@@ -222,14 +196,14 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/03/23/%E7%94%9F%E6%B4%BB/%E8%BF%91%E4%BB%A3%E5%93%B2%E5%AD%A6%E5%A4%87%E5%BF%98%E5%BD%95/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/03/29/Java%E8%BF%9B%E9%98%B6/%E5%B8%B8%E7%94%A8Lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%87%E6%80%BB/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
 
 
     </footer>
@@ -240,19 +214,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2021/03/29/Java%E8%BF%9B%E9%98%B6/%E5%B8%B8%E7%94%A8Lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%87%E6%80%BB/" class="article-nav-link">
+      <a href="/2021/04/07/Java%E8%BF%9B%E9%98%B6/SPI%E4%B8%8EJDBC/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            常用Lambda表达式汇总
+            SPI与JDBC
           
         </div>
       </a>
     
     
-      <a href="/2021/03/21/Java%E5%9F%BA%E7%A1%80/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E8%B4%A3%E4%BB%BB%E9%93%BE/" class="article-nav-link">
+      <a href="/2021/03/23/%E7%94%9F%E6%B4%BB/%E8%BF%91%E4%BB%A3%E5%93%B2%E5%AD%A6%E5%A4%87%E5%BF%98%E5%BD%95/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">设计模式之责任链</div>
+        <div class="article-nav-title">近代哲学备忘录</div>
       </a>
     
   </nav>
