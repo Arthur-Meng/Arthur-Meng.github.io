@@ -9,7 +9,7 @@
     
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    categories |  Arthur&#39;s Blog
+    分布式系统-缓存 |  Arthur&#39;s Blog
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -41,189 +41,250 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
+  <article id="post-系统设计/分布式系统-缓存" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  分布式系统-缓存
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/06/25/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F-%E7%BC%93%E5%AD%98/" class="article-date">
+  <time datetime="2021-06-25T08:26:45.000Z" itemprop="datePublished">2021-06-25</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">系统设计</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">907</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">3 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;最近发现了一个很强的项目，介绍<a href="https://github.com/donnemartin/system-design-primer/blob/master/README-zh-Hans.md" target="_blank" rel="noopener">系统设计</a>，感触颇深，所以想简单分享下分布式系统中可能用到的缓存。</p>
+<h2 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h2><p>&emsp;&emsp;缓存可以提高页面加载速度，并可以减少服务器和数据库的负载。在这个模型中，分发器先查看请求之前是否被响应过，如果有则将之前的结果直接返回，来省掉真正的处理。数据库分片均匀分布的读取是最好的。但是热门数据会让读取分布不均匀，这样就会造成瓶颈，如果在数据库前加个缓存，就会抹平不均匀的负载和突发流量对数据库的影响。</p>
+<br/>
+
+<h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><h3 id="客户端缓存"><a href="#客户端缓存" class="headerlink" title="客户端缓存"></a>客户端缓存</h3><p>&emsp;&emsp;缓存可以位于客户端（操作系统或者浏览器），服务端或者不同的缓存层。</p>
+<h3 id="CDN缓存"><a href="#CDN缓存" class="headerlink" title="CDN缓存"></a>CDN缓存</h3><p>&emsp;&emsp;CDN 也被视为一种缓存。</p>
+<h3 id="反向代理-Web服务器缓存"><a href="#反向代理-Web服务器缓存" class="headerlink" title="反向代理/Web服务器缓存"></a>反向代理/Web服务器缓存</h3><p>&emsp;&emsp;反向代理可以直接提供静态和动态内容。Web服务器同样也可以缓存请求，返回相应结果而不必连接应用服务器。</p>
+<h3 id="应用缓存"><a href="#应用缓存" class="headerlink" title="应用缓存"></a>应用缓存</h3><ul>
+<li>本地缓存：Guava、Caffeine</li>
+<li>分布式缓存：Ehcache、主流NoSQL(Redis，MemcacheDB，MongoDB)</li>
+</ul>
+<h3 id="数据库查询级别的缓存"><a href="#数据库查询级别的缓存" class="headerlink" title="数据库查询级别的缓存"></a>数据库查询级别的缓存</h3><p>&emsp;&emsp;当你查询数据库的时候，将查询语句的哈希值与查询结果存储到缓存中。通常有ORM框架实现(如Mybatis)，估计会话不同会分成多几级缓存。</p>
+<h3 id="数据库缓存"><a href="#数据库缓存" class="headerlink" title="数据库缓存"></a>数据库缓存</h3><p>&emsp;&emsp;数据库的默认配置中通常包含缓存级别，针对一般用例进行了优化。调整配置，在不同情况下使用不同的模式可以进一步提高性能。</p>
+<br/>
+
+<h2 id="策略"><a href="#策略" class="headerlink" title="策略"></a>策略</h2><h3 id="Cache-aside"><a href="#Cache-aside" class="headerlink" title="Cache aside"></a>Cache aside</h3><p>&emsp;&emsp;<strong>旁路缓存：操作逻辑是查询缓存，如果不存在那么就读取数据库并更新到缓存当中。如果是更新数据库，那么操作完数据库后，删除缓存（或者延时双删）。注意旁路缓存,缓存中的内容是不做更新操作的,只有写入和删除操作。适用于读操作较多的场景。而且实现很简单，性能也很好。</strong></p>
+<h3 id="Read-Write-through（直写模式）"><a href="#Read-Write-through（直写模式）" class="headerlink" title="Read/Write through（直写模式）"></a>Read/Write through（直写模式）</h3><p>&emsp;&emsp;<strong>核心策略：以缓存操作为主，通过缓存读数据和写数据，由缓存与数据库交互。</strong></p>
+<ul>
+<li>Read Through:先查询缓存中数据是否存在,如果存在则直接返回,如果不存在,则由缓存组件负责从数据库中同步加载数据</li>
+<li>Write Through:先查询要写入的数据在缓存中是否已经存在,如果已经存在,则更新缓存中的数据，并且由缓存组件同步更新到数据库中</li>
+</ul>
+<p>&emsp;&emsp;<strong>缓存与数据库保持一致，可能存在数据量过大的问题，而且写操作总是通过缓存到达主数据库，所以存在一定的写延迟。用于读操作较多的场景，但相较于Cache aside而言更适合缓存一致的场景（实现起来也更加麻烦）。</strong></p>
+<h3 id="Write-Back（回写模式）"><a href="#Write-Back（回写模式）" class="headerlink" title="Write Back（回写模式）"></a>Write Back（回写模式）</h3><p>&emsp;&emsp;Write back是相较于Write Through而言的一种异步回写策略。异步写可以减少与物理磁盘存储的交互，也可以进行合并写等优化。实现比较复杂，可能会丢失数据，适用场于读少写多的场景。MySQL InnoDB 引擎的Cache Pool其实就是使用的WriteBack策略，相较于Write through 而言拥有更高的写入性能。</p>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2021/06/25/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F-%E7%BC%93%E5%AD%98/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
   
-    <h1 class="page-type-title">Categories</h1>
-    <!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOP/">AOP</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/CAS/">CAS</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Https/">Https</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ID/">ID</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F/">Lambda表达式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Maven/">Maven</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%9B%E6%96%B0/">创新</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%93%B2%E5%AD%A6/">哲学</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%89%E5%85%A8/">安全</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1/">数据库事务</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%96%87%E4%BB%B6/">文件</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B3%A8%E8%A7%A3/">注解</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%94%B5%E5%BD%B1/">电影</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%94%B5%E8%A7%86%E5%89%A7/">电视剧</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%AE%97%E6%B3%95/">算法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">系统设计</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%BF%9E%E6%8E%A5%E6%B1%A0/">连接池</a></li></ul> -->
-    <ul class="category-list">
-      
-         
-          <a class="category-list-link" href="/categories/AOP/" title="AOP">
-            <li class="category-list-item">
-            AOP<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/CAS/" title="CAS">
-            <li class="category-list-item">
-            CAS<i>4</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/Https/" title="Https">
-            <li class="category-list-item">
-            Https<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/ID/" title="ID">
-            <li class="category-list-item">
-            ID<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/Lambda表达式/" title="Lambda表达式">
-            <li class="category-list-item">
-            Lambda表达式<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/Linux/" title="Linux">
-            <li class="category-list-item">
-            Linux<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/Maven/" title="Maven">
-            <li class="category-list-item">
-            Maven<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/Spring/" title="Spring">
-            <li class="category-list-item">
-            Spring<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/创新/" title="创新">
-            <li class="category-list-item">
-            创新<i>2</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/哲学/" title="哲学">
-            <li class="category-list-item">
-            哲学<i>2</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/多线程/" title="多线程">
-            <li class="category-list-item">
-            多线程<i>7</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/安全/" title="安全">
-            <li class="category-list-item">
-            安全<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/数据库事务/" title="数据库事务">
-            <li class="category-list-item">
-            数据库事务<i>3</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/文件/" title="文件">
-            <li class="category-list-item">
-            文件<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/注解/" title="注解">
-            <li class="category-list-item">
-            注解<i>2</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/电影/" title="电影">
-            <li class="category-list-item">
-            电影<i>2</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/电视剧/" title="电视剧">
-            <li class="category-list-item">
-            电视剧<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/算法/" title="算法">
-            <li class="category-list-item">
-            算法<i>2</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/系统设计/" title="系统设计">
-            <li class="category-list-item">
-            系统设计<i>4</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/编程/" title="编程">
-            <li class="category-list-item">
-            编程<i>5</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/设计模式/" title="设计模式">
-            <li class="category-list-item">
-            设计模式<i>1</i>
-            </li>
-          </a>
-        
-      
-         
-          <a class="category-list-link" href="/categories/连接池/" title="连接池">
-            <li class="category-list-item">
-            连接池<i>3</i>
-            </li>
-          </a>
-        
-      
-      </ul>
   
+  <nav class="article-nav">
+    
+      <a href="/2021/06/25/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E7%9A%84%E4%B8%80%E4%BA%9B%E9%80%9A%E7%94%A8%E6%AD%A5%E9%AA%A4/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            系统设计的一些通用步骤
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2021/06/25/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E6%89%80%E9%9C%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">分布式系统设计所需基础知识</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: '',
+        app_key: '',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'mp',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
 </section>
       <footer class="footer">
   <div class="outer">
@@ -373,6 +434,24 @@
 </script>
 
 
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
 
 
 
