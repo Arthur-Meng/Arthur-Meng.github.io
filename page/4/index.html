@@ -75,6 +75,96 @@
     
     
     
+    <article id="post-Java进阶/栅栏和闭锁" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/12/12/Java%E8%BF%9B%E9%98%B6/%E6%A0%85%E6%A0%8F%E5%92%8C%E9%97%AD%E9%94%81/"
+    >栅栏和闭锁</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/12/12/Java%E8%BF%9B%E9%98%B6/%E6%A0%85%E6%A0%8F%E5%92%8C%E9%97%AD%E9%94%81/" class="article-date">
+  <time datetime="2020-12-12T08:16:43.000Z" itemprop="datePublished">2020-12-12</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;在并发编程里面，栅栏和闭锁是两个常用的工具类，本文就带大（zi）家（ji）来一睹他们的真容（小白向）。</p>
+<h1 id="闭锁（CountDownLatch）"><a href="#闭锁（CountDownLatch）" class="headerlink" title="闭锁（CountDownLatch）"></a>闭锁（CountDownLatch）</h1><p>&emsp;&emsp;闭锁（CountDownLatch）允许<strong>一个或多个线程，等待其他一组线程完成操作后，再继续执行</strong>。打个比方，我在并发的时候需要<strong>控制执行顺序</strong>，需要在某些线程之后完成后才能继续执行下面的步骤，这时候引入闭锁就可以很好的解决这个问题。实现方式如下：</p>
+<ul>
+<li>闭锁通过一个计数器来实现的，我们定义闭锁的时候需要定义计数器的初始值，这个值就是<strong>需要等待线程的数量</strong>。</li>
+<li>我们在需要把闭锁传给需要等待的线程，并且在等待的地方调用CountDownLatch的<strong>await()</strong>方法。</li>
+<li>当需要等待的线程完成了自己的任务后，调用CountDownLatch的<strong>countDown()</strong>方法，计数器的值就会减1。</li>
+<li>当计数器值为<strong>0</strong>时，说明所有的等待线程都执行完了，此时，在闭锁上等待的线程await()就结束了，就可以恢复执行任务。</li>
+</ul>
+<p>接下去就是代码演示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义一个长度为10的线程池</span></span><br><span class="line">ExecutorService threadPool = newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line"><span class="comment">// 定义一个闭锁，需要等待的线程为10</span></span><br><span class="line"><span class="keyword">final</span> CountDownLatch latch = <span class="keyword">new</span> CountDownLatch(<span class="number">10</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> start = <span class="number">0</span>; start &lt; <span class="number">10</span>; start += <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="comment">// 把闭锁传入任务</span></span><br><span class="line">    threadPool.execute(<span class="keyword">new</span> Task(latch));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 当前线程等待10个任务全部执行结束</span></span><br><span class="line">latch.await();</span><br><span class="line">log.info(<span class="string">"10个任务全部执行结束"</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    	<span class="comment">// doSomething</span></span><br><span class="line">    	<span class="comment">// 执行完成后，闭锁减一</span></span><br><span class="line">        latch.countDown();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="栅栏（CyclicBarrier）"><a href="#栅栏（CyclicBarrier）" class="headerlink" title="栅栏（CyclicBarrier）"></a>栅栏（CyclicBarrier）</h1><p>&emsp;&emsp;栅栏（CyclicBarrier）类似于闭锁，它也能够阻塞一组线程直到某个事件发生；但是它与闭锁(CountDownLatch)的重大区别是，闭锁是所有线程等待一个外部事件的发生；而栅栏则是<strong>所有线程相互等待，直到所有线程都到达某一点时才打开栅栏，然后线程可以继续执行</strong>。打一个比方，栅栏就是赛马的比赛时候在马前边的栏杆，只有等全部赛马都上了赛道准备好了之后，栏杆才会打开，比赛才会开始。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.concurrent.BrokenBarrierException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.CyclicBarrier;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestCyclicBarrier</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 定义一个栅栏</span></span><br><span class="line">        CyclicBarrier barrier = <span class="keyword">new</span> CyclicBarrier(num, <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            	<span class="comment">// run方法定义，全部现场都准备好了之后，需要做的事情</span></span><br><span class="line">                System.out.println(<span class="string">"比赛开始!"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">10</span>; i++) &#123;</span><br><span class="line">        	<span class="comment">// 创建10个线程，模拟10匹赛马</span></span><br><span class="line">            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Horse(i, barrier)).start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Horse</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 编号</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> id;</span><br><span class="line">    <span class="comment">// 栅栏</span></span><br><span class="line">    <span class="keyword">private</span> CyclicBarrier barrier;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Horse</span><span class="params">(<span class="keyword">int</span> id, <span class="keyword">final</span> CyclicBarrier barrier)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">        <span class="keyword">this</span>.barrier = barrier;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            System.out.println(id + <span class="string">"号赛马准备就绪"</span>);</span><br><span class="line">            <span class="comment">// 当赛马准备好之后</span></span><br><span class="line">            barrier.await();</span><br><span class="line">            <span class="comment">// 当栅栏释放之后需要做的事情</span></span><br><span class="line">            System.out.println(id + <span class="string">"开始比赛"</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException | BrokenBarrierException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;输入如下（如下只是一种情况，比赛开始之后就说不准了）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">1号赛马准备就绪</span><br><span class="line">2号赛马准备就绪</span><br><span class="line">3号赛马准备就绪</span><br><span class="line">4号赛马准备就绪</span><br><span class="line">5号赛马准备就绪</span><br><span class="line">6号赛马准备就绪</span><br><span class="line">7号赛马准备就绪</span><br><span class="line">8号赛马准备就绪</span><br><span class="line">9号赛马准备就绪</span><br><span class="line">10号赛马准备就绪</span><br><span class="line">比赛开始!</span><br><span class="line">10开始比赛</span><br><span class="line">1开始比赛</span><br><span class="line">2开始比赛</span><br><span class="line">4开始比赛</span><br><span class="line">6开始比赛</span><br><span class="line">3开始比赛</span><br><span class="line">7开始比赛</span><br><span class="line">5开始比赛</span><br><span class="line">9开始比赛</span><br><span class="line">8开始比赛</span><br></pre></td></tr></table></figure>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-工具/强制联想" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -918,98 +1008,6 @@
 <li>增加一个处理队列内的剩余全部数据的方法，并加上@PreDestroy注解</li>
 <li>实现DisposableBean接口的destroy()方法，在destroy()方法内处理队列内的剩余全部数据</li>
 </ul>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java进阶/ThreadLocal妙用" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/ThreadLocal%E5%A6%99%E7%94%A8/"
-    >ThreadLocal妙用</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/07/27/Java%E8%BF%9B%E9%98%B6/ThreadLocal%E5%A6%99%E7%94%A8/" class="article-date">
-  <time datetime="2020-07-27T12:16:43.000Z" itemprop="datePublished">2020-07-27</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="什么是ThreadLocal"><a href="#什么是ThreadLocal" class="headerlink" title="什么是ThreadLocal"></a>什么是ThreadLocal</h2><p>&emsp;&emsp;ThreadLoal变量是线程局部变量，同一个ThreadLocal所包含的对象，在不同的Thread中有不同的副本。这里有几点需要注意：</p>
-<ul>
-<li>ThreadLocal提供了线程本地的实例。它与普通变量的区别在于，<strong>每个使用该变量的线程都会初始化一个完全独立的实例副本</strong>。</li>
-<li>因为每个Thread内有自己的实例副本，且该副本只能由当前Thread使用。这是也是ThreadLocal命名的由来。</li>
-<li>既然每个Thread有自己的实例副本，且其它Thread不可访问，那就不存在多线程间共享的问题。</li>
-<li>ThreadLocal变量通常被private static修饰。当一个线程结束时，它所使用的所有ThreadLocal相对的实例副本都可被回收。</li>
-<li>ThreadLocal是一个泛型类，保证可以接受任何类型的对象。</li>
-</ul>
-<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>&emsp;&emsp;一个线程内可以存在多个ThreadLocal对象，所以其实是ThreadLocal内部维护了一个 Map ，这个Map不是直接使用的HashMap ，而是ThreadLoca 实现的一个叫做ThreadLocalMap的静态内部类。而我们使用的 get()、set() 方法其实都是调用了这个ThreadLocalMap类对应的 get()、set() 方法。</p>
-<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>&emsp;&emsp;<strong>ThreadLoal提供了线程级别的信息存储，可以用于存储当前线程的重要标准和信息，并且可以全局共享，使得代码耦合度更低，且实现更优雅（尤其是和注解联合起来使用）</strong>，例如：</p>
-<ul>
-<li>在接入层或者拦截器中将当前用户编号存入ThreadLoal，在之后的处理过程中都可以拿到当前用户编号</li>
-<li>通过注解将需要权限控制的标志存入ThreadLoal，在之后Mybatis的拦截器中根据标志判断是否需要进行权限过滤</li>
-<li><strong>通过注解数据源信息存入ThreadLoal，在获取数据库连接时根据ThreadLoal中的数据源信息获取对应的连接</strong></li>
-</ul>
-<h2 id="应用示例（通过注解实现多数据源）"><a href="#应用示例（通过注解实现多数据源）" class="headerlink" title="应用示例（通过注解实现多数据源）"></a>应用示例（通过注解实现多数据源）</h2><h3 id="定义存放ThreadLocal的类"><a href="#定义存放ThreadLocal的类" class="headerlink" title="定义存放ThreadLocal的类"></a>定义存放ThreadLocal的类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DynamicDataSourceContextHolder</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 定义ThreadLocal存储当前数据源</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;String&gt; contextHolder = <span class="keyword">new</span> ThreadLocal();</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> List&lt;String&gt; dataSourceIds = <span class="keyword">new</span> ArrayList();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DynamicDataSourceContextHolder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setDataSourceType</span><span class="params">(String dataSourceType)</span> </span>&#123;</span><br><span class="line">        contextHolder.set(dataSourceType);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">getDataSourceType</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (String)contextHolder.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">clearDataSourceType</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        contextHolder.remove();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">containsDataSource</span><span class="params">(String dataSourceId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dataSourceIds.contains(dataSourceId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="定义注解"><a href="#定义注解" class="headerlink" title="定义注解"></a>定义注解</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义注解</span></span><br><span class="line"><span class="meta">@Target</span>(&#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> TargetDataSource &#123;</span><br><span class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line"></span><br><span class="line">    Class&lt;?&gt; location() <span class="keyword">default</span> Void<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用注解</span></span><br><span class="line"><span class="meta">@TargetDataSource</span>(<span class="string">"default"</span>)</span><br></pre></td></tr></table></figure>
-<h3 id="定义切面处理ThreadLocal的值"><a href="#定义切面处理ThreadLocal的值" class="headerlink" title="定义切面处理ThreadLocal的值"></a>定义切面处理ThreadLocal的值</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Order</span>(-<span class="number">1</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DynamicDataSourceAspect</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DynamicDataSourceAspect</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before</span>(<span class="string">"@annotation(targetDataSource)"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">changeDataSource</span><span class="params">(JoinPoint point, TargetDataSource targetDataSource)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="comment">// 根据注解的值设置当前数据源</span></span><br><span class="line">        String dsId = targetDataSource.value();</span><br><span class="line">        DynamicDataSourceContextHolder.setDataSourceType(dsId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@After</span>(<span class="string">"@annotation(targetDataSource)"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">restoreDataSource</span><span class="params">(JoinPoint point, TargetDataSource targetDataSource)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 方法结束后清理ThreadLocal中的值</span></span><br><span class="line">        DynamicDataSourceContextHolder.clearDataSourceType();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="使用ThreadLocal的值"><a href="#使用ThreadLocal的值" class="headerlink" title="使用ThreadLocal的值"></a>使用ThreadLocal的值</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DynamicDataSource</span> <span class="keyword">extends</span> <span class="title">AbstractRoutingDataSource</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Map&lt;Object, Object&gt; dataSourcesMap;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DynamicDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Object <span class="title">determineCurrentLookupKey</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 使用时从ThreadLocal取出当前数据源的值</span></span><br><span class="line">        <span class="keyword">return</span> DynamicDataSourceContextHolder.getDataSourceType();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getKey</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (String)<span class="keyword">this</span>.determineCurrentLookupKey();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">getTargetDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.determineTargetDataSource();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDataSourcesMap</span><span class="params">(Map&lt;Object, Object&gt; dataSourcesMap)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.dataSourcesMap = dataSourcesMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Map&lt;Object, Object&gt; <span class="title">getDataSourcesMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.dataSourcesMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">getCurrentDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (DataSource)<span class="keyword">this</span>.dataSourcesMap.get(DynamicDataSourceContextHolder.getDataSourceType() != <span class="keyword">null</span> ? DynamicDataSourceContextHolder.getDataSourceType() : <span class="string">"default"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">getDataSource</span><span class="params">(String dsId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (DataSource)<span class="keyword">this</span>.dataSourcesMap.get(dsId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <br/>
 <br/>
 

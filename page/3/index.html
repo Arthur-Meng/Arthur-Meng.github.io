@@ -75,6 +75,112 @@
     
     
     
+    <article id="post-Java基础/super究竟是什么" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/super%E7%A9%B6%E7%AB%9F%E6%98%AF%E4%BB%80%E4%B9%88/"
+    >super究竟是什么</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/super%E7%A9%B6%E7%AB%9F%E6%98%AF%E4%BB%80%E4%B9%88/" class="article-date">
+  <time datetime="2021-03-17T02:15:11.000Z" itemprop="datePublished">2021-03-17</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="导入"><a href="#导入" class="headerlink" title="导入"></a>导入</h2><p>&emsp;&emsp;我们先来看如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Scratch</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Son a = <span class="keyword">new</span> Son();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Father</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Father"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Son</span> <span class="keyword">extends</span> <span class="title">Father</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Sun"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Son</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass()); <span class="comment">//输出为class Son</span></span><br><span class="line">        System.out.println(<span class="keyword">super</span>.getClass()); <span class="comment">///输出为class Son</span></span><br><span class="line">        System.out.println(<span class="keyword">this</span>.get());   <span class="comment">//输出为Son</span></span><br><span class="line">        System.out.println(<span class="keyword">super</span>.get()); <span class="comment">//输出为Father</span></span><br><span class="line">        System.out.println(<span class="keyword">this</span>.n); <span class="comment">//输出为2</span></span><br><span class="line">        System.out.println(<span class="keyword">super</span>.n); <span class="comment">//输出为1</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
+<li><strong>为什么super.getClass()和this.getClass()是一样的？</strong></li>
+<li><strong>我们怎么才能知道上级是什么类?</strong></li>
+<li><strong>super()有什么用？</strong></li>
+</ul>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><h3 id="this的定义"><a href="#this的定义" class="headerlink" title="this的定义"></a>this的定义</h3><p>&emsp;&emsp;想要了解super，我们首先需要来看下this:</p>
+<ul>
+<li><strong>this是一个引用，保存内存地址指向自己</strong>。</li>
+<li>this出现在实例方法中，谁调用这个实例方法，this就代表谁，<strong>this代表当前正在执行这个动作的对象</strong>。</li>
+<li>this不能出现在静态方法中。</li>
+<li>this大部分情况下可以省略，在方法中区分实例变量和局部变量的时候不能省略。</li>
+<li>this(实际参数列表)出现在构造方法第一行，通过当前的构造方法去调用本类当中其它的构造方法。</li>
+</ul>
+<h3 id="super的定义"><a href="#super的定义" class="headerlink" title="super的定义"></a>super的定义</h3><p>&emsp;&emsp;从本质上讲，this是一个指向本对象的指针, 然而super是一个<strong>Java关键字</strong>。<br>&emsp;&emsp;<strong>super代表了当前对象中从父类继承过来的那部分特征</strong>。this指向一个独立的对象，super并不是指向某个”独立”的对象。<br>&emsp;&emsp;假设Father是父亲，Son是儿子，有这样一句话：大家都说Son的眼睛、鼻子和父亲的很像。那么也就是说儿子继承了父亲的眼睛和鼻子特征，那么眼睛和鼻子肯定最终还是长在儿子的身上。假设this指向Son，那么super就代表Son身上的眼睛和鼻子。<br>&emsp;&emsp;<strong>换句话说super其实是this的一部分</strong>。Father和张张大明小明其实是两个独立的对象，两个对象内存方面没有联系，super只是代表Son对象身上的眼睛和鼻子，<strong>因为这个是从父类中继承过来的，在内存方面使用了super关键字进行了标记</strong>，所以”this.眼睛”和”super.眼睛”都是访问的<strong>同一块内存空间</strong>。所以我们在<strong>实例化子类的时候也不会实例化一个父类出来</strong>。</p>
+<ul>
+<li>super和this都可以使用在<strong>实例方法</strong>当中。</li>
+<li>this和super都是<strong>不能使用在静态方法</strong>当中，因为super代表了当前对象上的父类型特征，静态方法中没有this，肯定也是不能使用super的。</li>
+<li>super也有这种用法：“super(实际参数列表);”，这种用法是通过当前的构造方法调用父类的构造方法。</li>
+</ul>
+<h3 id="为什么super-getClass-和this-getClass-是一样的"><a href="#为什么super-getClass-和this-getClass-是一样的" class="headerlink" title="为什么super.getClass()和this.getClass()是一样的"></a>为什么super.getClass()和this.getClass()是一样的</h3><p>&emsp;&emsp;super.getClass()或者this.getClass()，这<strong>getClass()都是从父类Object当中继承回来的</strong>，且是<strong>final</strong>。实质上调用的也是Object.getClass()而Object.getClass()是<strong>返回当前运行时对象的class</strong>，因此谁在运行就返回谁。这个在Object的API当中有说过。</p>
+<h3 id="我们怎么才能知道上级是什么类"><a href="#我们怎么才能知道上级是什么类" class="headerlink" title="我们怎么才能知道上级是什么类"></a>我们怎么才能知道上级是什么类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">this</span>.getClass().getSuperclass()</span><br></pre></td></tr></table></figure>
+
+<h3 id="super-有什么用"><a href="#super-有什么用" class="headerlink" title="super()有什么用"></a>super()有什么用</h3><ul>
+<li>super(参数)：<strong>调用父类中的某一个构造函数</strong>。</li>
+<li>this(参数)：<strong>调用本类中另一种形式的构造函数</strong></li>
+<li>调用super()必须写在<strong>子类构造方法的第一行</strong>，否则编译不通过。每个子类构造方法的第一条语句，都是隐含地调用super()，如果父类没有这种形式的构造函数，那么在编译的时候就会报错。</li>
+<li>this和super<strong>不能同时出现在一个构造函数里面</strong>，因为this必然会调用其它的构造函数，其它的构造函数必然也会有super语句的存在，所以在同一个构造函数里面有相同的语句，就失去了语句的意义，编译器也不会通过。</li>
+</ul>
+<br/>
+<br/>
+
+
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-网络/Https证书基础知识一览" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -975,96 +1081,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java进阶/栅栏和闭锁" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/12/12/Java%E8%BF%9B%E9%98%B6/%E6%A0%85%E6%A0%8F%E5%92%8C%E9%97%AD%E9%94%81/"
-    >栅栏和闭锁</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/12/12/Java%E8%BF%9B%E9%98%B6/%E6%A0%85%E6%A0%8F%E5%92%8C%E9%97%AD%E9%94%81/" class="article-date">
-  <time datetime="2020-12-12T08:16:43.000Z" itemprop="datePublished">2020-12-12</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;在并发编程里面，栅栏和闭锁是两个常用的工具类，本文就带大（zi）家（ji）来一睹他们的真容（小白向）。</p>
-<h1 id="闭锁（CountDownLatch）"><a href="#闭锁（CountDownLatch）" class="headerlink" title="闭锁（CountDownLatch）"></a>闭锁（CountDownLatch）</h1><p>&emsp;&emsp;闭锁（CountDownLatch）允许<strong>一个或多个线程，等待其他一组线程完成操作后，再继续执行</strong>。打个比方，我在并发的时候需要<strong>控制执行顺序</strong>，需要在某些线程之后完成后才能继续执行下面的步骤，这时候引入闭锁就可以很好的解决这个问题。实现方式如下：</p>
-<ul>
-<li>闭锁通过一个计数器来实现的，我们定义闭锁的时候需要定义计数器的初始值，这个值就是<strong>需要等待线程的数量</strong>。</li>
-<li>我们在需要把闭锁传给需要等待的线程，并且在等待的地方调用CountDownLatch的<strong>await()</strong>方法。</li>
-<li>当需要等待的线程完成了自己的任务后，调用CountDownLatch的<strong>countDown()</strong>方法，计数器的值就会减1。</li>
-<li>当计数器值为<strong>0</strong>时，说明所有的等待线程都执行完了，此时，在闭锁上等待的线程await()就结束了，就可以恢复执行任务。</li>
-</ul>
-<p>接下去就是代码演示：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义一个长度为10的线程池</span></span><br><span class="line">ExecutorService threadPool = newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line"><span class="comment">// 定义一个闭锁，需要等待的线程为10</span></span><br><span class="line"><span class="keyword">final</span> CountDownLatch latch = <span class="keyword">new</span> CountDownLatch(<span class="number">10</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> start = <span class="number">0</span>; start &lt; <span class="number">10</span>; start += <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="comment">// 把闭锁传入任务</span></span><br><span class="line">    threadPool.execute(<span class="keyword">new</span> Task(latch));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 当前线程等待10个任务全部执行结束</span></span><br><span class="line">latch.await();</span><br><span class="line">log.info(<span class="string">"10个任务全部执行结束"</span>);</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    	<span class="comment">// doSomething</span></span><br><span class="line">    	<span class="comment">// 执行完成后，闭锁减一</span></span><br><span class="line">        latch.countDown();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h1 id="栅栏（CyclicBarrier）"><a href="#栅栏（CyclicBarrier）" class="headerlink" title="栅栏（CyclicBarrier）"></a>栅栏（CyclicBarrier）</h1><p>&emsp;&emsp;栅栏（CyclicBarrier）类似于闭锁，它也能够阻塞一组线程直到某个事件发生；但是它与闭锁(CountDownLatch)的重大区别是，闭锁是所有线程等待一个外部事件的发生；而栅栏则是<strong>所有线程相互等待，直到所有线程都到达某一点时才打开栅栏，然后线程可以继续执行</strong>。打一个比方，栅栏就是赛马的比赛时候在马前边的栏杆，只有等全部赛马都上了赛道准备好了之后，栏杆才会打开，比赛才会开始。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.concurrent.BrokenBarrierException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.CyclicBarrier;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestCyclicBarrier</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 定义一个栅栏</span></span><br><span class="line">        CyclicBarrier barrier = <span class="keyword">new</span> CyclicBarrier(num, <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            	<span class="comment">// run方法定义，全部现场都准备好了之后，需要做的事情</span></span><br><span class="line">                System.out.println(<span class="string">"比赛开始!"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">10</span>; i++) &#123;</span><br><span class="line">        	<span class="comment">// 创建10个线程，模拟10匹赛马</span></span><br><span class="line">            <span class="keyword">new</span> Thread(<span class="keyword">new</span> Horse(i, barrier)).start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Horse</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 编号</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> id;</span><br><span class="line">    <span class="comment">// 栅栏</span></span><br><span class="line">    <span class="keyword">private</span> CyclicBarrier barrier;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Horse</span><span class="params">(<span class="keyword">int</span> id, <span class="keyword">final</span> CyclicBarrier barrier)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">        <span class="keyword">this</span>.barrier = barrier;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            System.out.println(id + <span class="string">"号赛马准备就绪"</span>);</span><br><span class="line">            <span class="comment">// 当赛马准备好之后</span></span><br><span class="line">            barrier.await();</span><br><span class="line">            <span class="comment">// 当栅栏释放之后需要做的事情</span></span><br><span class="line">            System.out.println(id + <span class="string">"开始比赛"</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException | BrokenBarrierException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;输入如下（如下只是一种情况，比赛开始之后就说不准了）：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">1号赛马准备就绪</span><br><span class="line">2号赛马准备就绪</span><br><span class="line">3号赛马准备就绪</span><br><span class="line">4号赛马准备就绪</span><br><span class="line">5号赛马准备就绪</span><br><span class="line">6号赛马准备就绪</span><br><span class="line">7号赛马准备就绪</span><br><span class="line">8号赛马准备就绪</span><br><span class="line">9号赛马准备就绪</span><br><span class="line">10号赛马准备就绪</span><br><span class="line">比赛开始!</span><br><span class="line">10开始比赛</span><br><span class="line">1开始比赛</span><br><span class="line">2开始比赛</span><br><span class="line">4开始比赛</span><br><span class="line">6开始比赛</span><br><span class="line">3开始比赛</span><br><span class="line">7开始比赛</span><br><span class="line">5开始比赛</span><br><span class="line">9开始比赛</span><br><span class="line">8开始比赛</span><br></pre></td></tr></table></figure>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
 
 
     </footer>
