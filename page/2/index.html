@@ -75,6 +75,87 @@
     
     
     
+    <article id="post-单点登录/CAS会话过期方案浅析" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/06/24/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95/CAS%E4%BC%9A%E8%AF%9D%E8%BF%87%E6%9C%9F%E6%96%B9%E6%A1%88%E6%B5%85%E6%9E%90/"
+    >CAS会话过期方案浅析</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/06/24/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95/CAS%E4%BC%9A%E8%AF%9D%E8%BF%87%E6%9C%9F%E6%96%B9%E6%A1%88%E6%B5%85%E6%9E%90/" class="article-date">
+  <time datetime="2021-06-24T13:43:49.000Z" itemprop="datePublished">2021-06-24</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/CAS/">CAS</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;最近有一次，突然被问到CAS服务端和CAS客户端的会话过期的一致性问题，有点懵逼。毕竟在我看来，既然都单点登录了，那边客户端的会话肯定是要和服务器的一致，客户端就没必要有自己的会话了，要过期就一起过期，还是太年轻了…</p>
+<h2 id="客户端会话过期"><a href="#客户端会话过期" class="headerlink" title="客户端会话过期"></a>客户端会话过期</h2><p>&emsp;&emsp;我们试想一个问题，如果其中一个客户端非要有自己的会话过期策略，那应该怎么处理比较合理？把这个问题转换过来就是，如果某个客户端A自己过期了，那它有必要通知服务端过期吗？答案是否定的，毕竟如果通知了服务端过期，那服务端会通知别的客户端B之类的，B的用户万一在用着好好的，突然就被登出了，这不得骂人？<br>&emsp;&emsp;那如果某个客户端A自己过期了，不通知服务端过期会有坏的影响吗？答案是有也没有。因为如果不通知服务端会话过期，那哪怕A自己把会话清了，下次重新访问的时候，还是会重定向到服务器重新获取一个票据，重新登录一次。好的方面是客户端A的这个过期没什么会影响…坏的方面是A的这个过期根本没什么用…OK，到这里还没结束，我们接着往下看。</p>
+<h2 id="服务端会话过期"><a href="#服务端会话过期" class="headerlink" title="服务端会话过期"></a>服务端会话过期</h2><p>&emsp;&emsp;我们来试想另外一个场景，如果我们的需求是需要服务端的会话过期失效呢？我们应该怎么设计？<br>&emsp;&emsp;抓瞎了呀…我的第一反应难道是心跳机制？客户端向服务端定时推送活跃会话，如果某个会话所有的客户端都不活跃，那就到期了把他踢出去。这样子好是好，但是太麻烦了，一点都不简洁。<br>&emsp;&emsp;后期我查阅了一些资料，发现网上的关于会话过期都基本上都差不多，都是用的CAS原生的一些策略，基于AbstractCasExpirationPolicy类的实现有8个类，这些类都在cas-server-core-tickets的org.jasig.cas.ticket.support包下。这里主要介绍两种常用的：</p>
+<ul>
+<li>NeverExpiresExpirationPolicy:票据永不过期</li>
+<li>TicketGrantingTicketExpirationPolicy:票据具有固定的生存期和空闲使用超时时间（CAS默认的过期策略）</li>
+</ul>
+<p>&emsp;&emsp;其中关于TicketGrantingTicketExpirationPolicy网上很多文章真的很扯，描述统一都是当用户在2个小时（7200秒）之内不动移动鼠标或者进行系统超过8个小时（28800秒），则TGT过期。WTF？CAS服务端那么厉害？还能监控用户鼠标有没有移动？牛逼牛逼。于是乎我去看了下源码，发现完全不是那回事…</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public boolean isExpired(TicketState ticketState) &#123;</span><br><span class="line">        long currentSystemTimeInMillis &#x3D; System.currentTimeMillis();</span><br><span class="line">        if (currentSystemTimeInMillis - ticketState.getCreationTime() &gt;&#x3D; this.maxTimeToLiveInMilliSeconds) &#123;</span><br><span class="line">        	&#x2F;&#x2F; maxTimeToLiveInMilliSeconds是TGT最大存活时间</span><br><span class="line">            LOGGER.debug(&quot;Ticket is expired because the time since creation is greater than maxTimeToLiveInMilliSeconds&quot;);</span><br><span class="line">            return true;</span><br><span class="line">        &#125; else if (currentSystemTimeInMillis - ticketState.getLastTimeUsed() &gt;&#x3D; this.timeToKillInMilliSeconds) &#123;</span><br><span class="line">        	&#x2F;&#x2F; timeToKillInMilliSeconds是TGT最大空闲时间</span><br><span class="line">            LOGGER.debug(&quot;Ticket is expired because the time since last use is greater than timeToKillInMilliseconds&quot;);</span><br><span class="line">            return true;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;后面又产生了疑问，那CAS服务端是怎么知道空闲了多久的？又是在什么时候去判断的有没有过期。看了好多，后来总算看到一篇稍微讲的合理的文章。<strong>TGT过期的校验发生在下一次登录的时候，即下一次登录，使用TGT的时候生成ST的时候都会校验是否有效，如果TGT已经过期那么整个流程就将失效，回到CAS单点登录的登录页面。讲到这里就一切跃然纸上了，TGT空闲时间就是上一次被登录的时候使用的时候到现在的间隔。校验发生在新登录发生的时候，如果TGT超过了最大存活时间或者最大空闲时间就算过期。</strong><br>&emsp;&emsp;这样子想来其实这个方案也还算合理。毕竟客户在登录新系统的时候肯定没在操作别的系统，这时候提示他超时了重新登录下也无可厚非。重新登录之后之前登录过的系统也会会再次生成新的会话，看上去似乎很完美！！！唯一的美中不足就是已经登录过的客户端在这种情况下其实是没有失效的情况的，但是我们可以结合上面的客户端会话来看，完美！！！我们可以给我们的<strong>客户端加上一个较小的会话过期时间</strong>，这样子如果会话失效了有两种情况：1、TGT没失效，自动重新登录，相当于没有过期；2、重新登录的时候校验TGT，发现也失效了，真的要手动重新登录。这样子就完美到达了我们的目的，既有会话失效，且两者的状态是统一的。</p>
+</br>
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95/" rel="tag">单点登录</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-Java进阶/Semaphore" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -1047,89 +1128,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java基础/浅拷贝和深拷贝引发的思考" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/"
-    >浅拷贝和深拷贝引发的思考</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/" class="article-date">
-  <time datetime="2021-03-17T10:25:19.000Z" itemprop="datePublished">2021-03-17</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;众所周知，拷贝有浅拷贝和深拷贝。但是在研究过程中我发现了很多有意思的地方，我们先来看一个例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span>  </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            A a = <span class="keyword">new</span> A();</span><br><span class="line">            B b = <span class="keyword">new</span> B();</span><br><span class="line">            b.setX(<span class="string">"1"</span>);</span><br><span class="line">            a.setB(b);</span><br><span class="line">            A a1 = a.clone();</span><br><span class="line">            b.setX(<span class="string">"2"</span>);</span><br><span class="line">            System.out.println(a.getB().getX()); <span class="comment">// 输出1</span></span><br><span class="line">            System.out.println(a1.getB().getX());<span class="comment">// 输出2</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (CloneNotSupportedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> B b;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setB</span><span class="params">(B b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.b = b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> B <span class="title">getB</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> A <span class="title">clone</span><span class="params">()</span> <span class="keyword">throws</span> CloneNotSupportedException </span>&#123;</span><br><span class="line">        A a = (A) <span class="keyword">super</span>.clone();</span><br><span class="line">        <span class="comment">// a.b = b.clone();</span></span><br><span class="line">        <span class="keyword">return</span> a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String x;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setX</span><span class="params">(String x)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.x = x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getX</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> B <span class="title">clone</span><span class="params">()</span> <span class="keyword">throws</span> CloneNotSupportedException </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (B) <span class="keyword">super</span>.clone();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
-<li>super.clone()做了什么？</li>
-<li>为什么这样子拷贝算是浅拷贝？深拷贝该怎么做？</li>
-<li>重写clone方法为什么要实现Cloneable接口，明明Cloneable接口是个空的接口？</li>
-<li>clone方法是Object类里面的方法，如果不实现Cloneable接口，会怎么样？</li>
-</ul>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><h3 id="问题一"><a href="#问题一" class="headerlink" title="问题一"></a>问题一</h3><p>&emsp;&emsp;在上一篇文章中，我们讲到super是一个Java关键字，代表了当前对象中从父类继承过来的那部分特征，而所有类都继承了Object，所以最终super.clone()会调用到<strong>Object的clone(</strong>)方法，而Object的clone()方法是一个<strong>native</strong>方法（jvm托管调用的本地方法），使用了<strong>RTTI</strong>（run-time  type  identification）的机制，动态得找到目前正在调用clone方法的那个<strong>reference</strong>，根据它的大小申请内存空间，然后进行<strong>bitwise的复制</strong>，将该对象的内存空间完全复制到新的空间中去，从而达到shallowcopy的目的。<br>&emsp;&emsp;所以总而言之，super.clone()就是<strong>一模一样拷贝了一个当前的对象</strong>。</p>
-<h3 id="问题二"><a href="#问题二" class="headerlink" title="问题二"></a>问题二</h3><p>&emsp;&emsp;在解释问题二前，我们先来看一个知识点，Java中的数据类型分为<strong>基本数据类型</strong>（六种数字类型（四个整数型，两个浮点型），一种字符类型，还有一种布尔型）和<strong>引用数据类型</strong>（除了基本数据类型的都是引用类型）。<br>&emsp;&emsp;对于这两种数据类型，我们<strong>在进行赋值操作、用作方法参数或返回值时，会有值传递和引用（地址）传递的差别</strong>。在我们这个例子就是的体现是，对象里面的字段如果是基础数据类型， 比如int，那么存储的是值；如果字段是对象，那边存储的是引用。<br>&emsp;&emsp;说到这里就解释了问题二，为什么这样子算是浅拷贝，因为我们是一模一样拷贝了一个对象，如果这个对象里面引用了别的，那这个引用也拷贝过去了，<strong>两个对象都指向了同一个引用</strong>。一旦这个引用发生变化，那这两个对象都会受到影响。那深拷贝该怎么做呢？答案就是<strong>把引用也进行拷贝</strong>，在上面的例子里面就是把a.b = b.clone();的注释给放开。这样子的话，新拷贝的对象里面会指向新的引用，那这两个对象就是完全独立的了。</p>
-<h3 id="问题三和四"><a href="#问题三和四" class="headerlink" title="问题三和四"></a>问题三和四</h3><p>&emsp;&emsp;问题三和四可以合并说明。首先，Cloneable接口虽然没有任何内容，但是对于重写clone方法是必要的，原因是<strong>Cloneable接口是一个标记接口</strong>（类似于Serializable）。我们只有加了这个标记接口，才能触发RTTI机制（不清楚是编译的时候）。我们如果不实现Cloneable接口，那么在运行的时候就会报出是<strong>CloneNotSupportedException是</strong>，也就是我们在重写clone()方法的时候必须要显式抛出的报错（编译的时候不知道当前类或者继承的父类有没有实现Cloneable接口）。</p>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
 
 
     </footer>
