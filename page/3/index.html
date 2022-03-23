@@ -75,6 +75,168 @@
     
     
     
+    <article id="post-单点登录/CAS会话过期方案浅析" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/06/24/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95/CAS%E4%BC%9A%E8%AF%9D%E8%BF%87%E6%9C%9F%E6%96%B9%E6%A1%88%E6%B5%85%E6%9E%90/"
+    >CAS会话过期方案浅析</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/06/24/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95/CAS%E4%BC%9A%E8%AF%9D%E8%BF%87%E6%9C%9F%E6%96%B9%E6%A1%88%E6%B5%85%E6%9E%90/" class="article-date">
+  <time datetime="2021-06-24T13:43:49.000Z" itemprop="datePublished">2021-06-24</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/CAS/">CAS</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;最近有一次，突然被问到CAS服务端和CAS客户端的会话过期的一致性问题，有点懵逼。毕竟在我看来，既然都单点登录了，那边客户端的会话肯定是要和服务器的一致，客户端就没必要有自己的会话了，要过期就一起过期，还是太年轻了…</p>
+<h2 id="客户端会话过期"><a href="#客户端会话过期" class="headerlink" title="客户端会话过期"></a>客户端会话过期</h2><p>&emsp;&emsp;我们试想一个问题，如果其中一个客户端非要有自己的会话过期策略，那应该怎么处理比较合理？把这个问题转换过来就是，如果某个客户端A自己过期了，那它有必要通知服务端过期吗？答案是否定的，毕竟如果通知了服务端过期，那服务端会通知别的客户端B之类的，B的用户万一在用着好好的，突然就被登出了，这不得骂人？<br>&emsp;&emsp;那如果某个客户端A自己过期了，不通知服务端过期会有坏的影响吗？答案是有也没有。因为如果不通知服务端会话过期，那哪怕A自己把会话清了，下次重新访问的时候，还是会重定向到服务器重新获取一个票据，重新登录一次。好的方面是客户端A的这个过期没什么会影响…坏的方面是A的这个过期根本没什么用…OK，到这里还没结束，我们接着往下看。</p>
+<h2 id="服务端会话过期"><a href="#服务端会话过期" class="headerlink" title="服务端会话过期"></a>服务端会话过期</h2><p>&emsp;&emsp;我们来试想另外一个场景，如果我们的需求是需要服务端的会话过期失效呢？我们应该怎么设计？<br>&emsp;&emsp;抓瞎了呀…我的第一反应难道是心跳机制？客户端向服务端定时推送活跃会话，如果某个会话所有的客户端都不活跃，那就到期了把他踢出去。这样子好是好，但是太麻烦了，一点都不简洁。<br>&emsp;&emsp;后期我查阅了一些资料，发现网上的关于会话过期都基本上都差不多，都是用的CAS原生的一些策略，基于AbstractCasExpirationPolicy类的实现有8个类，这些类都在cas-server-core-tickets的org.jasig.cas.ticket.support包下。这里主要介绍两种常用的：</p>
+<ul>
+<li>NeverExpiresExpirationPolicy:票据永不过期</li>
+<li>TicketGrantingTicketExpirationPolicy:票据具有固定的生存期和空闲使用超时时间（CAS默认的过期策略）</li>
+</ul>
+<p>&emsp;&emsp;其中关于TicketGrantingTicketExpirationPolicy网上很多文章真的很扯，描述统一都是当用户在2个小时（7200秒）之内不动移动鼠标或者进行系统超过8个小时（28800秒），则TGT过期。WTF？CAS服务端那么厉害？还能监控用户鼠标有没有移动？牛逼牛逼。于是乎我去看了下源码，发现完全不是那回事…</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public boolean isExpired(TicketState ticketState) &#123;</span><br><span class="line">        long currentSystemTimeInMillis &#x3D; System.currentTimeMillis();</span><br><span class="line">        if (currentSystemTimeInMillis - ticketState.getCreationTime() &gt;&#x3D; this.maxTimeToLiveInMilliSeconds) &#123;</span><br><span class="line">        	&#x2F;&#x2F; maxTimeToLiveInMilliSeconds是TGT最大存活时间</span><br><span class="line">            LOGGER.debug(&quot;Ticket is expired because the time since creation is greater than maxTimeToLiveInMilliSeconds&quot;);</span><br><span class="line">            return true;</span><br><span class="line">        &#125; else if (currentSystemTimeInMillis - ticketState.getLastTimeUsed() &gt;&#x3D; this.timeToKillInMilliSeconds) &#123;</span><br><span class="line">        	&#x2F;&#x2F; timeToKillInMilliSeconds是TGT最大空闲时间</span><br><span class="line">            LOGGER.debug(&quot;Ticket is expired because the time since last use is greater than timeToKillInMilliseconds&quot;);</span><br><span class="line">            return true;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;后面又产生了疑问，那CAS服务端是怎么知道空闲了多久的？又是在什么时候去判断的有没有过期。看了好多，后来总算看到一篇稍微讲的合理的文章。<strong>TGT过期的校验发生在下一次登录的时候，即下一次登录，使用TGT的时候生成ST的时候都会校验是否有效，如果TGT已经过期那么整个流程就将失效，回到CAS单点登录的登录页面。讲到这里就一切跃然纸上了，TGT空闲时间就是上一次被登录的时候使用的时候到现在的间隔。校验发生在新登录发生的时候，如果TGT超过了最大存活时间或者最大空闲时间就算过期。</strong><br>&emsp;&emsp;这样子想来其实这个方案也还算合理。毕竟客户在登录新系统的时候肯定没在操作别的系统，这时候提示他超时了重新登录下也无可厚非。重新登录之后之前登录过的系统也会会再次生成新的会话，看上去似乎很完美！！！唯一的美中不足就是已经登录过的客户端在这种情况下其实是没有失效的情况的，但是我们可以结合上面的客户端会话来看，完美！！！我们可以给我们的<strong>客户端加上一个较小的会话过期时间</strong>，这样子如果会话失效了有两种情况：1、TGT没失效，自动重新登录，相当于没有过期；2、重新登录的时候校验TGT，发现也失效了，真的要手动重新登录。这样子就完美到达了我们的目的，既有会话失效，且两者的状态是统一的。</p>
+</br>
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95/" rel="tag">单点登录</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-Java进阶/Semaphore" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/05/25/Java%E8%BF%9B%E9%98%B6/Semaphore/"
+    >Semaphore</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/05/25/Java%E8%BF%9B%E9%98%B6/Semaphore/" class="article-date">
+  <time datetime="2021-05-25T14:16:43.000Z" itemprop="datePublished">2021-05-25</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="总体介绍"><a href="#总体介绍" class="headerlink" title="总体介绍"></a>总体介绍</h2><p>&emsp;&emsp;Semaphore用于限制可以访问某些资源（物理或逻辑的）的线程数目，他维护了一个许可证集合，有多少资源需要限制就维护多少许可证集合，假如这里有N个资源，那就对应于N个许可证，同一时刻也只能有N个线程访问。一个线程获取许可证就调用acquire方法，用完了释放资源就调用release方法。</p>
+<h2 id="主要方法"><a href="#主要方法" class="headerlink" title="主要方法"></a>主要方法</h2><ul>
+<li>void acquire():从此信号量获取一个许可，在提供一个许可前一直将线程阻塞，否则线程被中断。</li>
+<li>void release():释放一个许可，将其返回给信号量。</li>
+<li>int availablePermits():返回此信号量中当前可用的许可数。</li>
+<li>boolean hasQueuedThreads():查询是否有线程正在等待获取。</li>
+</ul>
+<h2 id="效果演示"><a href="#效果演示" class="headerlink" title="效果演示"></a>效果演示</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 初始化许可数量为2</span></span><br><span class="line">    <span class="keyword">final</span> Semaphore semaphore = <span class="keyword">new</span> Semaphore(<span class="number">2</span>);</span><br><span class="line">    ExecutorService executorService = Executors.newCachedThreadPool();</span><br><span class="line">    <span class="comment">// 创建10个线程</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> index = i;</span><br><span class="line">        executorService.execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 尝试获取许可，如果获取不到则等待</span></span><br><span class="line">                    semaphore.acquire();</span><br><span class="line">                    System.out.println(<span class="string">"线程:"</span> + Thread.currentThread().getName() + <span class="string">"获得许可:"</span> + index);</span><br><span class="line">                    TimeUnit.SECONDS.sleep(<span class="number">1</span>);</span><br><span class="line">                    <span class="comment">// 释放许可</span></span><br><span class="line">                    semaphore.release();</span><br><span class="line">                    System.out.println(<span class="string">"允许任务个数："</span> + semaphore.availablePermits());</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    executorService.shutdown();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-Java进阶/volatile关键字" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -966,195 +1128,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java基础/浅拷贝和深拷贝引发的思考" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/"
-    >浅拷贝和深拷贝引发的思考</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/" class="article-date">
-  <time datetime="2021-03-17T10:25:19.000Z" itemprop="datePublished">2021-03-17</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;众所周知，拷贝有浅拷贝和深拷贝。但是在研究过程中我发现了很多有意思的地方，我们先来看一个例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span>  </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            A a = <span class="keyword">new</span> A();</span><br><span class="line">            B b = <span class="keyword">new</span> B();</span><br><span class="line">            b.setX(<span class="string">"1"</span>);</span><br><span class="line">            a.setB(b);</span><br><span class="line">            A a1 = a.clone();</span><br><span class="line">            b.setX(<span class="string">"2"</span>);</span><br><span class="line">            System.out.println(a.getB().getX()); <span class="comment">// 输出1</span></span><br><span class="line">            System.out.println(a1.getB().getX());<span class="comment">// 输出2</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (CloneNotSupportedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> B b;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setB</span><span class="params">(B b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.b = b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> B <span class="title">getB</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> A <span class="title">clone</span><span class="params">()</span> <span class="keyword">throws</span> CloneNotSupportedException </span>&#123;</span><br><span class="line">        A a = (A) <span class="keyword">super</span>.clone();</span><br><span class="line">        <span class="comment">// a.b = b.clone();</span></span><br><span class="line">        <span class="keyword">return</span> a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> <span class="keyword">implements</span> <span class="title">Cloneable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String x;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setX</span><span class="params">(String x)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.x = x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getX</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> B <span class="title">clone</span><span class="params">()</span> <span class="keyword">throws</span> CloneNotSupportedException </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (B) <span class="keyword">super</span>.clone();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
-<li>super.clone()做了什么？</li>
-<li>为什么这样子拷贝算是浅拷贝？深拷贝该怎么做？</li>
-<li>重写clone方法为什么要实现Cloneable接口，明明Cloneable接口是个空的接口？</li>
-<li>clone方法是Object类里面的方法，如果不实现Cloneable接口，会怎么样？</li>
-</ul>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><h3 id="问题一"><a href="#问题一" class="headerlink" title="问题一"></a>问题一</h3><p>&emsp;&emsp;在上一篇文章中，我们讲到super是一个Java关键字，代表了当前对象中从父类继承过来的那部分特征，而所有类都继承了Object，所以最终super.clone()会调用到<strong>Object的clone(</strong>)方法，而Object的clone()方法是一个<strong>native</strong>方法（jvm托管调用的本地方法），使用了<strong>RTTI</strong>（run-time  type  identification）的机制，动态得找到目前正在调用clone方法的那个<strong>reference</strong>，根据它的大小申请内存空间，然后进行<strong>bitwise的复制</strong>，将该对象的内存空间完全复制到新的空间中去，从而达到shallowcopy的目的。<br>&emsp;&emsp;所以总而言之，super.clone()就是<strong>一模一样拷贝了一个当前的对象</strong>。</p>
-<h3 id="问题二"><a href="#问题二" class="headerlink" title="问题二"></a>问题二</h3><p>&emsp;&emsp;在解释问题二前，我们先来看一个知识点，Java中的数据类型分为<strong>基本数据类型</strong>（六种数字类型（四个整数型，两个浮点型），一种字符类型，还有一种布尔型）和<strong>引用数据类型</strong>（除了基本数据类型的都是引用类型）。<br>&emsp;&emsp;对于这两种数据类型，我们<strong>在进行赋值操作、用作方法参数或返回值时，会有值传递和引用（地址）传递的差别</strong>。在我们这个例子就是的体现是，对象里面的字段如果是基础数据类型， 比如int，那么存储的是值；如果字段是对象，那边存储的是引用。<br>&emsp;&emsp;说到这里就解释了问题二，为什么这样子算是浅拷贝，因为我们是一模一样拷贝了一个对象，如果这个对象里面引用了别的，那这个引用也拷贝过去了，<strong>两个对象都指向了同一个引用</strong>。一旦这个引用发生变化，那这两个对象都会受到影响。那深拷贝该怎么做呢？答案就是<strong>把引用也进行拷贝</strong>，在上面的例子里面就是把a.b = b.clone();的注释给放开。这样子的话，新拷贝的对象里面会指向新的引用，那这两个对象就是完全独立的了。</p>
-<h3 id="问题三和四"><a href="#问题三和四" class="headerlink" title="问题三和四"></a>问题三和四</h3><p>&emsp;&emsp;问题三和四可以合并说明。首先，Cloneable接口虽然没有任何内容，但是对于重写clone方法是必要的，原因是<strong>Cloneable接口是一个标记接口</strong>（类似于Serializable）。我们只有加了这个标记接口，才能触发RTTI机制（不清楚是编译的时候）。我们如果不实现Cloneable接口，那么在运行的时候就会报出是<strong>CloneNotSupportedException是</strong>，也就是我们在重写clone()方法的时候必须要显式抛出的报错（编译的时候不知道当前类或者继承的父类有没有实现Cloneable接口）。</p>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java基础/super究竟是什么" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/super%E7%A9%B6%E7%AB%9F%E6%98%AF%E4%BB%80%E4%B9%88/"
-    >super究竟是什么</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2021/03/17/Java%E5%9F%BA%E7%A1%80/super%E7%A9%B6%E7%AB%9F%E6%98%AF%E4%BB%80%E4%B9%88/" class="article-date">
-  <time datetime="2021-03-17T02:15:11.000Z" itemprop="datePublished">2021-03-17</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B/">编程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="导入"><a href="#导入" class="headerlink" title="导入"></a>导入</h2><p>&emsp;&emsp;我们先来看如下代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Scratch</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Son a = <span class="keyword">new</span> Son();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Father</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Father"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Son</span> <span class="keyword">extends</span> <span class="title">Father</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Sun"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Son</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass()); <span class="comment">//输出为class Son</span></span><br><span class="line">        System.out.println(<span class="keyword">super</span>.getClass()); <span class="comment">///输出为class Son</span></span><br><span class="line">        System.out.println(<span class="keyword">this</span>.get());   <span class="comment">//输出为Son</span></span><br><span class="line">        System.out.println(<span class="keyword">super</span>.get()); <span class="comment">//输出为Father</span></span><br><span class="line">        System.out.println(<span class="keyword">this</span>.n); <span class="comment">//输出为2</span></span><br><span class="line">        System.out.println(<span class="keyword">super</span>.n); <span class="comment">//输出为1</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
-<li><strong>为什么super.getClass()和this.getClass()是一样的？</strong></li>
-<li><strong>我们怎么才能知道上级是什么类?</strong></li>
-<li><strong>super()有什么用？</strong></li>
-</ul>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><h3 id="this的定义"><a href="#this的定义" class="headerlink" title="this的定义"></a>this的定义</h3><p>&emsp;&emsp;想要了解super，我们首先需要来看下this:</p>
-<ul>
-<li><strong>this是一个引用，保存内存地址指向自己</strong>。</li>
-<li>this出现在实例方法中，谁调用这个实例方法，this就代表谁，<strong>this代表当前正在执行这个动作的对象</strong>。</li>
-<li>this不能出现在静态方法中。</li>
-<li>this大部分情况下可以省略，在方法中区分实例变量和局部变量的时候不能省略。</li>
-<li>this(实际参数列表)出现在构造方法第一行，通过当前的构造方法去调用本类当中其它的构造方法。</li>
-</ul>
-<h3 id="super的定义"><a href="#super的定义" class="headerlink" title="super的定义"></a>super的定义</h3><p>&emsp;&emsp;从本质上讲，this是一个指向本对象的指针, 然而super是一个<strong>Java关键字</strong>。<br>&emsp;&emsp;<strong>super代表了当前对象中从父类继承过来的那部分特征</strong>。this指向一个独立的对象，super并不是指向某个”独立”的对象。<br>&emsp;&emsp;假设Father是父亲，Son是儿子，有这样一句话：大家都说Son的眼睛、鼻子和父亲的很像。那么也就是说儿子继承了父亲的眼睛和鼻子特征，那么眼睛和鼻子肯定最终还是长在儿子的身上。假设this指向Son，那么super就代表Son身上的眼睛和鼻子。<br>&emsp;&emsp;<strong>换句话说super其实是this的一部分</strong>。Father和张张大明小明其实是两个独立的对象，两个对象内存方面没有联系，super只是代表Son对象身上的眼睛和鼻子，<strong>因为这个是从父类中继承过来的，在内存方面使用了super关键字进行了标记</strong>，所以”this.眼睛”和”super.眼睛”都是访问的<strong>同一块内存空间</strong>。所以我们在<strong>实例化子类的时候也不会实例化一个父类出来</strong>。</p>
-<ul>
-<li>super和this都可以使用在<strong>实例方法</strong>当中。</li>
-<li>this和super都是<strong>不能使用在静态方法</strong>当中，因为super代表了当前对象上的父类型特征，静态方法中没有this，肯定也是不能使用super的。</li>
-<li>super也有这种用法：“super(实际参数列表);”，这种用法是通过当前的构造方法调用父类的构造方法。</li>
-</ul>
-<h3 id="为什么super-getClass-和this-getClass-是一样的"><a href="#为什么super-getClass-和this-getClass-是一样的" class="headerlink" title="为什么super.getClass()和this.getClass()是一样的"></a>为什么super.getClass()和this.getClass()是一样的</h3><p>&emsp;&emsp;super.getClass()或者this.getClass()，这<strong>getClass()都是从父类Object当中继承回来的</strong>，且是<strong>final</strong>。实质上调用的也是Object.getClass()而Object.getClass()是<strong>返回当前运行时对象的class</strong>，因此谁在运行就返回谁。这个在Object的API当中有说过。</p>
-<h3 id="我们怎么才能知道上级是什么类"><a href="#我们怎么才能知道上级是什么类" class="headerlink" title="我们怎么才能知道上级是什么类"></a>我们怎么才能知道上级是什么类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">this</span>.getClass().getSuperclass()</span><br></pre></td></tr></table></figure>
-
-<h3 id="super-有什么用"><a href="#super-有什么用" class="headerlink" title="super()有什么用"></a>super()有什么用</h3><ul>
-<li>super(参数)：<strong>调用父类中的某一个构造函数</strong>。</li>
-<li>this(参数)：<strong>调用本类中另一种形式的构造函数</strong></li>
-<li>调用super()必须写在<strong>子类构造方法的第一行</strong>，否则编译不通过。每个子类构造方法的第一条语句，都是隐含地调用super()，如果父类没有这种形式的构造函数，那么在编译的时候就会报错。</li>
-<li>this和super<strong>不能同时出现在一个构造函数里面</strong>，因为this必然会调用其它的构造函数，其它的构造函数必然也会有super语句的存在，所以在同一个构造函数里面有相同的语句，就失去了语句的意义，编译器也不会通过。</li>
-</ul>
-<br/>
-<br/>
-
-
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%9F%BA%E7%A1%80/" rel="tag">Java基础</a></li></ul>
 
 
     </footer>
