@@ -75,6 +75,155 @@
     
     
     
+    <article id="post-系统设计/分布式系统设计所需基础知识" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/06/25/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E6%89%80%E9%9C%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"
+    >分布式系统设计所需基础知识</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/06/25/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E6%89%80%E9%9C%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" class="article-date">
+  <time datetime="2021-06-25T06:16:43.000Z" itemprop="datePublished">2021-06-25</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">系统设计</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;最近发现了一个很强的项目，介绍<a href="https://github.com/donnemartin/system-design-primer/blob/master/README-zh-Hans.md" target="_blank" rel="noopener">系统设计</a>，感触颇深，所以想简单分享下系统设计所需基础知识。</p>
+<h2 id="延迟与吞吐量"><a href="#延迟与吞吐量" class="headerlink" title="延迟与吞吐量"></a>延迟与吞吐量</h2><ul>
+<li>延迟是执行操作或运算结果所花费的时间。</li>
+<li>吞吐量是单位时间内（执行）此类操作或运算的数量。</li>
+<li>通常，你应该<strong>以可接受级延迟下最大化吞吐量为目标</strong>。</li>
+</ul>
+<br/>
+
+<h2 id="CAP理论"><a href="#CAP理论" class="headerlink" title="CAP理论"></a>CAP理论</h2><p>&emsp;&emsp;在一个分布式计算系统中，只能同时满足下列的两点:</p>
+<ul>
+<li><strong>一致性（Consistency）</strong> ─ 每次访问都能获得最新数据但可能会收到错误响应</li>
+<li><strong>可用性 （Availability）</strong>─ 每次访问都能收到非错响应，但不保证获取到最新数据</li>
+<li><strong>分区容错性 （Partition tolerance）</strong>─ 在任意分区网络故障的情况下系统仍能继续运行</li>
+</ul>
+<p>&emsp;&emsp;由于网络并不可靠，所以我们应要支持分区容错性（总不能一个分区挂了之后整个都挂了吧？），并需要在软件可用性和一致性间做出取舍，所以我们有以下两个选择：</p>
+<h3 id="CP-─-一致性和分区容错性"><a href="#CP-─-一致性和分区容错性" class="headerlink" title="CP ─ 一致性和分区容错性"></a>CP ─ 一致性和分区容错性</h3><p>&emsp;&emsp;等待分区节点的响应可能会导致延时错误。如果你的业务需求需要原子读写，CP是一个不错的选择。典型代表就是Zookeeper，一个选举的时间可能高达几十秒。</p>
+<h3 id="AP-─-可用性与分区容错性"><a href="#AP-─-可用性与分区容错性" class="headerlink" title="AP ─ 可用性与分区容错性"></a>AP ─ 可用性与分区容错性</h3><p>&emsp;&emsp;响应节点上可用数据的最近版本可能并不是最新的。当分区解析完后，写入（操作）可能需要一些时间来传播。典型代表就是Eureka，Eureka各个节点都是平等的，几个节点挂掉不会影响正常节点的工作，只要有一台Eureka还在，就能保证注册服务可用，只不过查到的信息可能不是最新的。如果业务需求允许最终一致性，或当有外部故障时要求系统继续运行，AP是一个不错的选择。</p>
+<h3 id="为什么不能同时满足CA"><a href="#为什么不能同时满足CA" class="headerlink" title="为什么不能同时满足CA"></a>为什么不能同时满足CA</h3><p>&emsp;&emsp;CA从本质需求上来讲就是矛盾的，如果我们在数据变动的时候，就需要分布式协商。而协商是需要时间的，在协商的过程中，如果每个节点继续提供服务，因为结果没出来，提供的数据肯定是不一致的，所以不满足一致性了；如果每个节点继续不提供服务，就不满足可用性了。</p>
+<br/>
+
+<h2 id="一致性模式"><a href="#一致性模式" class="headerlink" title="一致性模式"></a>一致性模式</h2><h3 id="弱一致性"><a href="#弱一致性" class="headerlink" title="弱一致性"></a>弱一致性</h3><p>在写入之后，访问可能看到，也可能看不到（写入数据）。尽力优化之让其能访问最新数据。弱一致性在视频聊天和实时多人游戏等真实用例中表现不错。打个比方，如果你在通话中丢失信号几秒钟时间，当重新连接时你是听不到这几秒钟所说的话的。由于不需要考虑数据一致（丢失）的问题，性能也最好。</p>
+<h3 id="最终一致性"><a href="#最终一致性" class="headerlink" title="最终一致性"></a>最终一致性</h3><p>在写入后，访问最终能看到写入数据（通常在数毫秒内）。数据被异步复制。DNS和email等系统使用的是此种方式。最终一致性在高可用性系统中效果不错（很常见）。</p>
+<h3 id="强一致性"><a href="#强一致性" class="headerlink" title="强一致性"></a>强一致性</h3><p>在写入后，访问立即可见。数据被同步复制。文件系统和关系型数据库（RDBMS）中使用的是此种方式。强一致性在需要记录的系统中运作良好，相对于来说性能也最差。</p>
+<br/>
+
+<h2 id="可用性模式"><a href="#可用性模式" class="headerlink" title="可用性模式"></a>可用性模式</h2><h3 id="故障切换"><a href="#故障切换" class="headerlink" title="故障切换"></a>故障切换</h3><h4 id="单活：工作到备用切换（Active-passive）"><a href="#单活：工作到备用切换（Active-passive）" class="headerlink" title="单活：工作到备用切换（Active-passive）"></a>单活：工作到备用切换（Active-passive）</h4><p>关于工作到备用的故障切换流程是，工作服务器发送周期信号给待机中的备用服务器。如果周期信号中断，备用服务器切换成工作服务器的 IP 地址并恢复服务。宕机时间取决于备用服务器处于“热”待机状态（<strong>热备</strong>）还是需要从“冷”待机状态（<strong>冷备</strong>）进行启动。只有工作服务器处理流量。</p>
+<p>工作到备用的故障切换也被称为主从切换。</p>
+<h4 id="双-多活：双工作切换（Active-active）"><a href="#双-多活：双工作切换（Active-active）" class="headerlink" title="双/多活：双工作切换（Active-active）"></a>双/多活：双工作切换（Active-active）</h4><p>在双工作切换中，双方都在管控流量，在它们之间分散负载。如果有一方宕机了，流量就不从它那边走了。</p>
+<h4 id="故障切换的缺陷"><a href="#故障切换的缺陷" class="headerlink" title="故障切换的缺陷"></a>故障切换的缺陷</h4><ul>
+<li>故障切换需要添加额外硬件并增加复杂性。</li>
+<li>如果新写入数据在能被复制到备用系统之前，工作系统出现了故障，则有可能会丢失数据（数据一致性问题）。</li>
+</ul>
+<h3 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h3><p>&emsp;&emsp;这里的复制主要是数据库部分的主─从复制和主─主复制。其实在我眼里，可用性的本质就是冗余，也就是复制，如果我们的系统存在不可用的情况，那就搞出很多个系统来，哪个能用用哪个。</p>
+<br/>
+
+<h2 id="域名系统"><a href="#域名系统" class="headerlink" title="域名系统"></a>域名系统</h2><p>&emsp;&emsp;域名系统是把<a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a> 等域名转换成 IP 地址。我们可以通过DNS服务来管理和路由流量:</p>
+<h4 id="加权轮询策略"><a href="#加权轮询策略" class="headerlink" title="加权轮询策略"></a>加权轮询策略</h4><ul>
+<li>防止流量进入维护中的服务器</li>
+<li>在不同大小集群间负载均衡</li>
+<li>A/B 测试</li>
+</ul>
+<h4 id="基于延迟路由（选择最低延迟）"><a href="#基于延迟路由（选择最低延迟）" class="headerlink" title="基于延迟路由（选择最低延迟）"></a>基于延迟路由（选择最低延迟）</h4><h4 id="基于地理位置路由（选择就近机房）"><a href="#基于地理位置路由（选择就近机房）" class="headerlink" title="基于地理位置路由（选择就近机房）"></a>基于地理位置路由（选择就近机房）</h4><br/>
+
+<h2 id="内容分发网络（CDN）"><a href="#内容分发网络（CDN）" class="headerlink" title="内容分发网络（CDN）"></a>内容分发网络（CDN）</h2><p>&emsp;&emsp;内容分发网络（CDN）是一个全球性的代理服务器分布式网络，它从靠近用户的位置提供内容。通常，HTML/CSS/JS，图片和视频等静态内容由 CDN 提供。将内容存储在 CDN 上可以从两个方面来提供性能：<strong>从靠近用户的数据中心提供资源；通过 CDN 你的服务器不必真的处理请求。</strong></p>
+<br/>
+
+<h2 id="负载均衡器"><a href="#负载均衡器" class="headerlink" title="负载均衡器"></a>负载均衡器</h2><h3 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h3><p>&emsp;&emsp;负载均衡器将传入的请求分发到应用服务器和数据库等计算资源。无论哪种情况，负载均衡器将从计算资源来的响应返回给恰当的客户端。负载均衡器的效用在于:</p>
+<ul>
+<li>防止请求进入不好的服务器</li>
+<li>防止资源过载</li>
+<li>帮助消除单一的故障点</li>
+<li>SSL终结：解密传入的请求并加密服务器响应，后面就不需要用SSL了。</li>
+<li>Session留存：追踪会话，同一个会话的请求路由到同一实例。</li>
+</ul>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>&emsp;&emsp;负载均衡器可以通过硬件（F5等）或 软件（HAProxy等）来实现，通常会设置采用工作─备用 或 双工作 模式的多个负载均衡器，以免发生故障。</p>
+<h3 id="负载策略"><a href="#负载策略" class="headerlink" title="负载策略"></a>负载策略</h3><ul>
+<li>随机</li>
+<li>最少负载</li>
+<li>Session/cookie</li>
+<li>轮询调度或加权轮询调度算法</li>
+<li>四层负载均衡</li>
+<li>七层负载均衡</li>
+</ul>
+<br/>
+
+<h2 id="反向代理"><a href="#反向代理" class="headerlink" title="反向代理"></a>反向代理</h2><h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>&emsp;&emsp;反向代理是一种可以集中地调用内部服务，并提供统一接口给外部。来自客户端的请求先被反向代理服务器转发到可响应请求的服务器，然后代理再把服务器的响应结果返回给客户端。</p>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>增加安全性：隐藏后端服务器的信息，屏蔽黑名单中的 IP，限制每个客户端的连接数。</li>
+<li>提高可扩展性和灵活性：客户端只能看到反向代理服务器的 IP，这使你可以增减服务器或者修改它们的配置。</li>
+<li>SSL终结：解密传入的请求并加密服务器响应，后面就不需要用SSL了。</li>
+<li>Session留存：追踪会话，同一个会话的请求路由到同一实例。</li>
+<li>压缩：压缩服务器响应</li>
+<li>缓存：直接返回命中的缓存结果</li>
+<li>静态内容：直接提供静态内容(HTML/CSS/JS/图片/视频等)</li>
+</ul>
+<h3 id="负载均衡器与反向代理"><a href="#负载均衡器与反向代理" class="headerlink" title="负载均衡器与反向代理"></a>负载均衡器与反向代理</h3><p>&emsp;&emsp;反向代理有着负载均衡的作用，但是拓展了更多功能：压缩，缓存和静态内容</p>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-单点登录/CAS会话过期方案浅析" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -962,172 +1111,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-生活/早期哲学备忘录" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2021/03/18/%E7%94%9F%E6%B4%BB/%E6%97%A9%E6%9C%9F%E5%93%B2%E5%AD%A6%E5%A4%87%E5%BF%98%E5%BD%95/"
-    >早期哲学备忘录</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2021/03/18/%E7%94%9F%E6%B4%BB/%E6%97%A9%E6%9C%9F%E5%93%B2%E5%AD%A6%E5%A4%87%E5%BF%98%E5%BD%95/" class="article-date">
-  <time datetime="2021-03-18T10:25:19.000Z" itemprop="datePublished">2021-03-18</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%93%B2%E5%AD%A6/">哲学</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;早期哲学备忘录是为了记下自己最近看过的哲学家及其思想，方便以后回顾和记忆，用于感(zhuang)悟(x)。</p>
-<h2 id="自然派"><a href="#自然派" class="headerlink" title="自然派"></a>自然派</h2><p>&emsp;&emsp;公元前6—公元5世纪，称为古希腊哲学。最早的希腊哲学家被称为“自然派哲学家”，在罗素的《西方哲学史》中称之为前苏格拉底哲学家。他们主要研究大自然与它的循环变化。</p>
-<h3 id="泰利斯"><a href="#泰利斯" class="headerlink" title="泰利斯"></a>泰利斯</h3><ul>
-<li>西方哲学史上第一位哲学家</li>
-<li>水是万物之源</li>
-</ul>
-<h3 id="赫拉克利特-赫拉克里特斯"><a href="#赫拉克利特-赫拉克里特斯" class="headerlink" title="赫拉克利特(赫拉克里特斯)"></a>赫拉克利特(赫拉克里特斯)</h3><ul>
-<li>所有事物都是流动的，<strong>恒常变化</strong>(或流动)正是大自然的最基本特征</li>
-<li>名言：不能两次踏进同一条河流</li>
-</ul>
-<h3 id="德谟克利特-德谟克里特斯"><a href="#德谟克利特-德谟克里特斯" class="headerlink" title="德谟克利特(德谟克里特斯)"></a>德谟克利特(德谟克里特斯)</h3><ul>
-<li>首先提出了<strong>原子</strong>(atom)。认为组成各种事物的单位不可能被无限制分割成更小的单位</li>
-<li>大自然的原子是永恒的，因为没有一件事物会来自虚无</li>
-</ul>
-<br/>
-
-
-<h2 id="毕达哥拉斯学派"><a href="#毕达哥拉斯学派" class="headerlink" title="毕达哥拉斯学派"></a>毕达哥拉斯学派</h2><p>&emsp;&emsp;毕达哥拉斯学派亦称“南意大利学派”，是一个集政治、学术、宗教三位于一体的组织，由古希腊哲学家毕达哥拉斯所创立，其成员大多是数学家、天文学家、音乐家。它是西方美学史上最早探讨美的本质的学派。信条是<strong>数即万物，万物皆数</strong>。</p>
-<h3 id="毕达哥拉斯"><a href="#毕达哥拉斯" class="headerlink" title="毕达哥拉斯"></a>毕达哥拉斯</h3><ul>
-<li>数学之父</li>
-<li>发现勾股定理</li>
-</ul>
-<br/>
-
-<h2 id="古希腊三贤（西方哲学的奠基）"><a href="#古希腊三贤（西方哲学的奠基）" class="headerlink" title="古希腊三贤（西方哲学的奠基）"></a>古希腊三贤（西方哲学的奠基）</h2><p>&emsp;&emsp;从智者开始，古希腊哲学由注重对自然本身的研究转变到<strong>注重对社会伦理和人</strong>的研究，即后来人们所常说的，将哲学从天上拉回到人间。从苏格拉底开始，自我和自然明显地区别开来；人不再仅仅是自然的一部分，而是和自然不同的另一种独特的实体。</p>
-<h3 id="苏格拉底"><a href="#苏格拉底" class="headerlink" title="苏格拉底"></a>苏格拉底</h3><ul>
-<li>苏格拉底没有作品，但是我们可以用他的学生柏拉图和色诺芬芬的记载中加以探索</li>
-<li>思想1：<strong>认识你自己</strong></li>
-<li>思想2：<strong>知识即美德</strong></li>
-<li>他把哲学定义为“爱智慧”</li>
-<li>他反对民主，主张专家治国论</li>
-<li>趣事：他被认为是当时最有智慧的人，但是却认为自己十分无知，所以他整天到处找人谈话（杠精），讨论问题，喜欢引导人们认识，经常搞得他人哑口无言，羞愧难当。最后被当众受审时依旧坚持追求真理，被处以死刑（赐以毒酒）</li>
-</ul>
-<h3 id="柏拉图"><a href="#柏拉图" class="headerlink" title="柏拉图"></a>柏拉图</h3><ul>
-<li>柏拉图是西方客观<strong>唯心主义</strong>的创始人，苏格拉底之徒</li>
-<li>世界由“<strong>理念世界</strong>”和“<strong>现象世界</strong>”所组成；理念的世界是真实的存在，永恒不变；人类感官所接触到的这个现实的世界只不过是理念世界的影子，它由现象所组成</li>
-<li>人的一切知识都是由天赋而来，它以潜在的方式存在于人的灵魂之中，所以知识是对理念世界的回忆</li>
-<li>柏拉图反对把爱情当成利害关系和情欲的满足，认为爱情是从人世间美的形体窥见美的本体以后所引起的爱慕，人经过这种爱情而达到永恒的美（理式）。后世的“柏拉图式的精神恋爱”，就是导源于他的爱情学说。</li>
-<li>《<strong>理想国</strong>》描述的正义之邦十分像印度的种姓制度，分工严明，各司其职，各安其位</li>
-<li>“宪法国家”是仅次于理想国的国家</li>
-</ul>
-<h3 id="亚里士多德"><a href="#亚里士多德" class="headerlink" title="亚里士多德"></a>亚里士多德</h3><ul>
-<li>誉为希腊哲学的集大成者，柏拉图之徒，亚历山大的老师</li>
-<li>一位百科全书式的科学家，他几乎对每个学科都做出了贡献</li>
-<li><strong>形式逻辑学</strong>的奠基人，使用演绎法推理，用三段论的形式论证</li>
-<li>亚里士多德则认为世界乃是由各种本身的<strong>形式与质料</strong>和谐一致的事物所组成的。“质料”是事物组成的材料，“形式”则是每一件事物的个别特征</li>
-<li>提出了形而上学的概念，即物体之上的学问，指对世界本质的研究</li>
-</ul>
-<br/>
-
-<h2 id="晚期希腊哲学"><a href="#晚期希腊哲学" class="headerlink" title="晚期希腊哲学"></a>晚期希腊哲学</h2><p>&emsp;&emsp;晚期希腊哲学有两个显著特征。一是这个时期没有全新的体系出现。哲学家们基本上是以某位或某派前人的思想成果为依据，加以改造或发挥，演绎出自己的结论。二是伦理化倾向。这一时期无论哪一派哲学都是以伦理学为核心来建构理论的，都是以灵魂安宁或生活幸福为主要目标，而且缺乏前人那种学以致知的思辨风格。</p>
-<h3 id="犬儒学派"><a href="#犬儒学派" class="headerlink" title="犬儒学派"></a>犬儒学派</h3><ul>
-<li><strong>否定社会与文明，提倡回归自然</strong>，清心寡欲，鄙弃俗世的荣华富贵</li>
-<li>要求人克己无求，摆脱世俗的利益而追求唯一值得拥有的善</li>
-<li>后期犬儒主义对世俗的全盘否定变成了对世俗的照单全收，而且还往往是对世俗中最坏的部分的不知羞耻的照单全收。于是，愤世嫉俗就变成了<strong>玩世不恭</strong></li>
-</ul>
-<h3 id="伊壁鸠鲁学派"><a href="#伊壁鸠鲁学派" class="headerlink" title="伊壁鸠鲁学派"></a>伊壁鸠鲁学派</h3><ul>
-<li>支持德谟克利特的原子论，并加入了形状和重量</li>
-<li>主张追求<strong>快乐</strong>，但是快乐是有层次的，不提倡享乐主义和纵欲</li>
-</ul>
-<h3 id="斯多葛学派"><a href="#斯多葛学派" class="headerlink" title="斯多葛学派"></a>斯多葛学派</h3><ul>
-<li>伦理学是哲学的核心</li>
-<li>世界理性决定事物的发展变化。所谓”<strong>世界理性</strong>“，就是神性，它是世界的主宰，个人只不过是神的整体中的一分子</li>
-<li>强调<strong>顺从天命</strong>，这与伊壁鸠鲁学派的快乐主义相悖</li>
-</ul>
-<h3 id="新柏拉图主义"><a href="#新柏拉图主义" class="headerlink" title="新柏拉图主义"></a>新柏拉图主义</h3><ul>
-<li>世界有两极，一端是被称为“上帝”的<strong>神圣之光</strong>，另一端则是完全的黑暗，完全的黑暗并不存在，只是缺乏亮光而已</li>
-<li>最接近上帝的光芒的，是人类的灵魂，只有灵魂才能与神秘与伟大合二为一</li>
-</ul>
-<h3 id="怀疑主义"><a href="#怀疑主义" class="headerlink" title="怀疑主义"></a>怀疑主义</h3><ul>
-<li><strong>人不可能认识事物的本性</strong>，存在的客观原因恰在于认识所必然具有的主观性和条件性</li>
-<li>总体上是消极和破坏性的</li>
-</ul>
-<h4 id="十大论式"><a href="#十大论式" class="headerlink" title="十大论式"></a>十大论式</h4><p>&emsp;&emsp;人的感觉(感性认识)是纯粹主观而不是可靠的，十大论式如下：</p>
-<ul>
-<li>不同生物有不同的感觉方式</li>
-<li>个人身心和所观察的事物都各不相同</li>
-<li>同一人的感官以不同的方式感知事物，它们是互相矛盾的</li>
-<li>人的身心在感受事物时，随着时间、身心状况的变化而变化</li>
-<li>对事物的观察，随着方向和距离的不同而不同，获得的结果也不相同</li>
-<li>对事物的感觉是凭借空气等中介的</li>
-<li>事物的颜色、温度、大小和运动，处在不断的变化当中</li>
-<li>一切感觉都是相对的和互相影响的</li>
-<li>人对事物的印象由于重复与否而导致深刻与否</li>
-<li>不同法律和社会条件下的人，有不同的信仰</li>
-</ul>
-<h4 id="怀疑主义与认识论"><a href="#怀疑主义与认识论" class="headerlink" title="怀疑主义与认识论"></a>怀疑主义与认识论</h4><ul>
-<li>不可知论（消极的）：彻底的怀疑主义，怀疑一切</li>
-<li>可知论（积极的）：代表是笛卡儿，从普遍的怀疑开始的，把一切打倒，重新建立（我思故我在的开端）。</li>
-</ul>
-<br/>
-
-<h2 id="中世纪"><a href="#中世纪" class="headerlink" title="中世纪"></a>中世纪</h2><p>&emsp;&emsp;公元5—15世纪，称为中世纪哲学。神与人、天国与世俗、信仰与理性的关系问题是中世纪哲学探讨的主要问题，是经院哲学的全盛期。经院哲学的特征是奉基督教教义为无上权威，但要用理性去加以解释，解释的方法极其烦琐，成了一种纯粹抽象的逻辑推理。</p>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
 
 
     </footer>
