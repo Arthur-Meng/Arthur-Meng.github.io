@@ -75,6 +75,111 @@
     
     
     
+    <article id="post-算法/雪花算法的位数可以阉割吗" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/03/20/%E7%AE%97%E6%B3%95/%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95%E7%9A%84%E4%BD%8D%E6%95%B0%E5%8F%AF%E4%BB%A5%E9%98%89%E5%89%B2%E5%90%97/"
+    >雪花算法的位数可以阉割吗</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/03/20/%E7%AE%97%E6%B3%95/%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95%E7%9A%84%E4%BD%8D%E6%95%B0%E5%8F%AF%E4%BB%A5%E9%98%89%E5%89%B2%E5%90%97/" class="article-date">
+  <time datetime="2021-03-20T09:11:43.000Z" itemprop="datePublished">2021-03-20</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/ID/">ID</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;场景如下：<strong>短时间内生成大量编号（比如100w），要求编号的格式是8位数字且唯一</strong>。请思索下解决方案。<br>&emsp;&emsp;我们先来解一下题，8位数字也就1亿种可能性，选出其中100w。如果我们采用纯随机的方式，那么到第100w的时候，后面一个重复的概率是100w/10000w，也就是1%的可能性。很显然，如果是纯随机的话，肯定已经重复了（原理就是概率论，如果不同可以去百度为什么一个班50个同学中有两人生日相同的概率为0.97）。<br>&emsp;&emsp;所以我们在生成的时候最好采用<strong>顺序生成</strong>的办法，似乎答案已经呼之欲出，没错，它就是<strong>数据库的号段模式</strong>（不懂的自行百度，今天我们不讲这个）。但是数据库的号段模式我们使用数据库且创建号段表，或者是使用Tinyid之类的组件才行。虽然方便，但是也还是有一定的复杂度。<br>&emsp;&emsp;那么我们有没有什么别的方法呢？这时候我的领导和我说，让我用雪花算法试试看，然后把雪花算法的长度给阉割了。我第一反应的拒绝的，感觉也肯定会重复。但是实际上当我仔细去看了雪花算法的实现后，发现事情并没有那么简单…</p>
+<h2 id="雪花算法的定义"><a href="#雪花算法的定义" class="headerlink" title="雪花算法的定义"></a>雪花算法的定义</h2><p>&emsp;&emsp;既然我们要用它，先来看看雪花算法是什么。雪花算法（SnowFlake算法）是由Twitter开源的一个大名鼎鼎的分布式id生成算法，在国内互联网广泛使用。它的结果是一个64bit大小的long类型的整数，它的结构如下：</p>
+<p>1、<strong>1bit</strong>，不用，因为二进制中最高位是符号位，1表示负数，0表示正数。生成的id一般都是用整数，所以最高位固定为0。</p>
+<p>2、<strong>41bit</strong>-<strong>时间戳</strong>，用来记录时间戳，毫秒级。</p>
+<ul>
+<li>41位可以表示个数字，</li>
+<li>如果只用来表示正整数（计算机中正数包含0），可以表示的数值范围是：0 至 ，减1是因为可表示的数值范围是从0开始算的，而不是1。</li>
+<li>也就是说41位可以表示个毫秒的值，转化成单位年则是年</li>
+</ul>
+<p>3、<strong>10bit</strong>-<strong>工作机器id</strong>，用来记录工作机器id。</p>
+<ul>
+<li>可以部署在个节点，包括5位datacenterId和5位workerId</li>
+<li>5位（bit）可以表示的最大正整数是，即可以用0、1、2、3、….31这32个数字，来表示不同的datecenterId或workerId</li>
+</ul>
+<p>4、<strong>12bit</strong>-<strong>序列号</strong>，序列号，用来记录同毫秒内产生的不同id。</p>
+<ul>
+<li>12位（bit）可以表示的最大正整数是，即可以用0、1、2、3、….4094这4095个数字，来表示同一机器同一时间截（毫秒)内产生的4095个ID序号。</li>
+</ul>
+<h2 id="雪花算法的实现"><a href="#雪花算法的实现" class="headerlink" title="雪花算法的实现"></a>雪花算法的实现</h2><p>&emsp;&emsp;我们既然已经知道了它的结果，那么理论上就可以写出它了，源码和解释如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">long</span> <span class="title">nextId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 获取当前时间戳</span></span><br><span class="line">        <span class="keyword">long</span> timestamp = <span class="keyword">this</span>.genTime();</span><br><span class="line">        <span class="keyword">if</span> (timestamp &lt; <span class="keyword">this</span>.lastTimestamp) &#123;</span><br><span class="line">        	<span class="comment">// 如果当前时间小于最近时间，这个循环一般不会进</span></span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.lastTimestamp - timestamp &gt;= <span class="number">2000L</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(StrUtil.format(<span class="string">"Clock moved backwards. Refusing to generate id for &#123;&#125;ms"</span>, <span class="keyword">new</span> Object[]&#123;<span class="keyword">this</span>.lastTimestamp - timestamp&#125;));</span><br><span class="line">            &#125;</span><br><span class="line">            timestamp = <span class="keyword">this</span>.lastTimestamp;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (timestamp == <span class="keyword">this</span>.lastTimestamp) &#123;</span><br><span class="line">        	<span class="comment">// 如果当前时间等于最近时间，这个循环在并发的情况下会进，需要在相同的毫秒内产生的不同序号的id。</span></span><br><span class="line">            <span class="keyword">long</span> sequence = <span class="keyword">this</span>.sequence + <span class="number">1L</span> &amp; <span class="number">4095L</span>;</span><br><span class="line">            <span class="keyword">if</span> (sequence == <span class="number">0L</span>) &#123;</span><br><span class="line">                timestamp = <span class="keyword">this</span>.tilNextMillis(<span class="keyword">this</span>.lastTimestamp);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">this</span>.sequence = sequence;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        	<span class="comment">// 如果当前时间不等于最近时间，序号归零</span></span><br><span class="line">            <span class="keyword">this</span>.sequence = <span class="number">0L</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 设置最近时间为当前时间</span></span><br><span class="line">        <span class="keyword">this</span>.lastTimestamp = timestamp;</span><br><span class="line">        <span class="comment">// 核心实现：</span></span><br><span class="line">        <span class="comment">// this.twepoch的值是1288834974657L，这个数刚刚好是1970-01-01 00:00:00时刻所经过的毫秒数</span></span><br><span class="line">        <span class="comment">// timestamp - this.twepoch 表示 从1970年那个时候到现在的毫秒数</span></span><br><span class="line">        <span class="comment">// timestamp - this.twepoch &lt;&lt; 22 表示这个毫秒数向前推22位，因为我们后面22位需要来表示5位datacenterId和5位workerId和12位的序号</span></span><br><span class="line">        <span class="comment">// 放心，向前推22位这个的值不会超过long的最大值，刚刚好是62位</span></span><br><span class="line">        <span class="comment">// 然后并上数据中心的编号，即 this.dataCenterId &lt;&lt; 17</span></span><br><span class="line">        <span class="comment">// 然后并上机器的编号 ，即 this.workerId &lt;&lt; 12</span></span><br><span class="line">        <span class="comment">// 最后并上序号 ，最大到12位</span></span><br><span class="line">        <span class="keyword">return</span> timestamp - <span class="keyword">this</span>.twepoch &lt;&lt; <span class="number">22</span> | <span class="keyword">this</span>.dataCenterId &lt;&lt; <span class="number">17</span> | <span class="keyword">this</span>.workerId &lt;&lt; <span class="number">12</span> | <span class="keyword">this</span>.sequence;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">10进制数据演示：</span><br><span class="line">timestamp：1616227057399</span><br><span class="line">twepoch：1288834974657</span><br><span class="line">timestamp - this.twepoch：327392082742</span><br><span class="line">dataCenterId：1</span><br><span class="line">workerId：1</span><br><span class="line">sequence：1</span><br><span class="line">最后的结果：1373181922213236736</span><br><span class="line"></span><br><span class="line">2进制数据演示：</span><br><span class="line">timestamp - this.twepoch：       100110000111010000101101011101100110110 </span><br><span class="line">timestamp - this.twepoch &lt;&lt; 22 ：1001100001110100001011010111011001101100000000000000000000000</span><br><span class="line">this.dataCenterId &lt;&lt; 17 | this.workerId &lt;&lt; 12 | this.sequence：             100001000000000000</span><br><span class="line">最后的结果：                       1001100001110100001011010111011001101100000100001000000000000</span><br></pre></td></tr></table></figure>
+
+<h2 id="阉割"><a href="#阉割" class="headerlink" title="阉割"></a>阉割</h2><p>&emsp;&emsp;我们可以发现雪花算法最后的结果是1373181922213236736，10进制的情况下一共是20位数字，最后的8位是13236736，那么现在思考下，这样子截取可以满足我们的要求吗？我们可能会思考了下之后说不行，因为雪花算法前面才是时间戳，后面是不动的工作机器id和序号，所以我们这样子的截取很可能会冲突，但是实际情况下真的是这样子的吗？</p>
+<h3 id="测试是否可以阉割"><a href="#测试是否可以阉割" class="headerlink" title="测试是否可以阉割"></a>测试是否可以阉割</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Snowflake SNOWFLAKE = IdUtil.createSnowflake(<span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line"><span class="comment">// 用于去重校验</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Set&lt;Long&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">handle</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    set.clear();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000000</span>; i++) &#123;</span><br><span class="line">        <span class="keyword">long</span> l = SNOWFLAKE.nextId();</span><br><span class="line">        l = l % <span class="number">100000000</span>;</span><br><span class="line">        <span class="keyword">if</span> (set.contains(l)) &#123;</span><br><span class="line">           <span class="comment">// 如果包含，则跳出</span></span><br><span class="line">            System.out.println(i);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            set.add(l);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h3><p>&emsp;&emsp;测试了几次，结果如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">9830161</span><br><span class="line">12462470</span><br><span class="line">12582913</span><br><span class="line">15028248</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;amazing，基本都是到了<strong>1000w</strong>的时候才重复，且效率居高，1000w的id只花了<strong>几秒</strong>就生成了，不禁让人疑惑whats wrong with me.</p>
+<h3 id="原因探究"><a href="#原因探究" class="headerlink" title="原因探究"></a>原因探究</h3><p>&emsp;&emsp;最终的结果那么喜人，居然在10000w的数据中产生了1000w不同的编号，归根结底和雪花算法的<strong>12位的序号机制</strong>有很大的关系，毕竟1毫秒内最大可以产生4095个序号，这些学号产生的结果是相连续的。我分析了下结果，我自己的电脑运行的时候，大概<strong>1毫秒可以尝试300多个连续的序号</strong>。<br>&emsp;&emsp;但是我们会觉得，虽然如此，但是序号前的工作机器id和序号是完全不动的，1亿的数据的二进制是101111101011110000100000000，去掉工作机器id和序号的10位和序号的12位。我们会发现留给时间的位数是5位，5位的话就32中可能性。是怎么做到的产生那么种情况的呢？<br>&emsp;&emsp;emmmmm，答案就是我们的阉割操作，<strong>因为我们的算法是2进制的，但是我们阉割是10进制的结果，这次阉割实际上是又做了一次混乱</strong>，所以阴差阳错地就达到了现在这样子的效果（每次都随机选一个数，然后这个数产生了300个多连续的数）。</p>
+<h3 id="最终结果"><a href="#最终结果" class="headerlink" title="最终结果"></a>最终结果</h3><p>&emsp;&emsp;最终结果就是我们可以对雪花算法进行阉割，设置阉割到8位数字的时候，都基本上可以不重复地生成1000w的数据（仅当次不重复）。</p>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-生活/早期哲学备忘录" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -1062,82 +1167,6 @@
 </ul>
 <h1 id="配置Tips"><a href="#配置Tips" class="headerlink" title="配置Tips"></a>配置Tips</h1><p>&emsp;&emsp;下面放了一些个人常用的配置，仅供参考：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">#初始化时建立物理连接的个数</span><br><span class="line">druid.initialSize&#x3D;1</span><br><span class="line">#最小连接池数量</span><br><span class="line">druid.minIdle&#x3D;1</span><br><span class="line">#最大连接池数量：有一个说法是合适的连接数 &#x3D; ((核心数 * 2) + 有效磁盘数)</span><br><span class="line">druid.maxActive&#x3D;20</span><br><span class="line"></span><br><span class="line">#获取连接时最大等待时间，单位毫秒。配置了maxWait之后，缺省启用公平锁，并发效率会有所下降，如果需要可以通过配置useUnfairLock属性为true使用非公平锁。</span><br><span class="line">druid.maxWait&#x3D;60000</span><br><span class="line"># 配置一个连接在池中最小生存的时间，单位是毫秒</span><br><span class="line">druid.minEvictableIdleTimeMillis: 30000</span><br><span class="line"></span><br><span class="line">#拦截器（监控统计用的filter:stat   日志用的filter:log4j   防御sql注入的filter:wall）</span><br><span class="line">druid.filters&#x3D;wall</span><br><span class="line">#记录慢sql，开发和测试环境可以开</span><br><span class="line">druid.stat.logSlowSql&#x3D;false</span><br><span class="line">#监控页面，开发和测试环境可以开</span><br><span class="line">druid.statViewServlet.enabled&#x3D;false</span><br><span class="line"></span><br><span class="line">#是否自动回收超时连接</span><br><span class="line">druid.removeAbandoned&#x3D;true</span><br></pre></td></tr></table></figure>
-
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-数据库/Spring如何保证同一个事务获取的是同一个连接" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Spring%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%90%8C%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E8%8E%B7%E5%8F%96%E7%9A%84%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5/"
-    >Spring如何保证同一个事务获取的是同一个连接</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Spring%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%90%8C%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E8%8E%B7%E5%8F%96%E7%9A%84%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5/" class="article-date">
-  <time datetime="2021-01-14T14:16:43.000Z" itemprop="datePublished">2021-01-14</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1/">数据库事务</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;在上文中提到过，Druid连接池并并不能保证同一个事务获取到的同一个连接，这个是由Spring的事务保证的。那Spring是如何保证同一个事务获取的是同一个连接呢？</p>
-<h1 id="获取连接时的源码分析"><a href="#获取连接时的源码分析" class="headerlink" title="获取连接时的源码分析"></a>获取连接时的源码分析</h1><p>&emsp;&emsp;Mybatis等ORM框架或者Spring自带的jdbcTemplate都会通过DataSourceUtils的getConnection方法来获取连接，让我们来看下源码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">getConnection</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> CannotGetJdbcConnectionException </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 直接调用了doGetConnection方法</span></span><br><span class="line">        <span class="keyword">return</span> doGetConnection(dataSource);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (SQLException var2) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> CannotGetJdbcConnectionException(<span class="string">"Could not get JDBC Connection"</span>, var2);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 这一层方法确保了如果有事务则同一个事务获取到的是同一个连接</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">doGetConnection</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    Assert.notNull(dataSource, <span class="string">"No DataSource specified"</span>);</span><br><span class="line">    <span class="comment">// 根据dataSource尝试获取连接的持有者</span></span><br><span class="line">    ConnectionHolder conHolder = (ConnectionHolder)TransactionSynchronizationManager.getResource(dataSource);</span><br><span class="line">    <span class="keyword">if</span> (conHolder == <span class="keyword">null</span> || !conHolder.hasConnection() &amp;&amp; !conHolder.isSynchronizedWithTransaction()) &#123;</span><br><span class="line">        <span class="comment">// 如果不存在连接的持有者，则从dataSource获取连接</span></span><br><span class="line">        logger.debug(<span class="string">"Fetching JDBC Connection from DataSource"</span>);</span><br><span class="line">        Connection con = dataSource.getConnection();</span><br><span class="line">        <span class="keyword">if</span> (TransactionSynchronizationManager.isSynchronizationActive()) &#123;</span><br><span class="line">            <span class="comment">// 如果开启了事务</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 把连接放到连接的持有者</span></span><br><span class="line">                ConnectionHolder holderToUse = conHolder;</span><br><span class="line">                <span class="keyword">if</span> (conHolder == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    holderToUse = <span class="keyword">new</span> ConnectionHolder(con);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    conHolder.setConnection(con);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                holderToUse.requested();</span><br><span class="line">                <span class="comment">// 存储连接的持有者以供后续调用时获取，确保同一个事务获取的是同一个连接</span></span><br><span class="line">                TransactionSynchronizationManager.registerSynchronization(<span class="keyword">new</span> DataSourceUtils.ConnectionSynchronization(holderToUse, dataSource));</span><br><span class="line">                holderToUse.setSynchronizedWithTransaction(<span class="keyword">true</span>);</span><br><span class="line">                <span class="keyword">if</span> (holderToUse != conHolder) &#123;</span><br><span class="line">                    TransactionSynchronizationManager.bindResource(dataSource, holderToUse);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (RuntimeException var4) &#123;</span><br><span class="line">                releaseConnection(con, dataSource);</span><br><span class="line">                <span class="keyword">throw</span> var4;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> con;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果存在连接的持有者，则直接从连接的持有者获取连接</span></span><br><span class="line">        conHolder.requested();</span><br><span class="line">        <span class="keyword">if</span> (!conHolder.hasConnection()) &#123;</span><br><span class="line">            logger.debug(<span class="string">"Fetching resumed JDBC Connection from DataSource"</span>);</span><br><span class="line">            conHolder.setConnection(dataSource.getConnection());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> conHolder.getConnection();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <br/>
 

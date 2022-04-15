@@ -75,6 +75,82 @@
     
     
     
+    <article id="post-数据库/Spring如何保证同一个事务获取的是同一个连接" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Spring%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%90%8C%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E8%8E%B7%E5%8F%96%E7%9A%84%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5/"
+    >Spring如何保证同一个事务获取的是同一个连接</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/14/%E6%95%B0%E6%8D%AE%E5%BA%93/Spring%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%90%8C%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E8%8E%B7%E5%8F%96%E7%9A%84%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5/" class="article-date">
+  <time datetime="2021-01-14T14:16:43.000Z" itemprop="datePublished">2021-01-14</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1/">数据库事务</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;在上文中提到过，Druid连接池并并不能保证同一个事务获取到的同一个连接，这个是由Spring的事务保证的。那Spring是如何保证同一个事务获取的是同一个连接呢？</p>
+<h1 id="获取连接时的源码分析"><a href="#获取连接时的源码分析" class="headerlink" title="获取连接时的源码分析"></a>获取连接时的源码分析</h1><p>&emsp;&emsp;Mybatis等ORM框架或者Spring自带的jdbcTemplate都会通过DataSourceUtils的getConnection方法来获取连接，让我们来看下源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">getConnection</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> CannotGetJdbcConnectionException </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 直接调用了doGetConnection方法</span></span><br><span class="line">        <span class="keyword">return</span> doGetConnection(dataSource);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (SQLException var2) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> CannotGetJdbcConnectionException(<span class="string">"Could not get JDBC Connection"</span>, var2);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 这一层方法确保了如果有事务则同一个事务获取到的是同一个连接</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">doGetConnection</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    Assert.notNull(dataSource, <span class="string">"No DataSource specified"</span>);</span><br><span class="line">    <span class="comment">// 根据dataSource尝试获取连接的持有者</span></span><br><span class="line">    ConnectionHolder conHolder = (ConnectionHolder)TransactionSynchronizationManager.getResource(dataSource);</span><br><span class="line">    <span class="keyword">if</span> (conHolder == <span class="keyword">null</span> || !conHolder.hasConnection() &amp;&amp; !conHolder.isSynchronizedWithTransaction()) &#123;</span><br><span class="line">        <span class="comment">// 如果不存在连接的持有者，则从dataSource获取连接</span></span><br><span class="line">        logger.debug(<span class="string">"Fetching JDBC Connection from DataSource"</span>);</span><br><span class="line">        Connection con = dataSource.getConnection();</span><br><span class="line">        <span class="keyword">if</span> (TransactionSynchronizationManager.isSynchronizationActive()) &#123;</span><br><span class="line">            <span class="comment">// 如果开启了事务</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 把连接放到连接的持有者</span></span><br><span class="line">                ConnectionHolder holderToUse = conHolder;</span><br><span class="line">                <span class="keyword">if</span> (conHolder == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    holderToUse = <span class="keyword">new</span> ConnectionHolder(con);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    conHolder.setConnection(con);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                holderToUse.requested();</span><br><span class="line">                <span class="comment">// 存储连接的持有者以供后续调用时获取，确保同一个事务获取的是同一个连接</span></span><br><span class="line">                TransactionSynchronizationManager.registerSynchronization(<span class="keyword">new</span> DataSourceUtils.ConnectionSynchronization(holderToUse, dataSource));</span><br><span class="line">                holderToUse.setSynchronizedWithTransaction(<span class="keyword">true</span>);</span><br><span class="line">                <span class="keyword">if</span> (holderToUse != conHolder) &#123;</span><br><span class="line">                    TransactionSynchronizationManager.bindResource(dataSource, holderToUse);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (RuntimeException var4) &#123;</span><br><span class="line">                releaseConnection(con, dataSource);</span><br><span class="line">                <span class="keyword">throw</span> var4;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> con;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果存在连接的持有者，则直接从连接的持有者获取连接</span></span><br><span class="line">        conHolder.requested();</span><br><span class="line">        <span class="keyword">if</span> (!conHolder.hasConnection()) &#123;</span><br><span class="line">            logger.debug(<span class="string">"Fetching resumed JDBC Connection from DataSource"</span>);</span><br><span class="line">            conHolder.setConnection(dataSource.getConnection());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> conHolder.getConnection();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-数据库/Druid如何自动回收超时连接" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -903,97 +979,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java进阶/Spring中Bean的生命周期" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/07/29/Java%E8%BF%9B%E9%98%B6/Spring%E4%B8%ADBean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/"
-    >Spring中Bean的生命周期</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/07/29/Java%E8%BF%9B%E9%98%B6/Spring%E4%B8%ADBean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" class="article-date">
-  <time datetime="2020-07-29T06:16:43.000Z" itemprop="datePublished">2020-07-29</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Spring/">Spring</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="四个阶段"><a href="#四个阶段" class="headerlink" title="四个阶段"></a>四个阶段</h2><p>&emsp;&emsp;Spring由IOC容器管理Bean的生命周期，帮我们自动创建和销毁Bean，使得我们可以很简单的使用Bean。Spring中Bean的生命周期大致分为这四个阶段：<strong>Instantiation、Populate、Initialization、Destruction</strong>，流程如下：</p>
-<ul>
-<li>通过构造器或工厂方法创建Bean实例，也就是实例化：Instantiation</li>
-<li>为Bean的属性设置值和对其他Bean的引用，也就是属性赋值：Populate</li>
-<li>调用Bean的初始化方法，也是就初始化：Initialization</li>
-<li>使用Bean</li>
-<li>当容器关闭时，调用Bean的销毁方法。也就是销毁：Destruction</li>
-</ul>
-<h2 id="执行顺序"><a href="#执行顺序" class="headerlink" title="执行顺序"></a>执行顺序</h2><p>&emsp;&emsp;Spring允许在Bean在初始化完成后以及Bean销毁前执行特定的操作，常用的设定方式有以下三种：</p>
-<ul>
-<li>通过实现<strong>InitializingBean/DisposableBean</strong>接口来定制初始化之后/销毁之前的操作方法； </li>
-<li>通过元素的<strong>init-method/destroy-method</strong>属性指定初始化之后/销毁之前调用的操作方法； </li>
-<li>在指定方法上加上<strong>@PostConstruct或@PreDestroy</strong>注解(JSR规定的)来制定该方法是在初始化之后还是销毁之前调用。</li>
-</ul>
-<p>&emsp;&emsp;那么问题来了，这三种的执行顺序是怎么样的？有兴趣的话可以自己验证下，答案如下：</p>
-<blockquote>
-<p><strong>初始化时：构造器Construct  -&gt;  属性注入  -&gt;  @PostConstruct  -&gt;  InitializingBean  -&gt;  定义的initMethod</strong><br><strong>销毁时：@PreDestroy  -&gt;  DisposableBean接口 -&gt;  bean定义的destoryMethod</strong></p>
-</blockquote>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
 
 
     </footer>
