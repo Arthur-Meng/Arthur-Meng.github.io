@@ -75,6 +75,148 @@
     
     
     
+    <article id="post-Java进阶/线程池浅析" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/12/01/Java%E8%BF%9B%E9%98%B6/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%B5%85%E6%9E%90/"
+    >线程池浅析</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/12/01/Java%E8%BF%9B%E9%98%B6/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%B5%85%E6%9E%90/" class="article-date">
+  <time datetime="2020-12-01T08:16:43.000Z" itemprop="datePublished">2020-12-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;众所周知，多线程可以极大提高执行效率。阿里的Java规范规定<strong>线程资源必须通过线程池提供，不允许在应用中自行显式创建线程</strong>。因为线程池的好处是<strong>减少在创建和销毁线程上所消耗的时间以及系统资源的开销</strong>，解决资源不足的问题。如果不使用线程池，有可能造成系统创建大量同类线程而导致消耗完内存或者”过度切换”的问题。</p>
+<h2 id="Executors"><a href="#Executors" class="headerlink" title="Executors"></a>Executors</h2><p>&emsp;&emsp;Java通过Executors提供四种预设线程池，分别为：</p>
+<ul>
+<li><strong>newCachedThreadPool</strong>：创建一个可缓存线程池(线程池为无限大)，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，则新建线程。</li>
+<li><strong>newFixedThreadPool</strong>：创建一个定长线程池，可控制线程最大并发数，超出的线程会在队列中等待（这个感觉是比较常用的线程池）。</li>
+<li><strong>newScheduledThreadPool</strong>：创建一个定长线程池，支持定时及周期性任务执行。</li>
+<li><strong>newSingleThreadExecutor</strong>：创建一个单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行。</li>
+</ul>
+<h2 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h2><p>&emsp;&emsp;但是阿里Java规范规定线程池不允许使用Executors去创建，而是通过<strong>ThreadPoolExecutor</strong>的方式，这样的处理方式让写的同学<strong>更加明确线程池的运行规则</strong>，规避资源耗尽的风险。 </p>
+<p>&emsp;&emsp;例如Executors预设的线程池对象可能存在如下弊端： </p>
+<ul>
+<li>FixedThreadPool和SingleThreadPool：允许的请求队列长度为Integer.MAX_VALUE，可能会堆积大量的请求，从而导致OOM。 </li>
+<li>CachedThreadPool：允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量的线程，从而导致OOM。</li>
+</ul>
+<h3 id="ThreadPoolExecutor使用参数"><a href="#ThreadPoolExecutor使用参数" class="headerlink" title="ThreadPoolExecutor使用参数"></a>ThreadPoolExecutor使用参数</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用ThreadPoolExecutor创建线程池的</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,                  // <span class="number">1</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          <span class="keyword">int</span> maximumPoolSize,               // <span class="number">2</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          <span class="keyword">long</span> keepAliveTime,                // <span class="number">3</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          TimeUnit unit,                     // <span class="number">4</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          BlockingQueue&lt;Runnable&gt; workQueue, // <span class="number">5</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          ThreadFactory threadFactory,       // <span class="number">6</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          RejectedExecutionHandler handler   // <span class="number">7</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span> </span>&#123;&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;释义如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">序号</th>
+<th align="left">名称</th>
+<th align="left">类型</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">1</td>
+<td align="left">corePoolSize</td>
+<td align="left">int</td>
+<td align="left">核心线程池大小</td>
+</tr>
+<tr>
+<td align="left">2</td>
+<td align="left">maximumPoolSize</td>
+<td align="left">int</td>
+<td align="left">最大线程池大小</td>
+</tr>
+<tr>
+<td align="left">3</td>
+<td align="left">keepAliveTime</td>
+<td align="left">long</td>
+<td align="left">线程最大空闲时间</td>
+</tr>
+<tr>
+<td align="left">4</td>
+<td align="left">unit</td>
+<td align="left">TimeUnit</td>
+<td align="left">时间单位</td>
+</tr>
+<tr>
+<td align="left">5</td>
+<td align="left">workQueue</td>
+<td align="left">BlockingQueue<Runnable></td>
+<td align="left">线程等待队列</td>
+</tr>
+<tr>
+<td align="left">6</td>
+<td align="left">threadFactory</td>
+<td align="left">ThreadFactory</td>
+<td align="left">线程创建工厂</td>
+</tr>
+<tr>
+<td align="left">7</td>
+<td align="left">handler</td>
+<td align="left">RejectedExecutionHandler</td>
+<td align="left">拒绝策略</td>
+</tr>
+</tbody></table>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-算法/常用加密算法介绍" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -933,170 +1075,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-系统设计/单体小型数据分析型系统设计分享" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/06/05/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E5%8D%95%E4%BD%93%E5%B0%8F%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E5%9E%8B%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E5%88%86%E4%BA%AB/"
-    >单体小型数据分析型系统设计分享</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/06/05/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/%E5%8D%95%E4%BD%93%E5%B0%8F%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E5%9E%8B%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E5%88%86%E4%BA%AB/" class="article-date">
-  <time datetime="2020-06-05T12:16:43.000Z" itemprop="datePublished">2020-06-05</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">系统设计</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;最近由于工作的变动，会涉及到从零开发一个新项目，所以想简单分析下自己在构建新项目中的一些想法。适用于单体小型数据分析型系统，使用用户也很少，所以比较简单，如果是大型项目请移步我最新的博客。</p>
-<h2 id="关于框架"><a href="#关于框架" class="headerlink" title="关于框架"></a>关于框架</h2><p>&emsp;&emsp;没什么好说的，如果没什么特殊情况的话，基本上是基于<strong>SpringBoot</strong>构建，围绕SpringBoot的体系选用其他的框架（当然如果公司自己有封装自己的框架，其实更加建议用公司封装的，毕竟万一到时候要整合什么其他的就麻烦了）。推荐使用SpringBoot初始化构建（如官网构建或者IDEA构建），直接选择需要集成到项目里面的框架和依赖。至于具体的选型，比如微服务是选dubbo还是SpringCloud全家桶，就不展开了，仁者见仁。</p>
-<br/>
-
-<h2 id="关于模块和项目构建"><a href="#关于模块和项目构建" class="headerlink" title="关于模块和项目构建"></a>关于模块和项目构建</h2><ul>
-<li>如果的小型的独立项目，那无需模块化。</li>
-<li>如果是大型的独立项目，那么建议根据功能或者类型来做模块化（<strong>SOA</strong>）。</li>
-<li>如果走在了时代的潮流中，选用了微服务的话，建议使用<strong>bom</strong>管理所有微服务的基本依赖以确保版本统一，而每个具体的微服务也至少抽成接口和具体的服务（根据具体的情况可以再抽）。</li>
-<li>如果项目是内嵌到别的项目里面去的框架或者组件，那么建议将整个项目<strong>彻底模块化</strong>，比如配置，接口，实现，依赖，组件，插件等都可以转化为独立的模块。一来根据灵活，方便做拓展，二来也方便客户重写。</li>
-</ul>
-<br/>
-
-<h2 id="关于分层"><a href="#关于分层" class="headerlink" title="关于分层"></a>关于分层</h2><blockquote>
-<p>接入层（Controller、Action或者微服务里面的接口层），只负责转发和记录请求</p>
-<blockquote>
-<p>服务层（Service），负责具体的逻辑实现</p>
-<blockquote>
-<p>持久化层（Dao，Mapper等），负责数据的持久化</p>
-<blockquote>
-<p>PS：如果有能力的话可以考虑DDD，分成4层，充血模型</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-<p>&emsp;&emsp;除了最上面的三层之后，还可能会抽出以下几层：</p>
-<ul>
-<li><strong>拦截器层</strong>（位于接入层之上，拦截请求统一实现某些功能，不管是MVC还是微服务都可能会有）</li>
-<li><strong>组件层</strong>（提供通用的组件服务，用于服务层调用）</li>
-<li><strong>缓存层</strong>（提供常用数据的缓存，用于服务层调用）</li>
-<li><strong>消息中间件层</strong>（提供消息的处理和推送，处理时调用服务层，被服务层调用推送消息）</li>
-</ul>
-<p>&emsp;&emsp;分层的意义是使得整个项目结构更加合理，减少冗余，提高可读性和健壮性，也更利于之后拓展和维护。当然如果是一个很小很小的项目的话，分层意义也不是很大，但是如果是要长期维护的话，建议考虑好分层。</p>
-<br/>
-
-<h2 id="关于ORM"><a href="#关于ORM" class="headerlink" title="关于ORM"></a>关于ORM</h2><p>&emsp;&emsp;ORM框架这方面国内之前主要还是Mybatis和Hibernate的天下。如果习惯了Mybatis且要写复杂SQL，强烈建议使用<strong>tkMybatis</strong>或者<strong>MyBatis-Plus</strong>这种增强框架，谁用谁知道，如果是Hibernate的话也可以考虑转<strong>Spring Data Jpa</strong>(Spring全家桶不香吗)或者<strong>JOOQ</strong>这种轻量级的。</p>
-<h3 id="逆向工程"><a href="#逆向工程" class="headerlink" title="逆向工程"></a>逆向工程</h3><p>&emsp;&emsp;如果是快速开发可以试下逆向工程，感觉还是挺方便的，根据数据库的表直接生成一整套代码。</p>
-<h3 id="连接池"><a href="#连接池" class="headerlink" title="连接池"></a>连接池</h3><p>&emsp;&emsp;说到ORM，也必然会扯到连接池，抛去老旧的c3p0和dbcp，似乎只剩下了<strong>Druid</strong>和<strong>HikariCP</strong>，Druid胜在监控（有单独的页面），HikariCP作为SpringBoot内置的则是性能无敌。也可以根据自己的情况选择。</p>
-<h3 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h3><p>&emsp;&emsp;MyBatis-Plus功能强大，有很多插件，也自带了分页插件，tkMybatis的话可以外挂PageHelper做分页。Jpa和JOOQ也都自带了分页。</p>
-<h3 id="拦截器"><a href="#拦截器" class="headerlink" title="拦截器"></a>拦截器</h3><p>&emsp;&emsp;针对某些情况，增加拦截器是很好的选择，比如在多租户的情况下，可以统一对SQL进行处理，可以极大减少开发量。</p>
-<br/>
-
-<h2 id="关于缓存"><a href="#关于缓存" class="headerlink" title="关于缓存"></a>关于缓存</h2><p>&emsp;&emsp;一般来说，稍微大型的项目里面或者使用人数稍多的项目都需要上缓存，毕竟数据库的瓶颈摆在那里，区别只是用几重缓存而已。常用的缓存主要分为两种：本地缓存的和分布式用的NoSQL，本地缓存的性能肯定是最好的，但是通常来说满足不了分布式的需求，但是在某些情况下依旧适用（比如某些不大变动的数据）。NoSQL里面常用的有<strong>Redis</strong>，<strong>MongoDB</strong>和<strong>Couchbase</strong>。Redis主要把数据存储在内存中，其”缓存”的性质远大于其“数据存储“的性质，其中数据的增删改查也只是像变量操作一样简单；MongoDB更像是一个“存储数据”的系统，增删改查可以添加很多条件，就像SQL数据库一样灵活，适用于海量数据的访问；Couchbase号称是Best NoSQL Cloud Database Service，由于个人没有用过，跳过，有兴趣的可能自己研究下。</p>
-<h3 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h3><p>&emsp;&emsp;缓存穿透是指缓存和数据库中都没有的数据，而用户不断发起请求，导致数据库压力过大。一般解决的办法有增加校验拦截这种请求和直接缓存null，复杂一点的有布隆过滤器。</p>
-<h3 id="缓存击穿"><a href="#缓存击穿" class="headerlink" title="缓存击穿"></a>缓存击穿</h3><p>&emsp;&emsp;缓存击穿指的是某个热点key失效的瞬间，大量请求导致数据库压力过大。一般解决的办法是加锁(分布式锁)，防止都去数据库重复取数据。</p>
-<h3 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h3><p>&emsp;&emsp;缓存雪崩指的是缓存大批量到期，导致的数据库压力过大，就像雪崩一样。一般解决的办法有设置不同时间过期和或者部分设置为不过期。</p>
-<h3 id="保证最终一致性"><a href="#保证最终一致性" class="headerlink" title="保证最终一致性"></a>保证最终一致性</h3><p>&emsp;&emsp;在并发的情况下，缓存可能会和数据库的值产生不一致的情况。主流解决方案是先更新数据库然后删除缓存的策略（延时双删）。</p>
-<br/>
-
-<h2 id="关于消息中间件"><a href="#关于消息中间件" class="headerlink" title="关于消息中间件"></a>关于消息中间件</h2><p>&emsp;&emsp;消息中间件其实包括很多，4大MQ，我其实就接触过<strong>RabbitMQ</strong>和<strong>Kafka</strong>，ActiveMQ和阿里的RocketMQ则还没时间摸索。在项目需要和别的系统交互的时候，采用MQ无疑是最好的选择：支持异步，高并发，解耦，削峰，易拓展等等。<br>&emsp;&emsp;个人观感里面，不同的MQ虽然核心逻辑差不多，但是实际的实现和根据其特点的应用场景都不一样。比如RabbitMQ是Push模式，服务端主动发送消息到客户端，及时性好；Kafka则是Pull模式，客户端主动从服务器端获取信息，实时较差但是针对性强。所以RabbitMQ适合企业级的消息发送订阅，而Kafka由于其高性能，常用日志采集，数据采集上。</p>
-<h3 id="确保消费成功和解决重复消费"><a href="#确保消费成功和解决重复消费" class="headerlink" title="确保消费成功和解决重复消费"></a>确保消费成功和解决重复消费</h3><p>&emsp;&emsp;总的来说，MQ都会有自己的事务的机制或者确认的机制确保消息不丢失，一定消费成功，但是需要项目自己解决重复消费的问题（毕竟一旦消费时间就会重新消费）。解决的方法也有很多种，根据场景的不同增加额外的条件过滤即可。在使用MQ的时候，这两块是一定要注意的地方。</p>
-<br/>
-
-<h2 id="关于分布式事务"><a href="#关于分布式事务" class="headerlink" title="关于分布式事务"></a>关于分布式事务</h2><p>&emsp;&emsp;关于分布式事务，有多种解决方案，两阶段提交，<strong>三阶段提交</strong>，<strong>补偿事务TCC</strong>，基于消息队列和 Sagas事务模型。不同的解决方案有不同的框架，当然也可以自己实现。由于这块涉猎也不是很多，之后看官可以自己研究。需要拎出来讲的原因是如果是分布式系统的话，这一块很重要……<br><br/></p>
-<h2 id="关于国际化"><a href="#关于国际化" class="headerlink" title="关于国际化"></a>关于国际化</h2><p>&emsp;&emsp;这一块其实也谈不上很有经验，但是以我的粗浅之见，解决策略是用code或者key来表示对应的文本信息，然后根据语言映射到不同的文件。前端和后台对于<strong>i18n</strong>其实都有很成熟的解决方案。需要拎出来讲的原因是一定要考虑清楚之后是不是会国际化，如果没有考虑的话，之后的返工会是很大的工作量，尤其是当文本信息是代码里面写死的时候。</p>
-<br/>
-
-<h2 id="关于异常处理"><a href="#关于异常处理" class="headerlink" title="关于异常处理"></a>关于异常处理</h2><ul>
-<li>个人认为，最好的策略是框架<strong>统一封装处理</strong>。</li>
-<li>需要处理异常的时候才捕捉异常，否则直接<strong>往上抛</strong>，直到有人处理或者被框架处理。</li>
-<li>如果有需要，可以对异常进行封装和分类，根据类型做不同的处理。</li>
-</ul>
-<br/>
-
-<h2 id="关于日志"><a href="#关于日志" class="headerlink" title="关于日志"></a>关于日志</h2><ul>
-<li>使用Java日志门面（如<strong>Slf4j</strong>），方便后期切换日志框架（如log4j2和logback）。</li>
-<li>合理规划级别，除了正常的info和error级别外，可以适量加下debug级别的日志，方便后期遇到问题排查。</li>
-<li>根据功能和类型的不同，可以输出到不同的日志文件。</li>
-<li>如果对实时性没有要求，尽量使用异步日志模式而不是同步日志模式。</li>
-<li>历史的日志文件建议根据年月日压缩归档。</li>
-</ul>
-<br/>
-
-<h2 id="关于接口和文档"><a href="#关于接口和文档" class="headerlink" title="关于接口和文档"></a>关于接口和文档</h2><ul>
-<li>接口风格尽量保持统一，比如用了<strong>RESTful</strong>就全部都用REST风格，约定了接口都以get，pus，post和delete开头就以这些开头。</li>
-<li>如果的mvc的项目，强烈建议使用<strong>Swagger2</strong>（据说微服务也支持），不仅方便形成接口文档，还可以直接调用，利于测试和开发。</li>
-<li>或者可以使用<strong>apiDoc</strong>生成形成接口文档，样式简洁，美观大方（至少比javadoc好看很多），缺点是要写的注解比较多。</li>
-<li>如果不介意在外部维护接口文档的话，也很推荐使用<strong>yApi</strong>，缺点是需要额外部署服务器，但是优点是功能强大，更加适合于项目开发。</li>
-</ul>
-<br/>
-
-<h2 id="关于编码规范"><a href="#关于编码规范" class="headerlink" title="关于编码规范"></a>关于编码规范</h2><p>&emsp;&emsp;开发人员建议统一使用<strong>代码规范插件</strong>，常用的插件有：SonarQube，Fortify，阿里代码规范插件。用起来感觉都不错，可以约定一套习惯给项目配置规则。Sonar还可以与Jenkins集成，在CI集成的时候扫描，但是终究还是在源头上控制更有效，只能作为保险。</p>
-<br/>
-
-
-<h2 id="关于单元测试和自动化测试"><a href="#关于单元测试和自动化测试" class="headerlink" title="关于单元测试和自动化测试"></a>关于单元测试和自动化测试</h2><p>&emsp;&emsp;单元测试最好还是要有的，从顶层开始写用例可以尽量覆盖到全部代码。如果没有单元测试的话，可以寄希望于自动化的接口测试，通过自动化测试把控代码质量，否则很可能哪天接口就被改坏了，造成了严重的事故。<strong>自动化测试</strong>的工具也有很多，如果有能力甚至可能根据项目的情况自研。</p>
-<br/>
-
-<h2 id="关于DevOps"><a href="#关于DevOps" class="headerlink" title="关于DevOps"></a>关于DevOps</h2><p>&emsp;&emsp;DevOps可以说是现在的潮流，CI/CD的自动化和白屏化会给工程人员极大的便利和解放，也间接增强了项目的稳定性。<strong>Jenkins</strong>作为最受欢迎的自动化工具是肯定是我们的首选，里面有丰富的插件和扩展，基本可以满足所有的需求。</p>
-<br/>
-
-<h2 id="关于云和Docker"><a href="#关于云和Docker" class="headerlink" title="关于云和Docker"></a>关于云和Docker</h2><p>&emsp;&emsp;个人认为，上不上云还是看需求的，对于一些小公司和个人项目，上云是绝对有必要的…Docker这个很有说法， 我个人强烈建议新的项目部署的时候做成<strong>Docker镜像</strong>的形式的部署，虽然在某些情况下，可能是得不偿失的..毕竟变相增加了难度，但是为了未来考虑，镜像化是一个很好的选择。</p>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
 
 
     </footer>

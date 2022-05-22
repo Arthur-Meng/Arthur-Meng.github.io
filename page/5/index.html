@@ -75,6 +75,83 @@
     
     
     
+    <article id="post-数据库/PostConstruct注解和Transactional注解冲突" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/01/19/%E6%95%B0%E6%8D%AE%E5%BA%93/PostConstruct%E6%B3%A8%E8%A7%A3%E5%92%8CTransactional%E6%B3%A8%E8%A7%A3%E5%86%B2%E7%AA%81/"
+    >PostConstruct注解和Transactional注解冲突</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/19/%E6%95%B0%E6%8D%AE%E5%BA%93/PostConstruct%E6%B3%A8%E8%A7%A3%E5%92%8CTransactional%E6%B3%A8%E8%A7%A3%E5%86%B2%E7%AA%81/" class="article-date">
+  <time datetime="2021-01-19T14:16:43.000Z" itemprop="datePublished">2021-01-19</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1/">数据库事务</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;最近在某一个项目的一个接口里面想加上@Transactional事务注解，让这个方法执行的时候可以通过事务来管理。但是很奇怪的是，试了很多方法但是怎么都不生效。最后想到可能是和@PostConstruct这个注解不兼容，最后一试果然是这个原因。</p>
+<h1 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h1><p>&emsp;&emsp;@PostConstruct允许在Bean在初始化完成后以及Bean销毁前执行特定的操作，但是问题就是它执行的太早了（执行顺序详见《Spring中Bean的生命周期》一文），所以没有办法确保所有的后处理已经完成，所以不会就没有加到事务里面去。</p>
+<h1 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h1><p>&emsp;&emsp;解决方法和网上说的差不多，注入当前事务管理器，在事务管理器里面手动加上当前的执行.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="meta">@Qualifier</span>(<span class="string">"transactionManager"</span>)</span><br><span class="line"><span class="keyword">protected</span> PlatformTransactionManager txManager;</span><br><span class="line"></span><br><span class="line"><span class="meta">@PostConstruct</span></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    TransactionTemplate tmpl = <span class="keyword">new</span> TransactionTemplate(txManager);</span><br><span class="line">    tmpl.execute(<span class="keyword">new</span> TransactionCallbackWithoutResult() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doInTransactionWithoutResult</span><span class="params">(TransactionStatus status)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// todo</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-Java进阶/并发之Condition" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -832,148 +909,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-Java进阶/线程池浅析" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/12/01/Java%E8%BF%9B%E9%98%B6/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%B5%85%E6%9E%90/"
-    >线程池浅析</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/12/01/Java%E8%BF%9B%E9%98%B6/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%B5%85%E6%9E%90/" class="article-date">
-  <time datetime="2020-12-01T08:16:43.000Z" itemprop="datePublished">2020-12-01</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;众所周知，多线程可以极大提高执行效率。阿里的Java规范规定<strong>线程资源必须通过线程池提供，不允许在应用中自行显式创建线程</strong>。因为线程池的好处是<strong>减少在创建和销毁线程上所消耗的时间以及系统资源的开销</strong>，解决资源不足的问题。如果不使用线程池，有可能造成系统创建大量同类线程而导致消耗完内存或者”过度切换”的问题。</p>
-<h2 id="Executors"><a href="#Executors" class="headerlink" title="Executors"></a>Executors</h2><p>&emsp;&emsp;Java通过Executors提供四种预设线程池，分别为：</p>
-<ul>
-<li><strong>newCachedThreadPool</strong>：创建一个可缓存线程池(线程池为无限大)，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，则新建线程。</li>
-<li><strong>newFixedThreadPool</strong>：创建一个定长线程池，可控制线程最大并发数，超出的线程会在队列中等待（这个感觉是比较常用的线程池）。</li>
-<li><strong>newScheduledThreadPool</strong>：创建一个定长线程池，支持定时及周期性任务执行。</li>
-<li><strong>newSingleThreadExecutor</strong>：创建一个单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行。</li>
-</ul>
-<h2 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h2><p>&emsp;&emsp;但是阿里Java规范规定线程池不允许使用Executors去创建，而是通过<strong>ThreadPoolExecutor</strong>的方式，这样的处理方式让写的同学<strong>更加明确线程池的运行规则</strong>，规避资源耗尽的风险。 </p>
-<p>&emsp;&emsp;例如Executors预设的线程池对象可能存在如下弊端： </p>
-<ul>
-<li>FixedThreadPool和SingleThreadPool：允许的请求队列长度为Integer.MAX_VALUE，可能会堆积大量的请求，从而导致OOM。 </li>
-<li>CachedThreadPool：允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量的线程，从而导致OOM。</li>
-</ul>
-<h3 id="ThreadPoolExecutor使用参数"><a href="#ThreadPoolExecutor使用参数" class="headerlink" title="ThreadPoolExecutor使用参数"></a>ThreadPoolExecutor使用参数</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用ThreadPoolExecutor创建线程池的</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,                  // <span class="number">1</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          <span class="keyword">int</span> maximumPoolSize,               // <span class="number">2</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          <span class="keyword">long</span> keepAliveTime,                // <span class="number">3</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          TimeUnit unit,                     // <span class="number">4</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          BlockingQueue&lt;Runnable&gt; workQueue, // <span class="number">5</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          ThreadFactory threadFactory,       // <span class="number">6</span></span></span></span><br><span class="line"><span class="function"><span class="params">                          RejectedExecutionHandler handler   // <span class="number">7</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span> </span>&#123;&#125;;</span><br></pre></td></tr></table></figure>
-
-<p>&emsp;&emsp;释义如下：</p>
-<table>
-<thead>
-<tr>
-<th align="left">序号</th>
-<th align="left">名称</th>
-<th align="left">类型</th>
-<th align="left">含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">1</td>
-<td align="left">corePoolSize</td>
-<td align="left">int</td>
-<td align="left">核心线程池大小</td>
-</tr>
-<tr>
-<td align="left">2</td>
-<td align="left">maximumPoolSize</td>
-<td align="left">int</td>
-<td align="left">最大线程池大小</td>
-</tr>
-<tr>
-<td align="left">3</td>
-<td align="left">keepAliveTime</td>
-<td align="left">long</td>
-<td align="left">线程最大空闲时间</td>
-</tr>
-<tr>
-<td align="left">4</td>
-<td align="left">unit</td>
-<td align="left">TimeUnit</td>
-<td align="left">时间单位</td>
-</tr>
-<tr>
-<td align="left">5</td>
-<td align="left">workQueue</td>
-<td align="left">BlockingQueue<Runnable></td>
-<td align="left">线程等待队列</td>
-</tr>
-<tr>
-<td align="left">6</td>
-<td align="left">threadFactory</td>
-<td align="left">ThreadFactory</td>
-<td align="left">线程创建工厂</td>
-</tr>
-<tr>
-<td align="left">7</td>
-<td align="left">handler</td>
-<td align="left">RejectedExecutionHandler</td>
-<td align="left">拒绝策略</td>
-</tr>
-</tbody></table>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
 
 
     </footer>
