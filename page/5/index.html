@@ -75,6 +75,150 @@
     
     
     
+    <article id="post-数据库/批量插入和更新的优化" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/01/20/%E6%95%B0%E6%8D%AE%E5%BA%93/%E6%89%B9%E9%87%8F%E6%8F%92%E5%85%A5%E5%92%8C%E6%9B%B4%E6%96%B0%E7%9A%84%E4%BC%98%E5%8C%96/"
+    >批量插入和更新的优化</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/20/%E6%95%B0%E6%8D%AE%E5%BA%93/%E6%89%B9%E9%87%8F%E6%8F%92%E5%85%A5%E5%92%8C%E6%9B%B4%E6%96%B0%E7%9A%84%E4%BC%98%E5%8C%96/" class="article-date">
+  <time datetime="2021-01-20T15:13:13.000Z" itemprop="datePublished">2021-01-20</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1/">数据库事务</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;我们项目中，难免会遇到需要大量插入和更新的情况，本文罗列了几种常见的批量插入和更新的方法，计算了耗时并尝试优化，希望找到了一个批量插入和更新的较优解。</p>
+<h1 id="Java代码循环"><a href="#Java代码循环" class="headerlink" title="Java代码循环"></a>Java代码循环</h1><h2 id="Java代码循环-1"><a href="#Java代码循环-1" class="headerlink" title="Java代码循环"></a>Java代码循环</h2><p>&emsp;&emsp;我们可以在代码里面直接for循环插入或者更新对象，如下面的代码，formId是form对象的主键：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    form.setFormId(i + <span class="string">""</span>);</span><br><span class="line">    formMapper.insert(form);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    form.setFormId(i + <span class="string">""</span>);</span><br><span class="line">    formMapper.updateByPrimaryKeySelective(form);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>99秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>96秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;很显然，这种方式一条一条语句执行，所以效率很低。</p>
+<h2 id="使用PreparedStatement"><a href="#使用PreparedStatement" class="headerlink" title="使用PreparedStatement"></a>使用PreparedStatement</h2><p>&emsp;&emsp;我们可以直接获取连接后使用PreparedStatement进行批量插入和更新，如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"插入的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.execute();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"更新的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.executeUpdate();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>67秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>89秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;PreparedStatement就是<strong>预编译</strong>，可以优化sql的执行，且编译一次之后后续的sql就不需要再次编译，所以在这种情况下可以极大提升性能。之所以和上一种方式效率差不多是因为<strong>#{}</strong>在mybatis中的底层就是运用了PreparedStatement。但是相较于上一种方式还是有所提升，究其原因是直接使用了底层的方法，抛弃了mybatis的一些处理。</p>
+<h2 id="关闭自动提交"><a href="#关闭自动提交" class="headerlink" title="关闭自动提交"></a>关闭自动提交</h2><p>&emsp;&emsp;我们可以上述方法的基础上关闭自动提交进行批量插入和更新，如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line"><span class="comment">// 关闭自动提交</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"插入的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.execute();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line"><span class="comment">// 完成后再次打开还原初始状态</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line"><span class="comment">// 关闭自动提交</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"更新的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.executeUpdate();</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line"><span class="comment">// 完成后再次打开还原初始状态</span></span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>26秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>27秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;MySQL默认的数据提交操作模式是自动提交模式（autocommit）。这就表示除非显式地开始一个事务，否则<strong>每个查询都被当做一个单独的事务自动执行</strong>。所以当我们关闭自动提交，会发现执行速度有了一个小的质变。</p>
+<h2 id="批量执行"><a href="#批量执行" class="headerlink" title="批量执行"></a>批量执行</h2><p>&emsp;&emsp;我们可以上述方法的基础上再使用批量执行去执行插入和更新的操作，如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"插入的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.addBatch();</span><br><span class="line">    <span class="keyword">if</span> (i % <span class="number">10000</span> == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 每1w条批量执行一次</span></span><br><span class="line">        preparedStatement.executeBatch();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Connection connection = jdbcTemplate.getDataSource().getConnection();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">PreparedStatement preparedStatement = connection.prepareStatement(<span class="string">"更新的sql"</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">100000</span>; i++) &#123;</span><br><span class="line">    preparedStatement.setString(<span class="number">1</span>, i + <span class="string">""</span>);</span><br><span class="line">    preparedStatement.addBatch();</span><br><span class="line">    <span class="keyword">if</span> (i % <span class="number">10000</span> == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 每1w条批量执行一次</span></span><br><span class="line">        preparedStatement.executeBatch();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">preparedStatement.close();</span><br><span class="line">connection.commit();</span><br><span class="line">connection.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>20秒</strong>。</li>
+<li>批量更新了10w个form对象，总共花费了<strong>23秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;addBatch()是把若干sql语句装载到一起，然后<strong>一次性传送到数据库执行</strong>。我们可以发现，在加上了批量提交了之后，执行的速度又微微提升了一点，由于我在测试的时候数据库没有别的访问，所以差距不大。在实际情况下，由于数据库需要处理很多请求，这种方式的优势会更加明显。</p>
+<br/>
+
+
+<h1 id="构造批量插入的SQL"><a href="#构造批量插入的SQL" class="headerlink" title="构造批量插入的SQL"></a>构造批量插入的SQL</h1><p>&emsp;&emsp;除了直接循环外，我们也可以通过构造批量插入的SQL的方法来达到批量执行的目的。批量插入的写法比较简单，有以下两种方式：</p>
+<h2 id="使用foreach构造"><a href="#使用foreach构造" class="headerlink" title="使用foreach构造"></a>使用foreach构造</h2><p>&emsp;&emsp;我们使用mybatis的foreach标签构造sql语句，下面是示例：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">insert</span> <span class="attr">id</span>=<span class="string">"saveList"</span> <span class="attr">parameterType</span>=<span class="string">"java.util.List"</span>&gt;</span></span><br><span class="line">    insert into form(form_id,form_name) values</span><br><span class="line">    <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span> <span class="attr">separator</span>=<span class="string">","</span>&gt;</span></span><br><span class="line">        (#&#123;form.formId&#125;,</span><br><span class="line">        #&#123;form.formName&#125;)</span><br><span class="line">    <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">insert</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>7秒</strong>。</li>
+</ul>
+<h2 id="使用ORM框架的批量插入接口构造"><a href="#使用ORM框架的批量插入接口构造" class="headerlink" title="使用ORM框架的批量插入接口构造"></a>使用ORM框架的批量插入接口构造</h2><p>&emsp;&emsp;很多ORM都自带有批量插入的接口的实现，如tkmybatis和mybatisplus。<strong>在tkmybatis中mapper只需要继承InsertListMapper接口就可以直接使用insertList接口</strong>，这还是十分方便的。</p>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>7秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;我们可以发现，构造批量插入的SQL执行的效率相较于前面的一种方法又有了极大的提升（哭泣，枉费我们优化了那么多次）。毕竟<strong>构造批量插入的SQL可以把之前需要执行的sql的数量降低好几个数量级，不快都不行</strong>。而使用ORM框架的批量插入接口构造和使用foreach构造只是使用方法不一样，最后构造出来的sql是一致的，所以执行效率一致。</p>
+<br/>
+
+
+<h1 id="构造批量更新的SQL"><a href="#构造批量更新的SQL" class="headerlink" title="构造批量更新的SQL"></a>构造批量更新的SQL</h1><h2 id="使用case-when"><a href="#使用case-when" class="headerlink" title="使用case when"></a>使用case when</h2><p>&emsp;&emsp;使用case when构造批量更新这种方式，根据主键的值来更新需要更新的值，有几个需要字段，就要遍历几遍，下面是示例：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">update</span> <span class="attr">id</span>=<span class="string">"updateList"</span>&gt;</span></span><br><span class="line">     update form</span><br><span class="line">     <span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">"set"</span> <span class="attr">suffixOverrides</span>=<span class="string">","</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">"form_name = case form_id"</span> <span class="attr">suffix</span>=<span class="string">"end,"</span>&gt;</span></span><br><span class="line">             <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span>&gt;</span></span><br><span class="line">                 when #&#123;form.formId&#125; then #&#123;form.formName&#125;</span><br><span class="line">             <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">"form_type = case form_id"</span> <span class="attr">suffix</span>=<span class="string">"end"</span>&gt;</span></span><br><span class="line">             <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span>&gt;</span></span><br><span class="line">                 when #&#123;form.formId&#125; then #&#123;form.formType&#125;</span><br><span class="line">             <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">where</span>&gt;</span></span><br><span class="line">         form_id in (</span><br><span class="line">         <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">separator</span>=<span class="string">","</span> <span class="attr">item</span>=<span class="string">"form"</span>&gt;</span></span><br><span class="line">             #&#123;form.formId&#125;</span><br><span class="line">         <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line">         )</span><br><span class="line">     <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;/<span class="name">update</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>26秒</strong>。<br>&emsp;&emsp;我们可以发现，这种方式效率其实不是很高。主要是因为当更新的字段很多时或者数量较多时，SQL语句会特别长，特别复杂，这导致了执行效率比较低。</li>
+</ul>
+<h2 id="使用foreach"><a href="#使用foreach" class="headerlink" title="使用foreach"></a>使用foreach</h2><p>&emsp;&emsp;用foreach组装成多条update语句，需要注意的是，Mybatis映射文件中的sql语句默认是不支持以”;” 结尾的，也就是不支持多条sql语句的执行。所以需要在<strong>连接mysql的url上加&amp;allowMultiQueries=true</strong>这个才可以执行。下面是示例：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">update</span> <span class="attr">id</span>=<span class="string">"updateList"</span>  <span class="attr">parameterType</span>=<span class="string">"java.util.List"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">"list"</span> <span class="attr">item</span>=<span class="string">"form"</span> <span class="attr">index</span>=<span class="string">"index"</span> <span class="attr">open</span>=<span class="string">""</span> <span class="attr">close</span>=<span class="string">""</span> <span class="attr">separator</span>=<span class="string">";"</span>&gt;</span></span><br><span class="line">        update form</span><br><span class="line">        <span class="tag">&lt;<span class="name">set</span>&gt;</span></span><br><span class="line">            form_name= #&#123;form.formName&#125;</span><br><span class="line">        <span class="tag">&lt;/<span class="name">set</span>&gt;</span></span><br><span class="line">        where form_id = #&#123;form.formId&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">update</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>批量插入了10w个form对象，总共花费了<strong>63秒</strong>。</li>
+</ul>
+<p>&emsp;&emsp;我们可以发现这种方法的效率并不高。究其原因，虽然说构造处理的sql是一整个SQL，但是实际上也是执行的时候是以单个sql执行，所以效率并不高。</p>
+<h2 id="使用ON-DUPLICATE-KEY-UPDATE"><a href="#使用ON-DUPLICATE-KEY-UPDATE" class="headerlink" title="使用ON DUPLICATE KEY UPDATE"></a>使用ON DUPLICATE KEY UPDATE</h2><p>&emsp;&emsp;只能在mysql可以使用，oracle不支持，不推荐，跳过。</p>
+<h2 id="使用replace-into"><a href="#使用replace-into" class="headerlink" title="使用replace into"></a>使用replace into</h2><p>&emsp;&emsp;只能在mysql可以使用，oracle不支持，不推荐，跳过。</p>
+<br/>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>&emsp;&emsp;我们刚刚试验了很多批量插入和批量更新的方法，最后得出结论：</p>
+<ul>
+<li><strong>批量插入：推荐使用ORM框架的批量插入接口构造（其次是使用foreach构造），原因是使用最简单，效率最高。</strong></li>
+<li><strong>批量更新：推荐使用Java代码循环+PreparedStatement+关闭自动提交+批量执行的方式，原因是使用相对简单，效率也可以接受。</strong></li>
+</ul>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-数据库/PostConstruct注解和Transactional注解冲突" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -850,90 +994,13 @@
 
 </article>
     
-    <article id="post-算法/动态规划的理解和应用" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/12/02/%E7%AE%97%E6%B3%95/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92%E7%9A%84%E7%90%86%E8%A7%A3%E5%92%8C%E5%BA%94%E7%94%A8/"
-    >动态规划的理解和应用</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/12/02/%E7%AE%97%E6%B3%95/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92%E7%9A%84%E7%90%86%E8%A7%A3%E5%92%8C%E5%BA%94%E7%94%A8/" class="article-date">
-  <time datetime="2020-12-02T05:58:43.000Z" itemprop="datePublished">2020-12-02</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%AE%97%E6%B3%95/">算法</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;珠玉在前,瓦石难当。如果大家真的想好好了解下动态规划，请移步<a href="https://github.com/labuladong/fucking-algorithm" target="_blank" rel="noopener">labuladong的算法小抄</a>。里面讲解的深入浅出，受益匪浅。本文仅仅是记录一些个人在使用过程中的感悟。</p>
-<h2 id="核心"><a href="#核心" class="headerlink" title="核心"></a>核心</h2><p>&emsp;&emsp;私以为动态规划的核心就想清楚怎么处理子问题：<strong>在子问题中，我们需要什么数据，需要做什么处理才能过渡到下一个子问题</strong>。就labuladong的算法小抄里面的话说就是<strong>找到状态转移方程：怎么根据现有数据转移到下一个状态</strong>。所以其实还是那两个问题，<strong>我们在子问题中需要什么样的数据支撑我们进行当前的处理</strong>（这个数据肯定是和状态息息相关的），<strong>怎么处理当前的数据过渡到下一个子问题</strong>。</p>
-<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><h3 id="Table-Fill"><a href="#Table-Fill" class="headerlink" title="Table Fill"></a>Table Fill</h3><p>&emsp;&emsp;Table Fill其实就是填dp表（Dynamic Programming，DP），<strong>dp表就上面说的支撑我们进行处理的额外数据（我们每次处理的结果都会存到dp表，下一个处理的时候从dp表取数据处理）</strong>。dp表往往是由你后续处理决定的，后续处理时需要这个额外数据，那它就应该存在dp表。dp表可以是一个，可以是多个，可以是一维，也可以是多维，它的形式取决于你需要什么样的数据。<br>&emsp;&emsp;我们在填dp表时，需要注意的是<strong>遍历顺序</strong>。我们可以从前往后填，也可以从后往前填，亦或是从左或者从右，甚至可以斜着来。遍历顺序取决于你的场景，什么顺序遍历所需要的计算越小就采用什么顺序。<br>&emsp;&emsp;Table Fill大概率是动态规划的最优解，尤其是那种统计的题目。但是难点依旧在找到合适的状态转移方程（有一些状态转移方程甚至可能很晦涩，看不懂）。</p>
-<h3 id="Recursion-Memoization"><a href="#Recursion-Memoization" class="headerlink" title="Recursion+Memoization"></a>Recursion+Memoization</h3><p>&emsp;&emsp;Recursion+Memoization就是递归+备忘录。相较于Table Fill，递归+备忘录的<strong>难度直线下降</strong>，写出来的代码都是看得懂的。如果你在做算法题的时候，遇到了一道你觉得很操蛋的，用正常思维解决不了的题目，那么你基本上可以往动态规划靠，而动态规划最简单的实现就递归+备忘录。一旦你找到想好递归中如何处理子系统和想好边界的判断，那么这道题目就基本上解出来了。<br>&emsp;&emsp;其实这两个方法都是动态规划，原理其实是一样的，只是实现方法不一样，所以递归+备忘录的形式基本上可以转换成Table Fill的形式。<br>&emsp;&emsp;递归+备忘录的性能其实可以接受的（如果没有备忘录就接受不了了），但是缺点是<strong>耗费堆栈</strong>，毕竟在递归的时候会频繁创建栈去执行子问题，而Table Fill只是在一个方法内循环。所以实际情况下还是更建议使用Table Fill。</p>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
   </article>
   
 
   
   <nav class="page-nav">
     
-    <a class="extend prev" rel="prev" href="/page/4/">上一页</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/6/">下一页</a>
+    <a class="extend prev" rel="prev" href="/page/4/">上一页</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/6/">下一页</a>
   </nav>
   
 </section>
