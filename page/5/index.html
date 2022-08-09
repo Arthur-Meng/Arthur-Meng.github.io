@@ -75,6 +75,270 @@
     
     
     
+    <article id="post-网络/Https证书基础知识一览" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/03/10/%E7%BD%91%E7%BB%9C/Https%E8%AF%81%E4%B9%A6%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%B8%80%E8%A7%88/"
+    >Https证书基础知识一览</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/03/10/%E7%BD%91%E7%BB%9C/Https%E8%AF%81%E4%B9%A6%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%B8%80%E8%A7%88/" class="article-date">
+  <time datetime="2021-03-10T06:17:43.000Z" itemprop="datePublished">2021-03-10</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Https/">Https</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;由于工作关系，最近接触到了Https证书，做一个相关知识的整理。我们先来回顾下Https的原理和过程，再来看证书相关的知识，最后分享一些实用的命令。</p>
+<h2 id="Https"><a href="#Https" class="headerlink" title="Https"></a>Https</h2><h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>&emsp;&emsp;Https协议是由HTTP加上TLS/SSL协议构建的可进行加密传输、身份认证的网络协议(TLS基于SSL3.0)。所以Https的安全基础是SSL，Https有一个不同于HTTP的默认端口(443)及一个加密/身份验证层（在HTTP与TCP之间）。</p>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><p>&emsp;&emsp;Https采用了<strong>非对称加密和对称加密两种加密模式。其中正文使用的是对称加密，这样子效率较高，会使用一个随机数来进行对称加密，而随机数依靠非对称加密进行传输，也就是使用公钥和私钥的加密解密形式保证随机数不被泄露，确保了安全性</strong>。过程如下：</p>
+<ul>
+<li>客户端发送请求到服务器端</li>
+<li>服务器端返回<strong>证书和公钥</strong>，公钥作为证书的一部分而存在</li>
+<li>客户端验证证书和公钥的<strong>有效性</strong>，如果有效，则生成<strong>随机数</strong>并使用公钥加密发送到服务器端</li>
+<li>服务器端使用<strong>私钥解密数据</strong>，并使用收到的随机数加密数据，发送到客户端</li>
+<li>客户端使用随机数解密数据</li>
+<li>SSL加密建立</li>
+</ul>
+<br/>
+
+<h2 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h2><h3 id="CA"><a href="#CA" class="headerlink" title="CA"></a>CA</h3><p>&emsp;&emsp;容我拷贝下百度里面的定义：证书颁发机构（CA, Certificate Authority）即颁发数字证书的机构。是负责<strong>发放和管理数字证书</strong>的权威机构，并作为电子商务交易中受信任的第三方，承担公钥体系中公钥的合法性检验的责任。</p>
+<h3 id="申请流程"><a href="#申请流程" class="headerlink" title="申请流程"></a>申请流程</h3><ul>
+<li>1、服务方S向第三方机构CA提交公钥、组织信息、个人信息(域名)等信息并申请认证</li>
+<li>2、CA通过线上、线下等多种手段验证申请者提供信息的真实性，如组织是否存在、企业是否合法，是否拥有域名的所有权等</li>
+<li>3、如信息审核通过，CA会向申请者签发认证文件，即证书</li>
+<li>4、证书一般是cer或者crt格式的，个人体感中间证书一般是crt格式的。</li>
+</ul>
+<h3 id="包含"><a href="#包含" class="headerlink" title="包含"></a>包含</h3><p>&emsp;&emsp;证书包含以下信息：<strong>申请者公钥、申请者的组织信息和个人信息、签发机构CA的信息（用于向CA校验）、有效时间、证书</strong>等信息的明文，基本上还会绑定<strong>域名</strong>，同时包含一个<strong>签名</strong>。</p>
+<h3 id="校验过程"><a href="#校验过程" class="headerlink" title="校验过程"></a>校验过程</h3><ul>
+<li>1、客户端C向服务器S发出请求时，<strong>服务器S返回证书文件</strong></li>
+<li>2、客户端C读取证书中的相关的明文信息，采用相同的散列函数计算得到信息摘要，然后利用<strong>对应CA的公钥解密签名数据</strong>，对比证书的信息摘要，如果一致，则可以确认证书的合法性，即公钥合法</li>
+<li>3、客户端然后<strong>验证证书相关的域名信息、有效时间</strong>等信息</li>
+<li>4、客户端会内置信任CA的证书信息(包含公钥)，如果CA不被信任，则找不到对应CA的证书，证书也会被判定非法</li>
+</ul>
+<h3 id="要点"><a href="#要点" class="headerlink" title="要点"></a>要点</h3><ul>
+<li>申请证书不需要提供私钥，确保私钥永远只能服务器掌握</li>
+<li>证书的合法性仍然依赖于非对称加密算法，证书主要是增加了服务器信息以及签名</li>
+<li>内置CA对应的证书称为<strong>根证书</strong>，颁发者和使用者相同，自己为自己签名，即自签名证书，否则需要向CA校验</li>
+<li>证书=公钥+申请者与颁发者信息+签名</li>
+<li>数字签名的签发过程是私钥加密，公钥解密</li>
+</ul>
+<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><ul>
+<li>DV证书（Domain Validated），适合个人网站，请求该类证书的速度较快，审核较宽松</li>
+<li>OV证书（Organization Validated），则会严对服务器实体的身份信息进行审查，适合企业等机构对安全性的高要求</li>
+<li>EV证书（Extended Validation），对于身份信息的审核比DV和OV证书都要严格，拥有EV证书的服务器访问时除了会有“绿色小锁”标志外，还会显示该企业的名字，而DV证书和OV证书只会显示“绿色小锁”标志。</li>
+</ul>
+<h3 id="SAN"><a href="#SAN" class="headerlink" title="SAN"></a>SAN</h3><p>&emsp;&emsp;SAN（Subject Alternative Name）即用户可选择名称，该属性项可以配置IP地址，域名和电子邮件地址等，且这些属性的值可以不止一个，例如域名，拿域名来举例，在CA证书里，如果配置了SAN，表示该<strong>证书被多个域名拥有，也就是可以被很多域名一起使用</strong>。</p>
+<h3 id="信任链"><a href="#信任链" class="headerlink" title="信任链"></a>信任链</h3><p>&emsp;&emsp;多网站的数字证书都是有信任链中的中间结点签发的，然而浏览器并没有这些中间结点的根证书，那么是如何判断这些中间签发机构的可信任性呢？答案就是信任链，证书中的<strong>Authority Information Access</strong>这一项就配置了中间证书，这个中间证书可以下载下来，我们可以看到这些中间证书是由其他的中间证书（最终也指向了受信任的根证书）或者直接由受信任的根证书颁发的。这样子证书就完成了一个信任链。关于信任链，本文讲的有点简略，详细的描述可以看<a href="https://cjting.me/2021/03/02/how-to-validate-tls-certificate/" target="_blank" rel="noopener">这里</a>。</p>
+<h3 id="CRL"><a href="#CRL" class="headerlink" title="CRL"></a>CRL</h3><p>&emsp;&emsp;CRL（CRL Distribution Points）即证书吊销列表，该文件包含了证书颁发机构CA<strong>已经吊销的证书的序列号及其吊销日期</strong>。 CRL文件中还包含证书颁发机构信息、吊销列表失效时间和下一次更新时间，以及采用的签名算法等。值得注意的是：目前有些CA颁发的证书和大部分自签SSL证书都没有提供吊销列表(CRL)服务或证书 吊销列表分发点是不可访问的 ，当然更别提<strong>OSCP服务（在线证书状态协议）</strong>，这是非常危险的，因为如果证书丢失或被盗而无法吊销的话，就极有可能被用于非法用途而让用户蒙受损失。</p>
+<br/>
+
+<h2 id="Keytool"><a href="#Keytool" class="headerlink" title="Keytool"></a>Keytool</h2><p>&emsp;&emsp;Keytool是一个Java数据证书的管理工具 ，Keytool将密钥（key）和证书（certificates）存在一个称为keystore的文件中。 在keystore里，包含两种数据：</p>
+<ul>
+<li>密钥实体（Key entity）——密钥（secret key）又或者是私钥和配对公钥（采用非对称加密）</li>
+<li>可信任的证书实体（trusted certificate entries）——只包含公钥</li>
+</ul>
+<p>&emsp;&emsp;Keystore可以简单理解为一个存放应用签名的文件。所谓<strong>JKS（Java Key Store）就是利用Java Keytool 工具生成的Keystore文件（其实就是keystore，密钥库类型是 jks），JKS文件由公钥和密钥构成，其中的公钥就是我们所说的证书，即cer为后缀的文件，而私钥就是密钥，即以key为后缀的文件</strong>。我们通过Keytool结合Openssl提取jks文件的公钥和私钥，或者通过网站<a href="https://myssl.com/cert_convert.html" target="_blank" rel="noopener">https://myssl.com/cert_convert.html</a></p>
+<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><h4 id="查看keystore文件"><a href="#查看keystore文件" class="headerlink" title="查看keystore文件"></a>查看keystore文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -v -list -keystore  server.keystore（或者是jks文件）</span><br></pre></td></tr></table></figure>
+
+<h4 id="创建keystore文件"><a href="#创建keystore文件" class="headerlink" title="创建keystore文件"></a>创建keystore文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">keytool -genkey -keyalg RSA -alias server -keypass changeit -keystore server.keystore -storepass changeit</span><br><span class="line">然后输入一些信息，其中what&#39;s you name?这个问题的时候最好使用域名。</span><br></pre></td></tr></table></figure>
+
+<h4 id="通过cer公钥生成keystore文件"><a href="#通过cer公钥生成keystore文件" class="headerlink" title="通过cer公钥生成keystore文件"></a>通过cer公钥生成keystore文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -import -file server.cer -keystore server.keystore -alias server</span><br></pre></td></tr></table></figure>
+
+<h4 id="keystore文件导出里面的cer公钥"><a href="#keystore文件导出里面的cer公钥" class="headerlink" title="keystore文件导出里面的cer公钥"></a>keystore文件导出里面的cer公钥</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -alias hundsun -exportcert -keystore &#x2F;keystore.keystore -file keystore.cer</span><br></pre></td></tr></table></figure>
+
+<h4 id="查看cer文件"><a href="#查看cer文件" class="headerlink" title="查看cer文件"></a>查看cer文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl x509 -in keystore.cer -noout -text</span><br></pre></td></tr></table></figure>
+
+<h4 id="把cer公钥打到jdk"><a href="#把cer公钥打到jdk" class="headerlink" title="把cer公钥打到jdk"></a>把cer公钥打到jdk</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -import -file keystore.cer -keystore &quot;%JAVA_HOME%\jre\lib\security\cacerts&quot; -alias keystore</span><br></pre></td></tr></table></figure>
+
+
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag">网络</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-Linux/虚拟机扩容" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/01/25/Linux/%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%89%A9%E5%AE%B9/"
+    >虚拟机扩容</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/25/Linux/%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%89%A9%E5%AE%B9/" class="article-date">
+  <time datetime="2021-01-25T12:23:14.000Z" itemprop="datePublished">2021-01-25</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <p>&emsp;&emsp;记录一次给虚拟机扩容的经历，希望对后来者有所帮助。</p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>&emsp;&emsp;在扩容前，我们最好对linux的磁盘管理有所了解，需要是以下几个知识点：</p>
+<ul>
+<li><strong>磁盘</strong></li>
+<li><strong>物理卷</strong>（Physical Volume，PV）</li>
+<li><strong>卷组</strong>（Volume Group,VG）</li>
+<li><strong>逻辑卷</strong>（Logical Volume,LV）</li>
+</ul>
+<p>&emsp;&emsp;最好在实操前了解以上几个的名词的释义和大致作用，方便下一步实操（壮胆）。</p>
+<br/>
+
+
+<h2 id="实操"><a href="#实操" class="headerlink" title="实操"></a>实操</h2><h3 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h3><p>&emsp;&emsp;我们首先要确定好我们需要给什么挂载点(路径)扩容，也就是根据挂载点(路径)找到需要扩容的逻辑卷及其所属的卷组（可以使用lsblk命令或者df命令），并想好扩容多大。</p>
+<h3 id="磁盘增加容量"><a href="#磁盘增加容量" class="headerlink" title="磁盘增加容量"></a>磁盘增加容量</h3><p>&emsp;&emsp;先给虚拟机的磁盘增加对应容量，不同的软件设置方法不一样，请根据自己的虚拟机软件增加容量。</p>
+<h3 id="增加物理卷"><a href="#增加物理卷" class="headerlink" title="增加物理卷"></a>增加物理卷</h3><p>&emsp;&emsp;增加物理卷，可以理解成区，就是从磁盘里面分出一块。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#处理/dev/sda磁盘</span><br><span class="line">fdisk /dev/sda </span><br><span class="line"></span><br><span class="line">#请根据指引输入命令，例如我创建了一个/dev/sda3的物理卷，大小就是刚刚扩容的大小，因为太多了这里就不详情展开了</span><br><span class="line"></span><br><span class="line">#增加后刷新</span><br><span class="line">partprobe</span><br></pre></td></tr></table></figure>
+
+<h3 id="把新增的物理卷挂到对应卷组"><a href="#把新增的物理卷挂到对应卷组" class="headerlink" title="把新增的物理卷挂到对应卷组"></a>把新增的物理卷挂到对应卷组</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vgextend VolGroup &#x2F;dev&#x2F;sda3</span><br></pre></td></tr></table></figure>
+
+<h3 id="对应逻辑卷扩容"><a href="#对应逻辑卷扩容" class="headerlink" title="对应逻辑卷扩容"></a>对应逻辑卷扩容</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#从当前卷组分配64G到逻辑卷&#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_home</span><br><span class="line">lvextend -L +64G &#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_home</span><br><span class="line"></span><br><span class="line">#刷新逻辑卷&#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_home</span><br><span class="line">resize2fs &#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_home</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看效果"><a href="#查看效果" class="headerlink" title="查看效果"></a>查看效果</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# df -h</span><br><span class="line">文件系统                      容量  已用  可用 已用% 挂载点</span><br><span class="line">devtmpfs                      3.4G     0  3.4G    0% &#x2F;dev</span><br><span class="line">tmpfs                         3.4G     0  3.4G    0% &#x2F;dev&#x2F;shm</span><br><span class="line">tmpfs                         3.4G  306M  3.1G    9% &#x2F;run</span><br><span class="line">tmpfs                         3.4G     0  3.4G    0% &#x2F;sys&#x2F;fs&#x2F;cgroup</span><br><span class="line">&#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_root   50G   19G   28G   41% &#x2F;</span><br><span class="line">&#x2F;dev&#x2F;sda1                     477M  199M  250M   45% &#x2F;boot</span><br><span class="line">&#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_home   74G   51G   20G   73% &#x2F;home</span><br><span class="line">Home                          466G  377G   89G   81% &#x2F;media&#x2F;psf&#x2F;Home</span><br><span class="line">iCloud                        466G  377G   89G   81% &#x2F;media&#x2F;psf&#x2F;iCloud</span><br><span class="line">tmpfs                         684M     0  684M    0% &#x2F;run&#x2F;user&#x2F;0</span><br></pre></td></tr></table></figure>
+
+<br/>
+
+
+<h2 id="相关命令"><a href="#相关命令" class="headerlink" title="相关命令"></a>相关命令</h2><h3 id="lsblk"><a href="#lsblk" class="headerlink" title="lsblk"></a>lsblk</h3><p>&emsp;&emsp;用于列出所有可用块设备的信息.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root@root ~]# lsblk </span><br><span class="line">NAME                 MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT</span><br><span class="line">sda                    8:0    0   128G  0 disk </span><br><span class="line">├─sda1                 8:1    0   500M  0 part &#x2F;boot</span><br><span class="line">├─sda2                 8:2    0  63.5G  0 part </span><br><span class="line">│ ├─VolGroup-lv_root 253:0    0    50G  0 lvm  &#x2F;</span><br><span class="line">│ ├─VolGroup-lv_swap 253:1    0     2G  0 lvm  [SWAP]</span><br><span class="line">│ └─VolGroup-lv_home 253:2    0  74.6G  0 lvm  &#x2F;home</span><br><span class="line">└─sda3                 8:3    0    64G  0 part </span><br><span class="line">  └─VolGroup-lv_home 253:2    0  74.6G  0 lvm  &#x2F;home</span><br><span class="line">sr0                   11:0    1 122.4M  0 rom  </span><br><span class="line">sr1                   11:1    1   4.2G  0 rom</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>sda1、sda2、sda3是sda硬盘上的三个物理卷</li>
+<li>VolGroup就是虚拟机的卷组</li>
+<li>lv_root、lv_home、lv_swap就是卷组下的三个逻辑卷</li>
+<li>sda2被分配给了lv_root、lv_home、lv_swap三个逻辑卷，sda3被分配给了lv_home这个逻辑卷</li>
+</ul>
+<h3 id="fdisk"><a href="#fdisk" class="headerlink" title="fdisk"></a>fdisk</h3><p>&emsp;&emsp;使用fdisk可以查看、增加和删除物理卷pv.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# fdisk -l</span><br><span class="line"></span><br><span class="line">磁盘 &#x2F;dev&#x2F;sda：137.4 GB, 137438953472 字节，268435456 个扇区</span><br><span class="line">Units &#x3D; 扇区 of 1 * 512 &#x3D; 512 bytes</span><br><span class="line">扇区大小(逻辑&#x2F;物理)：512 字节 &#x2F; 4096 字节</span><br><span class="line">I&#x2F;O 大小(最小&#x2F;最佳)：4096 字节 &#x2F; 4096 字节</span><br><span class="line">磁盘标签类型：dos</span><br><span class="line">磁盘标识符：0x000990c9</span><br><span class="line"></span><br><span class="line">   设备 Boot      Start         End      Blocks   Id  System</span><br><span class="line">&#x2F;dev&#x2F;sda1   *        2048     1026047      512000   83  Linux</span><br><span class="line">&#x2F;dev&#x2F;sda2         1026048   134217727    66595840   8e  Linux LVM</span><br><span class="line">&#x2F;dev&#x2F;sda3       134217728   268435455    67108864   83  Linux</span><br><span class="line"></span><br><span class="line">磁盘 &#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_root：53.7 GB, 53687091200 字节，104857600 个扇区</span><br><span class="line">Units &#x3D; 扇区 of 1 * 512 &#x3D; 512 bytes</span><br><span class="line">扇区大小(逻辑&#x2F;物理)：512 字节 &#x2F; 4096 字节</span><br><span class="line">I&#x2F;O 大小(最小&#x2F;最佳)：4096 字节 &#x2F; 4096 字节</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">磁盘 &#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_swap：2113 MB, 2113929216 字节，4128768 个扇区</span><br><span class="line">Units &#x3D; 扇区 of 1 * 512 &#x3D; 512 bytes</span><br><span class="line">扇区大小(逻辑&#x2F;物理)：512 字节 &#x2F; 4096 字节</span><br><span class="line">I&#x2F;O 大小(最小&#x2F;最佳)：4096 字节 &#x2F; 4096 字节</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">磁盘 &#x2F;dev&#x2F;mapper&#x2F;VolGroup-lv_home：80.0 GB, 80035708928 字节，156319744 个扇区</span><br><span class="line">Units &#x3D; 扇区 of 1 * 512 &#x3D; 512 bytes</span><br><span class="line">扇区大小(逻辑&#x2F;物理)：512 字节 &#x2F; 4096 字节</span><br><span class="line">I&#x2F;O 大小(最小&#x2F;最佳)：4096 字节 &#x2F; 4096 字节</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="pvs-pvdisplay"><a href="#pvs-pvdisplay" class="headerlink" title="pvs/pvdisplay"></a>pvs/pvdisplay</h3><p>&emsp;&emsp;显示有关物理卷的信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# pvs</span><br><span class="line">  PV         VG       Fmt  Attr PSize   PFree   </span><br><span class="line">  &#x2F;dev&#x2F;sda2  VolGroup lvm2 a--  &lt;63.51g       0 </span><br><span class="line">  &#x2F;dev&#x2F;sda3  VolGroup lvm2 a--  &lt;64.00g 1020.00m</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# pvdisplay</span><br><span class="line">  --- Physical volume ---</span><br><span class="line">  PV Name               &#x2F;dev&#x2F;sda2</span><br><span class="line">  VG Name               VolGroup</span><br><span class="line">  PV Size               63.51 GiB &#x2F; not usable 3.00 MiB</span><br><span class="line">  Allocatable           yes (but full)</span><br><span class="line">  PE Size               4.00 MiB</span><br><span class="line">  Total PE              16258</span><br><span class="line">  Free PE               0</span><br><span class="line">  Allocated PE          16258</span><br><span class="line">  PV UUID               zuwqie-2MP7-1P5L-2kED-Stiv-T5Wh-gVm9np</span><br><span class="line">   </span><br><span class="line">  --- Physical volume ---</span><br><span class="line">  PV Name               &#x2F;dev&#x2F;sda3</span><br><span class="line">  VG Name               VolGroup</span><br><span class="line">  PV Size               64.00 GiB &#x2F; not usable 4.00 MiB</span><br><span class="line">  Allocatable           yes </span><br><span class="line">  PE Size               4.00 MiB</span><br><span class="line">  Total PE              16383</span><br><span class="line">  Free PE               255</span><br><span class="line">  Allocated PE          16128</span><br><span class="line">  PV UUID               Lq2NSO-mH5X-l5pV-yZO6-K3LI-75Mk-BxLG4r</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="vgs-vgdisplay"><a href="#vgs-vgdisplay" class="headerlink" title="vgs/vgdisplay"></a>vgs/vgdisplay</h3><p>&emsp;&emsp;显示有关卷组的信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# vgs</span><br><span class="line">  VG       #PV #LV #SN Attr   VSize   VFree   </span><br><span class="line">  VolGroup   2   3   0 wz--n- 127.50g 1020.00m</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# vgdisplay</span><br><span class="line">  --- Volume group ---</span><br><span class="line">  VG Name               VolGroup</span><br><span class="line">  System ID             </span><br><span class="line">  Format                lvm2</span><br><span class="line">  Metadata Areas        2</span><br><span class="line">  Metadata Sequence No  6</span><br><span class="line">  VG Access             read&#x2F;write</span><br><span class="line">  VG Status             resizable</span><br><span class="line">  MAX LV                0</span><br><span class="line">  Cur LV                3</span><br><span class="line">  Open LV               3</span><br><span class="line">  Max PV                0</span><br><span class="line">  Cur PV                2</span><br><span class="line">  Act PV                2</span><br><span class="line">  VG Size               127.50 GiB</span><br><span class="line">  PE Size               4.00 MiB</span><br><span class="line">  Total PE              32641</span><br><span class="line">  Alloc PE &#x2F; Size       32386 &#x2F; &lt;126.51 GiB</span><br><span class="line">  Free  PE &#x2F; Size       255 &#x2F; 1020.00 MiB</span><br><span class="line">  VG UUID               TZPtDr-B1n8-WU5M-sJQG-1EjC-7QW6-S6fFii</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="lvs-lvdisplay"><a href="#lvs-lvdisplay" class="headerlink" title="lvs/lvdisplay"></a>lvs/lvdisplay</h3><p>&emsp;&emsp;显示有关逻辑卷的信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# lvs</span><br><span class="line">  LV      VG       Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert</span><br><span class="line">  lv_home VolGroup -wi-ao---- &lt;74.54g                                                    </span><br><span class="line">  lv_root VolGroup -wi-ao----  50.00g                                                    </span><br><span class="line">  lv_swap VolGroup -wi-ao----  &lt;1.97g</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">[root@root ~]# lvdisplay</span><br><span class="line">  --- Logical volume ---</span><br><span class="line">  LV Path                &#x2F;dev&#x2F;VolGroup&#x2F;lv_swap</span><br><span class="line">  LV Name                lv_swap</span><br><span class="line">  VG Name                VolGroup</span><br><span class="line">  LV UUID                nR1VMw-0zcS-rlca-1QrT-W0Hm-eTMx-9dySrE</span><br><span class="line">  LV Write Access        read&#x2F;write</span><br><span class="line">  LV Creation host, time centos-linux.shared, 2019-09-10 20:32:15 +0800</span><br><span class="line">  LV Status              available</span><br><span class="line">  # open                 2</span><br><span class="line">  LV Size                &lt;1.97 GiB</span><br><span class="line">  Current LE             504</span><br><span class="line">  Segments               1</span><br><span class="line">  Allocation             inherit</span><br><span class="line">  Read ahead sectors     auto</span><br><span class="line">  - currently set to     8192</span><br><span class="line">  Block device           253:1</span><br><span class="line">   </span><br><span class="line">  --- Logical volume ---</span><br><span class="line">  LV Path                &#x2F;dev&#x2F;VolGroup&#x2F;lv_root</span><br><span class="line">  LV Name                lv_root</span><br><span class="line">  VG Name                VolGroup</span><br><span class="line">  LV UUID                3Gwc5F-SpkI-FDm0-Bysz-1Kcl-XWBn-7rQ5dq</span><br><span class="line">  LV Write Access        read&#x2F;write</span><br><span class="line">  LV Creation host, time centos-linux.shared, 2019-09-10 20:32:15 +0800</span><br><span class="line">  LV Status              available</span><br><span class="line">  # open                 1</span><br><span class="line">  LV Size                50.00 GiB</span><br><span class="line">  Current LE             12800</span><br><span class="line">  Segments               1</span><br><span class="line">  Allocation             inherit</span><br><span class="line">  Read ahead sectors     auto</span><br><span class="line">  - currently set to     8192</span><br><span class="line">  Block device           253:0</span><br><span class="line">   </span><br><span class="line">  --- Logical volume ---</span><br><span class="line">  LV Path                &#x2F;dev&#x2F;VolGroup&#x2F;lv_home</span><br><span class="line">  LV Name                lv_home</span><br><span class="line">  VG Name                VolGroup</span><br><span class="line">  LV UUID                mW3rew-NCVt-ESSW-5IXK-i6mT-20pJ-DBAhge</span><br><span class="line">  LV Write Access        read&#x2F;write</span><br><span class="line">  LV Creation host, time centos-linux.shared, 2019-09-10 20:32:15 +0800</span><br><span class="line">  LV Status              available</span><br><span class="line">  # open                 1</span><br><span class="line">  LV Size                &lt;74.54 GiB</span><br><span class="line">  Current LE             19082</span><br><span class="line">  Segments               2</span><br><span class="line">  Allocation             inherit</span><br><span class="line">  Read ahead sectors     auto</span><br><span class="line">  - currently set to     8192</span><br><span class="line">  Block device           253:2</span><br></pre></td></tr></table></figure>
+
+<h3 id="mount-umount"><a href="#mount-umount" class="headerlink" title="mount/umount"></a>mount/umount</h3><p>&emsp;&emsp;磁盘挂载与卸除（配置物理卷/逻辑卷和路径的映射）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount [-t 文件系统] [-L Label名] [-o 额外选项] [-n]  装置文件名  挂载点</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;磁盘被手动挂载之后都必须把挂载信息写入<strong>/etc/fstab</strong>这个文件中，否则下次开机启动时仍然需要重新挂载。系统开机时会主动读取/etc/fstab这个文件中的内容，根据文件里面的配置挂载磁盘。这样我们只需要将磁盘的挂载信息写入这个文件中我们就不需要每次开机启动之后手动进行挂载了。</p>
+<br/>
+<br/>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/" rel="tag">磁盘管理</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-数据库/批量插入和更新的优化" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -801,181 +1065,6 @@
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E8%BF%9B%E9%98%B6/" rel="tag">Java进阶</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-工具/强制联想" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/12/02/%E5%B7%A5%E5%85%B7/%E5%BC%BA%E5%88%B6%E8%81%94%E6%83%B3/"
-    >强制联想</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/12/02/%E5%B7%A5%E5%85%B7/%E5%BC%BA%E5%88%B6%E8%81%94%E6%83%B3/" class="article-date">
-  <time datetime="2020-12-02T06:59:43.000Z" itemprop="datePublished">2020-12-02</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%88%9B%E6%96%B0/">创新</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;强制联想可能是我们平时不怎么会听到和用到的思维工具，但是我个人体验发现感觉效果很好（据上课的老师说奇葩说的导演们也觉得这个方法很好），下文简单介绍下用法和注意事项。</p>
-<h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><table>
-<thead>
-<tr>
-<th align="left">创新产品</th>
-<th align="left">随机物品</th>
-<th align="left">随机物品的特征和本质</th>
-<th align="left">集合（如果创新产品像它一样会怎么样）</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">手机</td>
-<td align="left">青草</td>
-<td align="left">会生长，绿色，光合作用（呼吸），可以吃</td>
-<td align="left">记忆金属外壳（可以耨捏成想要的样子），绿色的手机壳，增加吹风机的功能</td>
-</tr>
-</tbody></table>
-<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h3><ul>
-<li>选随机物品的时候要快，不然会被影响</li>
-<li>随机物品最好要不相干，这样子强制联想的效果也越好</li>
-<li>最后强制联想的结果大概是30-40个点子，从中筛选出来3-4个点子</li>
-<li>整个过程大概20m，时间多了也没什么用</li>
-</ul>
-<p>&emsp;&emsp;上课有感，谨以斯文以记之。</p>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-工具/头脑风暴" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/12/02/%E5%B7%A5%E5%85%B7/%E5%A4%B4%E8%84%91%E9%A3%8E%E6%9A%B4/"
-    >头脑风暴</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/12/02/%E5%B7%A5%E5%85%B7/%E5%A4%B4%E8%84%91%E9%A3%8E%E6%9A%B4/" class="article-date">
-  <time datetime="2020-12-02T05:59:43.000Z" itemprop="datePublished">2020-12-02</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%88%9B%E6%96%B0/">创新</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <p>&emsp;&emsp;虽然头脑风暴可以说是一个我们非常熟知的思维工具，但是我们在实际的使用过程中还是不能很好地实践它。在设想开发型的头脑风暴，它的使用原则如下：</p>
-<h3 id="庭外判决原则"><a href="#庭外判决原则" class="headerlink" title="庭外判决原则"></a>庭外判决原则</h3><p>&emsp;&emsp;头脑风暴时不批评别人的方案，认真倾听并记录每一个方案（不要去深究别人的方案是不是合理可行，如果岔开话题就影响了头脑风暴）。</p>
-<h3 id="自由畅想原则"><a href="#自由畅想原则" class="headerlink" title="自由畅想原则"></a>自由畅想原则</h3><p>&emsp;&emsp;名抒己见，自由发言，创造良好的沟通（每个人都要开动脑筋，大胆说出自己的想法）</p>
-<h3 id="以量求质的原则"><a href="#以量求质的原则" class="headerlink" title="以量求质的原则"></a>以量求质的原则</h3><p>&emsp;&emsp;时间范围内尽可能多的给出更多的解决方案（数量很重要，数量越多就说明脑洞越大，创新的概率越高，出成果的概率越大）</p>
-<h3 id="综合改善原则"><a href="#综合改善原则" class="headerlink" title="综合改善原则"></a>综合改善原则</h3><p>&emsp;&emsp;积极分享自己的想法，也鼓励在别人的想法上迭代（可以进行二次创新或者延伸）</p>
-<br/>
-<br/>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li></ul>
 
 
     </footer>
